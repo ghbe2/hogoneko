@@ -8,7 +8,9 @@ const path=require('node:path'),assert=require('node:assert/strict');
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(pathToFileURL(path.resolve(__dirname,'../index.html')).href);
  const setup=async phase=>page.evaluate(phase=>{
-   titleScreenOpen=false;gameState.campaign.phase=phase;gameState.campaign.intakeCalled=false;
+   titleScreenOpen=false;gameState.campaign.phase=phase;
+   // 通常の受け入れ完了後は呼びかけ済みフラグが残る。その実データで検証する。
+   gameState.campaign.intakeCalled=phase==='room';
    gameState.cats[0].types=['chase','ambush'];gameState.cats[0].name='はる';
    gameState.ui.layoutMode=true;gameState.ui.layoutTrayOpen=true;gameState.ui.guideExpanded=false;
    gameState.rooms[0].floor=[];gameState.rooms[0].wall=[];render(gameState);

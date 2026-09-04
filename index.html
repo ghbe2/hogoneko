@@ -4198,7 +4198,7 @@ app.addEventListener("pointerdown", event => {
   }
 
   const target = event.target.closest("[data-layout-item], .layout-palette-item");
-  if (target && gameState.ui.layoutMode && !gameState.campaign.intakeCalled) {
+  if (target && gameState.ui.layoutMode && !(gameState.campaign.phase === "intake" && gameState.campaign.intakeCalled)) {
     const stage = target.closest(".stage");
     const world = stage?.querySelector("[data-room-world]");
     if (!stage || !world) return;
