@@ -82,7 +82,7 @@ async function drag(page, source, destination) {
       if (!await page.locator('.layout-edge-palette').count()) await page.locator('[data-action="toggle-layout-tray"]').click();
       // ガイドは折り畳んで家具を操作する。
       if (await page.locator('.guide-detail').count()) await page.locator('[data-action="toggle-guide"]').click();
-      await page.locator(`.layout-palette-item[data-item="${id}"]`).click();
+      await page.locator(`.layout-palette-item[data-item="${id}"]`).press('Enter');
     }
     assert(await page.evaluate(() => getRoomComfortBreakdown(gameState).canExit), 'Drawn cat cannot finish intake');
     await page.locator('[data-action="call-intake-cat"]').click();

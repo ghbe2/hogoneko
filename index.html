@@ -981,6 +981,15 @@
     .layout-palette-item .label { width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:7px; font-weight:900; }
     .layout-palette-item .placement-badge { left:3px; top:3px; font-size:6px; }
     .layout-palette-item .durability { width:43px; height:3px; }
+    .layout-palette-item { touch-action:none; cursor:grab; }
+    .layout-edge-scroll { touch-action:none; }
+    .stage.layout-dragging > .screen-guide { visibility:hidden; }
+    .layout-drag-preview { pointer-events:none !important; z-index:50 !important; filter:drop-shadow(0 8px 8px #5e403744); }
+    .layout-drag-preview.invalid { opacity:.38; outline:2px dashed #bd6475 !important; }
+    .layout-lift-origin { opacity:.2 !important; }
+    .layout-edge-palette.drop-storage, .layout-tray-toggle.drop-storage { outline:3px solid #dc9da9; }
+    .layout-edge-palette.drop-storage-active, .layout-tray-toggle.drop-storage-active { outline:4px solid #bc657c; background:#f8dbe3; }
+    .layout-drop-hint { position:absolute; z-index:75; bottom:12px; left:50%; transform:translateX(-50%); padding:7px 12px; border-radius:20px; background:#fffaf4ee; color:#946c66; font-size:11px; pointer-events:none; white-space:nowrap; }
     .layout-tray-toggle {
       position:absolute;
       right:12px;
@@ -2835,6 +2844,17 @@ function reduceGameState(state, action) {
       return { ...state, rooms:[{ ...room, floor:move(room.floor), wall:move(room.wall) }], campaign:{ ...state.campaign, intakeFeedback:state.campaign.phase === "intake" ? null : state.campaign.intakeFeedback }, ui:{ ...state.ui, lastLayoutItem:action.itemId } };
     }
 
+    case "DROP_LAYOUT_ITEM": {
+      const item = getItem(action.itemId);
+      if (!state.ui.layoutMode || !CONFIG.stage1.placedItems.includes(action.itemId) || !item) return state;
+      if (!action.store && (getDurability(state, item.id) <= 0 || !Number.isFinite(action.x) || !Number.isFinite(action.y))) return state;
+      const room = getRoom(state);
+      const nextRoom = { ...room, floor:room.floor.filter(p => p.itemId !== item.id), wall:room.wall.filter(p => p.itemId !== item.id) };
+      if (!action.store) nextRoom[item.zone].push({ itemId:item.id, x:action.x, y:action.y });
+      return { ...state, rooms:[nextRoom], campaign:{ ...state.campaign, intakeFeedback:null },
+        ui:{ ...state.ui, lastLayoutItem:item.id, message:action.store ? `${item.label}を押し入れに戻した` : `${item.label}を置いた` } };
+    }
+
     case "SET_ROOM_PAN":
       return { ...state, ui:{ ...state.ui, roomPan:Math.max(0, Math.min(getMaxPan(state), action.pan)) } };
 
@@ -3339,12 +3359,12 @@ function getScreenGuide(state) {
   if (phase === "intake") {
     if (state.campaign.intakeCalled) return {title:"出てくるまで、そっと", detail:"名前に応えて、キャリーから一歩。もうすぐ一緒の暮らしが始まります。"};
     const comfort = getRoomComfortBreakdown(state);
-    if (comfort.missingEssential.length) return {title:"⑦ ごはん皿とトイレを用意", detail:"右の家具一覧から足りない必需品を置こう。この2つは猫の好みに関係なく必要です。", target:'.layout-edge-palette'};
+    if (comfort.missingEssential.length) return {title:"⑦ ごはん皿とトイレを用意", detail:"右の押し入れから、足りない必需品をつかんで床へ置こう。この2つは好みに関係なく必要です。", target:'.layout-edge-palette'};
     if (comfort.canExit) return {title:"⑧ 名前で呼んでみよう", detail:"部屋の準備が整ったようです。下の呼びかけボタンで、この子の返事を待ちましょう。", target:'[data-action="call-intake-cat"]'};
     const best = CONFIG.stage1.placedItems.filter(id => !getPlaced(getRoom(state)).some(p => p.itemId === id)).map(id => getItem(id)).filter(item => item && !item.essential).sort((a,b) => getAffinity(getCat(state), b).score - getAffinity(getCat(state), a).score)[0];
     return {title:"⑦ 落ち着ける部屋を探そう", detail:active && best ? `まず${best.label}を置いて様子を見てみよう。小さなハートやキャリーの揺れがヒント。準備できたら名前を呼んで確認。` : "家具を出し入れして、ハートやキャリーの揺れを見てみよう。名前を呼ぶと、今の部屋への返事が分かります。", target:state.ui.layoutTrayOpen ? '.layout-edge-palette' : '[data-action="toggle-layout-tray"]'};
   }
-  if (state.ui.layoutMode) return {title:"家具を選んで、部屋で動かそう", detail:"右の一覧で出し入れ。選ぶと一覧が閉じます。部屋の家具をドラッグして配置し、もよう替えをもう一度押して完了。"};
+  if (state.ui.layoutMode) return {title:"つかんで置く、戻してしまう", detail:"右の押し入れから家具を部屋へ。戻すときは家具を押し入れまで運んで離そう。一覧は縦スワイプ、家具は横につかみ出せます。"};
   if (phase === "room") return {title:"猫の返事を見ながら、遊ぼう", detail:"あそぶの丸をつかみ、部屋で玩具を揺らしてみて。小さな♥が10回で大きな♥ひとつ。好きなものほど育つのが速く、苦手なら距離を取ります。"};
   const guides = {
     town:[getCat(state).status === "raising" ? "買い物へ、またはおうちへ" : "住宅街で猫を探そう", "地図の行き先をタップ。ステージ2以降はまだ未解放です。"],
@@ -4098,7 +4118,8 @@ app.addEventListener("click", event => {
   if (action === "toggle-layout") dispatch({ type: "TOGGLE_LAYOUT" });
   if (action === "toggle-layout-tray") dispatch({ type: "TOGGLE_LAYOUT_TRAY" });
   if (action === "set-layout-filter") dispatch({ type:"SET_LAYOUT_FILTER", filter:target.dataset.filter });
-  if (action === "toggle-placed") dispatch({ type: "TOGGLE_PLACED_ITEM", itemId: target.dataset.item });
+  // キーボードのEnter/Spaceは従来の出し入れ。ポインターはドラッグで操作する。
+  if (action === "toggle-placed" && event.detail === 0) dispatch({ type: "TOGGLE_PLACED_ITEM", itemId: target.dataset.item });
   if (action === "open-notebook") dispatch({ type: "OPEN_NOTEBOOK" });
   if (action === "save-nickname") dispatch({ type:"SET_NICKNAME", nickname:document.querySelector("#cat-nickname")?.value });
   if (action === "next-day") dispatch({ type: "NEXT_DAY" });
@@ -4176,30 +4197,31 @@ app.addEventListener("pointerdown", event => {
     return;
   }
 
-  const target = event.target.closest("[data-layout-item]");
-  if (target && gameState.ui.layoutMode) {
+  const target = event.target.closest("[data-layout-item], .layout-palette-item");
+  if (target && gameState.ui.layoutMode && !gameState.campaign.intakeCalled) {
     const stage = target.closest(".stage");
     const world = stage?.querySelector("[data-room-world]");
     if (!stage || !world) return;
     event.preventDefault();
-    const itemId = target.dataset.layoutItem;
+    const fromPalette = target.matches(".layout-palette-item");
+    const itemId = target.dataset.layoutItem || target.dataset.item;
     const item = getItem(itemId);
+    if (fromPalette && getDurability(gameState, itemId) <= 0) return;
     const placed = getPlaced(getRoom(gameState)).find(entry => entry.itemId === itemId);
     const stageRect = stage.getBoundingClientRect();
     const worldRect = world.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
-    const widthPercent = (targetRect.width / worldRect.width) * 100;
-    const heightPercent = (targetRect.height / stageRect.height) * 100;
-    const minX = 2;
-    const maxX = Math.max(minX, 98 - widthPercent);
-    const minY = item.zone === "wall" ? 7 : Math.max(9, 61 - heightPercent);
-    const maxY = item.zone === "wall" ? Math.max(minY, 57 - heightPercent) : Math.max(minY, 98 - heightPercent);
     dragDraft = {
-      target, itemId, zone:item.zone, stage, stageRect, worldRect, minX, maxX, minY, maxY,
+      target, itemId, zone:item.zone, stage, world, stageRect, worldRect, fromPalette,
+      startX:event.clientX, startY:event.clientY, pointerType:event.pointerType, pointerId:event.pointerId,
+      offsetX:fromPalette ? null : event.clientX-targetRect.left,
+      offsetY:fromPalette ? null : event.clientY-targetRect.top,
+      scroll:target.closest('.layout-edge-scroll'), scrollTop:target.closest('.layout-edge-scroll')?.scrollTop || 0,
+      moved:false, scrolling:false, valid:false, store:false,
       x:placed?.x ?? CONFIG.stage1.defaultLayout[itemId].x,
       y:placed?.y ?? CONFIG.stage1.defaultLayout[itemId].y,
     };
-    stage.classList.add("layout-dragging");
+    app.setPointerCapture(event.pointerId);
     return;
   }
 
@@ -4256,14 +4278,7 @@ app.addEventListener("pointermove", event => {
   }
   if (dragDraft) {
     event.preventDefault();
-    const rawX = ((event.clientX - dragDraft.worldRect.left) / dragDraft.worldRect.width) * 100;
-    const rawY = ((event.clientY - dragDraft.stageRect.top) / dragDraft.stageRect.height) * 100;
-    const x = Math.max(dragDraft.minX, Math.min(dragDraft.maxX, rawX));
-    const y = Math.max(dragDraft.minY, Math.min(dragDraft.maxY, rawY));
-    dragDraft.x = Math.round(x);
-    dragDraft.y = Math.round(y);
-    dragDraft.target.style.left = `${dragDraft.x}%`;
-    dragDraft.target.style.top = `${dragDraft.y}%`;
+    moveLayoutDrag(dragDraft, event.clientX, event.clientY);
     return;
   }
   if (panDraft) {
@@ -4312,8 +4327,10 @@ app.addEventListener("pointerup", event => {
   if (dragDraft) {
     const draft = dragDraft;
     dragDraft = null;
-    draft.stage?.classList.remove("layout-dragging");
-    dispatch({ type:"MOVE_ITEM", itemId:draft.itemId, x:draft.x, y:draft.y });
+    if (draft.moved || draft.scrolling) suppressClickUntil = Date.now() + 350;
+    if (draft.moved) moveLayoutDrag(draft, event.clientX, event.clientY);
+    clearLayoutDrag(draft);
+    if (draft.moved && draft.valid) dispatch({ type:"DROP_LAYOUT_ITEM", itemId:draft.itemId, x:draft.x, y:draft.y, store:draft.store });
     return;
   }
   if (panDraft) {
@@ -4336,12 +4353,69 @@ app.addEventListener("pointercancel", () => {
   if (commandDraft) clearCommandDrag(commandDraft, false);
   commandDraft = null;
   playDraft = null;
-  if (dragDraft?.stage) dragDraft.stage.classList.remove("layout-dragging");
+  if (dragDraft) clearLayoutDrag(dragDraft);
   dragDraft = null;
   if (panDraft?.world) panDraft.world.classList.remove("dragging");
   panDraft = null;
   render(gameState);
 });
+
+function moveLayoutDrag(draft, clientX, clientY) {
+  const dx=clientX-draft.startX, dy=clientY-draft.startY;
+  if (!draft.moved && !draft.scrolling && Math.hypot(dx,dy)<8) return;
+  // スマホでは押し入れを縦にスワイプすると一覧、横につかみ出すと家具を操作。
+  if (!draft.moved && draft.fromPalette && draft.pointerType === 'touch' && (draft.scrolling || Math.abs(dy)>Math.abs(dx)*1.2)) {
+    draft.scrolling=true;
+    draft.scroll.scrollTop=draft.scrollTop-dy;
+    return;
+  }
+  if (!draft.moved) {
+    draft.moved=true;
+    const template=document.createElement('template');
+    template.innerHTML=renderPlacedItem({itemId:draft.itemId,x:draft.x,y:draft.y},gameState,CONFIG.stage1.clueCycle[0]);
+    draft.ghost=template.content.firstElementChild;
+    draft.ghost.removeAttribute('data-layout-item');
+    draft.ghost.removeAttribute('tabindex');
+    draft.ghost.setAttribute('aria-hidden','true');
+    draft.ghost.classList.add('layout-drag-preview');
+    draft.world.appendChild(draft.ghost);
+    const bounds=draft.ghost.getBoundingClientRect();
+    draft.width=bounds.width;draft.height=bounds.height;
+    draft.offsetX ??= bounds.width/2;draft.offsetY ??= bounds.height/2;
+    draft.origin=draft.world.querySelector(`[data-layout-item="${draft.itemId}"]`);
+    draft.origin?.classList.add('layout-lift-origin');
+    draft.stage.classList.add('layout-dragging');
+    draft.storage=draft.stage.querySelector('.layout-edge-palette, .layout-tray-toggle');
+    draft.storage?.classList.add('drop-storage');
+    draft.hint=document.createElement('div');draft.hint.className='layout-drop-hint';draft.hint.setAttribute('role','status');draft.stage.appendChild(draft.hint);
+  }
+  const inside=(rect)=>rect && clientX>=rect.left && clientX<=rect.right && clientY>=rect.top && clientY<=rect.bottom;
+  draft.store=Boolean(inside(draft.storage?.getBoundingClientRect()));
+  const rect=draft.stageRect, world=draft.worldRect;
+  const width=draft.width/world.width*100,height=draft.height/rect.height*100;
+  const rawX=(clientX-world.left-draft.offsetX)/world.width*100;
+  const rawY=(clientY-rect.top-draft.offsetY)/rect.height*100;
+  // 背の高い床家具も、つかんだ位置ではなく足元で床に接しているか判定。
+  const floor=rawY+height>=59;
+  const minY=draft.zone==='wall'?7:Math.max(9,61-height);
+  const maxY=draft.zone==='wall'?Math.max(minY,57-height):Math.max(minY,98-height);
+  draft.x=Math.round(Math.max(2,Math.min(98-width,rawX)));
+  draft.y=Math.round(Math.max(minY,Math.min(maxY,rawY)));
+  draft.valid=draft.store || (inside(rect) && (draft.zone==='floor'?floor:!floor));
+  draft.ghost.style.left=`${draft.x}%`;draft.ghost.style.top=`${draft.y}%`;
+  draft.ghost.classList.toggle('invalid',!draft.valid);
+  draft.ghost.style.visibility=draft.store?'hidden':'';
+  draft.storage?.classList.toggle('drop-storage-active',draft.store);
+  draft.hint.textContent=draft.store?'離して押し入れに戻す':draft.valid?'離してここに置く':`置けるのは${draft.zone==='wall'?'壁':'床'}。右の押し入れへ戻せます`;
+}
+
+function clearLayoutDrag(draft) {
+  draft.ghost?.remove();draft.hint?.remove();
+  draft.origin?.classList.remove('layout-lift-origin');
+  draft.stage.classList.remove('layout-dragging');
+  draft.storage?.classList.remove('drop-storage','drop-storage-active');
+  if(app.hasPointerCapture(draft.pointerId)) app.releasePointerCapture(draft.pointerId);
+}
 
 function makeCommandDraft(event, target, command, extra = {}) {
   const rect = target.getBoundingClientRect();
