@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#efe1d6">
+  <title>ホゴネコ｜プレビュー</title>
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#efe1d6;color:#75594f;font-family:"Yu Gothic",Meiryo,sans-serif}
+    body{min-height:100svh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 32%,#fffaf4,transparent 75%),#efe1d6}
+    main{width:min(100%,340px);padding:34px 24px;text-align:center;background:#fffaf4e8;border:1px solid #ead4cc;border-radius:28px;box-shadow:0 18px 45px #60472d10}
+    .paw{font-size:36px}h1{font-size:32px;letter-spacing:.13em;margin:12px 0}p{font-size:12px;line-height:1.9;color:#998078}
+    label{display:block;text-align:left;font-size:11px;margin:26px 0 8px}input,button{width:100%;font:inherit;border-radius:12px;min-height:48px;padding:12px}
+    input{font-size:16px;border:1px solid #dfc8c0;background:#fff;color:#473b3a}input:focus{outline:2px solid #d67d90;outline-offset:2px}
+    button{border:0;background:#d47c90;color:white;font-weight:bold;margin-top:16px;box-shadow:0 4px 0 #ae6173;cursor:pointer}button:disabled{opacity:.6;cursor:wait}
+    #error{min-height:36px;margin:14px 0 0;color:#b14c65;font-size:11px}small{font-size:9px;color:#ad958c}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="paw" aria-hidden="true">🐾</div><h1>ホゴネコ</h1>
+    <p>クライアント向けプレビュー<br>お知らせしたパスワードでお入りください。</p>
+    <form id="entry">
+      <label for="password">閲覧用パスワード</label>
+      <input id="password" type="password" required autocomplete="current-password" autocapitalize="none" spellcheck="false" aria-describedby="error">
+      <button id="enter" type="submit">プレビューを開く</button>
+      <p id="error" role="status" aria-live="polite"></p>
+    </form>
+    <small>開発中のモックです</small>
+  </main>
+  <script>
+    const payload = __PREVIEW_PAYLOAD__;
+    const bytes = value => Uint8Array.from(atob(value), char => char.charCodeAt(0));
+    document.querySelector('#entry').addEventListener('submit',async event => {
+      event.preventDefault();
+      const button=document.querySelector('#enter'), input=document.querySelector('#password'), error=document.querySelector('#error');
+      button.disabled=true;button.textContent='開いています…';error.textContent='';
+      if(!globalThis.crypto?.subtle){error.textContent='HTTPSのURLを、最新のブラウザで開いてください。';button.disabled=false;button.textContent='プレビューを開く';return;}
+      try {
+        const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(input.value),'PBKDF2',false,['deriveKey']);
+        const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:bytes(payload.salt),iterations:payload.iterations,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['decrypt']);
+        const data=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(payload.iv)},key,bytes(payload.data));
+        input.value='';
+        document.open();document.write(new TextDecoder().decode(data));document.close();
+      }catch{
+        error.textContent='パスワードが違います。もう一度お試しください。';
+        button.disabled=false;button.textContent='プレビューを開く';input.focus();input.select();
+      }
+    });
+  </script>
+</body>
+</html>

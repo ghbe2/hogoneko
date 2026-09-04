@@ -1,0 +1,8 @@
+tests/screenshots/
+node_modules/
+.env
+.env.*
+*.log
+SPEC_*.md
+INSTRUCTIONS_*.md
+TYPE_MATCHUP_*.html
