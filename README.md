@@ -4,6 +4,8 @@
 
 ## 実機プレビュー
 
+https://ghbe2.github.io/hogoneko/
+
 GitHub Pages の公開元を `main` ブランチの `/docs` に設定する。
 閲覧用パスワードは別途共有。パスワードを知らずにURLを開くと、入口だけが表示される。
 
