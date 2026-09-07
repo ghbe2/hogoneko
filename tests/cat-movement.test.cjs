@@ -1,0 +1,33 @@
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+const {pathToFileURL}=require('node:url');
+const path=require('node:path');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
+ const page=await browser.newPage({viewport:{width:375,height:667}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(pathToFileURL(path.resolve(__dirname,'../index.html')).href);
+ const result=await page.evaluate(()=>{
+  titleScreenOpen=false;gameState.campaign.phase='room';gameState.cats[0].types=['chase','ambush'];gameState.ui.modal=null;render(gameState);
+  const room=getRoom(gameState);room.wall=[{itemId:'shelf',x:30,y:36}];room.floor=[{itemId:'tower',x:70,y:60},{itemId:'box',x:15,y:72}];render(gameState);
+  const first=getAvailableRoamPoints(gameState);const shelf=first.find(p=>p.id==='shelf');
+  room.wall[0].x+=12;room.wall[0].y+=5;
+  const moved=getAvailableRoamPoints(gameState).find(p=>p.id==='shelf');
+  const shift={x:moved.x-shelf.x,y:moved.y-shelf.y};
+  gameState.ui.roamIndex=moved.index;render(gameState);
+  const cat=document.querySelector('.cat-object'), platform=document.querySelector('.item-shelf');
+  const feet=cat.getBoundingClientRect().bottom,top=platform.getBoundingClientRect().top+7;
+  const a=getAvailableRoamPoints(gameState).find(p=>p.id==='floor_back_left'), b=getAvailableRoamPoints(gameState).find(p=>p.id==='floor_back_right');
+  const walk=animateFelineTravel(cat,a,b);const walkMs=walk.effect.getTiming().duration;walk.finish();
+  const stopped=!cat.classList.contains('walking');
+  const jump=animateFelineTravel(cat,a,moved);const jumpMs=jump.effect.getTiming().duration;jump.finish();
+  room.wall=[];const removed=!getAvailableRoamPoints(gameState).some(p=>p.id==='shelf');
+  const fallback=getCatPoint(gameState).surface;
+  gameState.durability.tower=0;const brokenExcluded=!getAvailableRoamPoints(gameState).some(p=>p.id==='tower');
+  const window=document.querySelector('.fixed-window').getBoundingClientRect();
+  return{noWindow:first.every(p=>p.surface!=='window'),shift,feetError:Math.abs(feet-top),walkMs,jumpMs,removed,fallback,brokenExcluded,area:window.width*window.height};
+ });
+ assert(result.noWindow);assert(Math.abs(result.shift.x-12)<.001);assert(Math.abs(result.shift.y-5)<.001);
+ assert(result.feetError<1,JSON.stringify(result));assert(result.walkMs>3000);assert(result.jumpMs<550);assert(result.removed);assert.equal(result.fallback,'floor');assert(result.brokenExcluded);assert(Math.abs(result.area/(74*90)-3)<.05);
+ await page.evaluate(()=>{gameState.ui.roamIndex=0;render(gameState);animateCatWalk(getAvailableRoamPoints(gameState)[0],getAvailableRoamPoints(gameState)[1]);});
+ await page.waitForTimeout(250);require('node:fs').mkdirSync(path.join(__dirname,'screenshots'),{recursive:true});await page.screenshot({path:path.join(__dirname,'screenshots/cat-movement.png')});
+ assert.equal(errors.length,0,errors.join('\n'));console.log('PASS',result);
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1});

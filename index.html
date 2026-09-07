@@ -266,7 +266,7 @@
     .clue-marker.scratch { background:repeating-linear-gradient(105deg,transparent 0 6px,rgba(103,74,57,.72) 7px 8px,transparent 9px 12px); transform:rotate(-8deg); }
 
     .item-window {
-      left: 62%; top: 15%; width: 74px; height: 90px;
+      left: 62%; top: 15%; width: 128px; height: 156px;
       border: 7px solid #ad8268;
       background: linear-gradient(#bbdce1 0 62%, #9fbea1 62%);
       box-shadow: inset 0 0 0 2px rgba(255,255,255,.72), 0 5px 0 rgba(108,77,57,.12);
@@ -287,8 +287,8 @@
 
     .fixed-window {
       position: absolute;
-      left: 60%;
-      top: 15%;
+      left: 50%;
+      top: 7%;
       z-index: 2;
       cursor: default;
     }
@@ -379,7 +379,7 @@
       height: 134px;
       transform: translate(-50%, -50%);
       z-index: 10;
-      transition: transform .35s ease;
+      transition: none;
       will-change: left, top, transform;
     }
     .cat-object:active { transform: translate(-50%, -50%) scale(.96); }
@@ -436,6 +436,23 @@
     .cat-object.toy-watch .cat-eyes { color:#d4ae47; text-shadow:0 0 4px rgba(255,236,154,.8); }
     .cat-object.toy-avoid .cat-head { transform:rotate(-8deg); }
     .cat-object.toy-avoid .cat-tail { animation:cat-tail-walk .18s ease-in-out infinite alternate; }
+    .cat-legs { display:none; }
+    .cat-object.walking .cat-fallback, .cat-object.jumping .cat-fallback { transform:scaleX(var(--cat-facing,1)); }
+    .cat-object.walking .cat-body, .cat-object.jumping .cat-body { left:18px; bottom:25px; width:91px; height:49px; border-radius:48%; animation:none; }
+    .cat-object.walking .cat-body::before, .cat-object.walking .cat-body::after { display:none; }
+    .cat-object.walking .cat-head, .cat-object.jumping .cat-head { width:49px; height:43px; left:0; top:57px; animation:none; }
+    .cat-object.walking .cat-head::before, .cat-object.walking .cat-head::after, .cat-object.jumping .cat-head::before, .cat-object.jumping .cat-head::after { width:19px; height:23px; top:-12px; }
+    .cat-object.walking .cat-eyes, .cat-object.jumping .cat-eyes { left:9px; top:73px; font-size:15px; letter-spacing:5px; }
+    .cat-object.walking .cat-muzzle, .cat-object.jumping .cat-muzzle { left:14px; top:87px; font-size:12px; }
+    .cat-object.walking .cat-tail, .cat-object.jumping .cat-tail { right:-12px; bottom:39px; width:35px; height:51px; border-width:9px; animation:cat-tail-walk 1.8s ease-in-out infinite alternate; }
+    .cat-object.walking .cat-legs, .cat-object.jumping .cat-legs { display:block; position:absolute; inset:0; }
+    .cat-legs i { position:absolute; bottom:0; width:11px; height:38px; border-radius:6px 5px 7px 7px; background:#806b5b; transform-origin:50% 4px; }
+    .cat-legs i:nth-child(1){left:29px;filter:brightness(.8)} .cat-legs i:nth-child(2){left:85px;filter:brightness(.8)}
+    .cat-legs i:nth-child(3){left:18px} .cat-legs i:nth-child(4){left:96px}
+    .walking .cat-legs i { animation:feline-paw .95s ease-in-out infinite; }
+    .walking .cat-legs i:nth-child(2){animation-delay:-.24s}.walking .cat-legs i:nth-child(3){animation-delay:-.48s}.walking .cat-legs i:nth-child(4){animation-delay:-.72s}
+    .jumping .cat-legs i { transform:rotate(-22deg) scaleY(.65); }
+    @keyframes feline-paw {0%,100%{transform:rotate(-13deg)}50%{transform:rotate(13deg) translateY(-2px)}}
 
     .held-cat {
       position: absolute;
@@ -1809,7 +1826,7 @@ const CONFIG = {
       { id:"floor_center",      x:47, y:73, scale:.82, distance:"near", surface:"floor" },
       { id:"floor_right",       x:76, y:71, scale:.78, distance:"near", surface:"floor" },
       { id:"shelf",             x:68, y:35, scale:.55, distance:"far",  surface:"shelf", requiresItem:"shelf" },
-      { id:"window",            x:67, y:24, scale:.50, distance:"far",  surface:"window" },
+      { id:"floor_back_center", x:48, y:59, scale:.66, distance:"far", surface:"floor" },
     ],
     defaultLayout: {
       box:{ x:9, y:72, zone:"floor" }, tower:{ x:71, y:57, zone:"floor" },
@@ -1885,7 +1902,8 @@ const CONFIG = {
     awayEventMs: 20000,
     roamMsLowHeart: 3800,
     roamMsHighHeart: 10500,
-    roamWalkMs: 3200,
+    roamWalkMs: 5200,
+    jumpMs: 430,
     careAnimationMs: 1050,
   },
 };
@@ -2275,17 +2293,33 @@ function isGraduationReady(state) {
 }
 
 function getRoamPoint(state) {
-  const point = CONFIG.stage1.roamPoints[state.ui.roamIndex];
-  return getAvailableRoamPoints(state).includes(point) ? point : getAvailableRoamPoints(state)[0];
+  const points = getAvailableRoamPoints(state);
+  return points.find(point => point.index === state.ui.roamIndex) || points[0];
 }
 
 function getAvailableRoamPoints(state) {
-  const placed = new Set(getPlaced(getRoom(state)).map(entry => entry.itemId));
-  return CONFIG.stage1.roamPoints.filter(point => !point.requiresItem || (placed.has(point.requiresItem) && getDurability(state, point.requiresItem) > 0));
+  const placed = getPlaced(getRoom(state));
+  const world = document.querySelector('[data-room-world]')?.getBoundingClientRect();
+  const width = world?.width || 375, height = world?.height || 560;
+  const platforms = {box:{width:88,top:11},tower:{width:78,top:20},shelf:{width:86,top:7}};
+  return CONFIG.stage1.roamPoints.flatMap((base,index) => {
+    const point = {...base,index};
+    if (!point.requiresItem) return [point];
+    const entry = placed.find(p => p.itemId === point.requiresItem);
+    if (!entry || getDurability(state, entry.itemId) <= 0) return [];
+    const platform = platforms[entry.itemId];
+    if (!platform) return [];
+    // 座標は猫の中心。足元が家具天面に接するよう、体高の半分を引く。
+    return [{...point,x:entry.x + platform.width / 2 / width * 100,
+      y:entry.y + (platform.top - 67 * point.scale) / height * 100}];
+  });
 }
 
 function getCatPoint(state) {
-  return state.ui.catFocus || getRoamPoint(state);
+  const focus = state.ui.catFocus;
+  if (!focus) return getRoamPoint(state);
+  const anchor = getAvailableRoamPoints(state).find(p => p.id === focus.id);
+  return anchor ? {...anchor,response:focus.response} : getRoamPoint(state);
 }
 
 function getPlacedPoint(state, itemId, fallback = { x:50, y:66 }) {
@@ -2293,22 +2327,20 @@ function getPlacedPoint(state, itemId, fallback = { x:50, y:66 }) {
   return placed ? { x:placed.x, y:placed.y } : fallback;
 }
 
-function getNearestRoamIndex(target, points = CONFIG.stage1.roamPoints) {
+function getNearestRoamIndex(target, points = getAvailableRoamPoints(gameState)) {
   let bestIndex = 0;
   let bestDistance = Infinity;
-  CONFIG.stage1.roamPoints.forEach((point, index) => {
-    if (!points.includes(point)) return;
+  points.forEach(point => {
     const distance = Math.hypot(point.x - target.x, (point.y - target.y) * 1.25);
     if (distance < bestDistance) {
       bestDistance = distance;
-      bestIndex = index;
+      bestIndex = point.index;
     }
   });
   return bestIndex;
 }
 
 function getInteractionFocus(result, target = { x:50, y:66 }, state = gameState) {
-  const all = CONFIG.stage1.roamPoints;
   const available = getAvailableRoamPoints(state);
   const candidates = result.referenceStage.id === "fear"
     ? available.filter(point => point.distance === "far")
@@ -2322,9 +2354,9 @@ function getInteractionFocus(result, target = { x:50, y:66 }, state = gameState)
       const pointDistance = Math.hypot(point.x - target.x, point.y - target.y);
       return pointDistance > bestDistance ? point : best;
     }, candidates[0]);
-    index = all.indexOf(farthest);
+    index = farthest.index;
   }
-  return { ...all[index], response:result.operation };
+  return { ...available.find(p => p.index === index), response:result.operation };
 }
 
 function getTypeScore(catType, stimulusTag) {
@@ -3006,7 +3038,7 @@ function reduceGameState(state, action) {
         cats:[{ ...cat, heart:application.nextHeart, body:{ ...cat.body, weight:cat.body.weight + (bodyUsed ? 0 : 1) }, notebook }],
         ui:{ ...state.ui, modal:null, equippedHand, equippedContact:null, playMode:false, usedHandItems:{ ...state.ui.usedHandItems, [usedKey]:nextUsedValue, [bodyKey]:true, heart_overflow:state.ui.usedHandItems.heart_overflow || application.overflowUsed },
           roamIndex:action.anchorIndex ?? (result.referenceStage.id === "fear" ? state.ui.roamIndex : 4),
-          catFocus:action.live ? null : action.anchorIndex != null ? { ...CONFIG.stage1.roamPoints[action.anchorIndex], response:"play" } : getInteractionFocus(result, { x:action.x ?? 50, y:action.y ?? 65 }),
+          catFocus:action.live ? null : action.anchorIndex != null ? { ...getAvailableRoamPoints(state).find(p => p.index === action.anchorIndex), response:"play" } : getInteractionFocus(result, { x:action.x ?? 50, y:action.y ?? 65 }),
           lastAffinityLog:affinityLog({ ...result, heartDelta:delta }), message:worn.broken ? `${item.label}を使い切った` : `${item.label}を動かして、${getCallName(cat)}と遊んだ`,
           reaction:action.live ? liveReaction : reactionFromResult(result, delta, `${action.motionLabel || "玩具を追った"}${alreadyUsed ? "・今日は心への効果なし" : ""}`) },
       };
@@ -3242,12 +3274,18 @@ function reduceGameState(state, action) {
 
 function dispatch(action) {
   const previousState = gameState;
-  const previousPoint = getCatPoint(previousState);
+  let previousPoint = getCatPoint(previousState);
+  const visibleCat = document.querySelector('.cat-object');
+  if (visibleCat && (visibleCat._travelAnimation?.playState === 'running' || (action.type === 'FINISH_PLAY' && action.live))) {
+    const bounds = visibleCat.parentElement.getBoundingClientRect(), css = getComputedStyle(visibleCat);
+    const transform = new DOMMatrixReadOnly(css.transform);
+    previousPoint = {...previousPoint,x:parseFloat(css.left)/bounds.width*100,y:parseFloat(css.top)/bounds.height*100,scale:Math.hypot(transform.a,transform.b)};
+  }
   gameState = reduceGameState(gameState, action);
   const nextPoint = getCatPoint(gameState);
   saveGameState(gameState);
   render(gameState);
-  if ((previousPoint.x !== nextPoint.x || previousPoint.y !== nextPoint.y || previousPoint.scale !== nextPoint.scale) && !gameState.ui.holdingCat && !(action.type === "FINISH_PLAY" && action.live)) {
+  if ((previousPoint.x !== nextPoint.x || previousPoint.y !== nextPoint.y || previousPoint.scale !== nextPoint.scale) && !gameState.ui.holdingCat && !gameState.ui.layoutMode) {
     animateCatWalk(previousPoint, nextPoint, nextPoint.response ? 900 : CONFIG.stage1.roamWalkMs);
   }
   if (gameState.ui.reaction) {
@@ -3273,41 +3311,37 @@ function dispatch(action) {
   }
 }
 
-function animateCatWalk(from, to, duration = CONFIG.stage1.roamWalkMs) {
+function animateCatWalk(from, to) {
   const catElement = document.querySelector(".cat-object");
-  if (!catElement || typeof catElement.animate !== "function") return;
-  if (!from || !to) return;
-  const jumping = Boolean(from.surface && to.surface && (from.surface !== to.surface || Math.abs(from.y - to.y) > 9));
-  if (jumping) {
-    const apexY = Math.min(from.y, to.y) - Math.max(7, Math.min(15, Math.abs(from.y - to.y) * .45 + 7));
-    catElement.animate([
-      { left:`${from.x}%`, top:`${from.y}%`, transform:`translate(-50%,-50%) scale(${from.scale}) rotate(0deg)` },
-      { left:`${from.x + (to.x - from.x) * .18}%`, top:`${from.y + 2}%`, transform:`translate(-50%,-50%) scale(${from.scale * .92}) rotate(-3deg)`, offset:.16 },
-      { left:`${from.x + (to.x - from.x) * .52}%`, top:`${apexY}%`, transform:`translate(-50%,-50%) scale(${(from.scale + to.scale) * .54}) rotate(5deg)`, offset:.52 },
-      { left:`${to.x}%`, top:`${to.y}%`, transform:`translate(-50%,-50%) scale(${to.scale * .94}) rotate(-2deg)`, offset:.88 },
-      { left:`${to.x}%`, top:`${to.y}%`, transform:`translate(-50%,-50%) scale(${to.scale}) rotate(0deg)` },
-    ], { duration:Math.max(720, duration * .72), easing:"cubic-bezier(.35,.05,.3,1)" });
-    return;
-  }
-  const firstMid = {
-    x: from.x + (to.x - from.x) * .34,
-    y: from.y + (to.y - from.y) * .34 - 1,
-    scale: from.scale + (to.scale - from.scale) * .34,
+  if (!catElement || !from || !to) return;
+  return animateFelineTravel(catElement, from, to);
+}
+
+function animateFelineTravel(element, from, to, pace = 1) {
+  const jumping = from.surface !== to.surface && (from.surface !== "floor" || to.surface !== "floor");
+  const rect = element.parentElement.getBoundingClientRect();
+  const distance = Math.hypot((to.x-from.x)*rect.width/100,(to.y-from.y)*rect.height/100);
+  const duration = jumping ? CONFIG.stage1.jumpMs : Math.max(1100,Math.min(6500,distance/42*1000))*pace;
+  const frame = (x,y,scale,squash=1) => ({left:x+"%",top:y+"%",transform:`translate(-50%,-50%) scale(${scale},${scale*squash})`});
+  element.style.setProperty("--cat-facing",to.x>=from.x?-1:1);
+  element.classList.add(jumping?"jumping":"walking");
+  element.classList.remove(jumping?"walking":"jumping");
+  const frames = jumping ? [
+    {...frame(from.x,from.y,from.scale),offset:0},
+    {...frame(from.x,from.y+1,from.scale,.85),offset:.16},
+    {...frame((from.x+to.x)/2,Math.min(from.y,to.y)-7,(from.scale+to.scale)/2,1.05),offset:.52},
+    {...frame(to.x,to.y+.7,to.scale,.9),offset:.88},
+    {...frame(to.x,to.y,to.scale),offset:1},
+  ] : [frame(from.x,from.y,from.scale),frame(to.x,to.y,to.scale)];
+  const animation = element.animate(frames,{duration,easing:jumping?"cubic-bezier(.25,.1,.35,1)":"linear"});
+  element._travelAnimation = animation;
+  const settled = () => {
+    if (element._travelAnimation === animation) {
+      element.classList.remove("walking","jumping"); element._travelAnimation = null;
+    }
   };
-  const secondMid = {
-    x: from.x + (to.x - from.x) * .68,
-    y: from.y + (to.y - from.y) * .68 + 1,
-    scale: from.scale + (to.scale - from.scale) * .68,
-  };
-  catElement.animate([
-    { left:`${from.x}%`, top:`${from.y}%`, transform:`translate(-50%,-50%) scale(${from.scale})` },
-    { left:`${firstMid.x}%`, top:`${firstMid.y}%`, transform:`translate(-50%,-50%) scale(${firstMid.scale})`, offset:.34 },
-    { left:`${secondMid.x}%`, top:`${secondMid.y}%`, transform:`translate(-50%,-50%) scale(${secondMid.scale})`, offset:.68 },
-    { left:`${to.x}%`, top:`${to.y}%`, transform:`translate(-50%,-50%) scale(${to.scale})` },
-  ], {
-    duration,
-    easing:"linear",
-  });
+  animation.onfinish=settled; animation.oncancel=settled;
+  return animation;
 }
 
 // ============================================================
@@ -3642,7 +3676,7 @@ function render(state) {
 
 function renderRoomLife(state, cat, food, roam) {
   return `${!state.ui.layoutMode && cat.body.vomit ? `<div class="mess-object mess-${Math.min(3, Number(cat.body.vomit) || 1)}" data-action="tap-trouble" data-drop-target="clean" data-problem="vomit" role="button" tabindex="0" aria-label="吐いたあと。そうじ道具をここへ運んで片づける"></div>` : ""}
-    ${state.ui.holdingCat ? "" : `<div class="cat-object walking ${state.ui.reaction ? "answering" : ""} ${state.ui.pickupResult === "fled" ? "fleeing" : ""}" style="left:${roam.x}%;top:${roam.y}%;transform:translate(-50%,-50%) scale(${roam.scale})"
+    ${state.ui.holdingCat ? "" : `<div class="cat-object ${state.ui.reaction ? "answering" : ""} ${state.ui.pickupResult === "fled" ? "fleeing" : ""}" style="left:${roam.x}%;top:${roam.y}%;transform:translate(-50%,-50%) scale(${roam.scale})"
       data-action="tap-cat" role="button" tabindex="0" aria-label="部屋の奥を歩いている${cat.name}">${renderCatArt(cat)}</div>`}`;
 }
 
@@ -3659,14 +3693,14 @@ function renderPlayToy(itemId) {
 }
 
 function renderFixedWindow(state, clue) {
-  const showClue = !state.ui.layoutMode && !state.ui.clueFound && clue.itemId === "window";
+  const showClue = false; // 窓は背景。猫の足場や毛の発生地点にはしない。
   return `<div class="item-window fixed-window season-${state.season}" aria-label="${CONFIG.seasons[state.season].label}の景色が見える窓"><span class="window-weather"></span></div>
     ${showClue ? `<div class="clue-marker hair" style="left:69%;top:31%" data-action="tap-clue" role="button" tabindex="0" aria-label="窓辺に残った毛"></div>` : ""}`;
 }
 
 function renderCatArt(cat) {
   return `<div class="cat-fallback" aria-hidden="true">
-    <div class="cat-tail"></div><div class="cat-body"></div><div class="cat-head"></div>
+    <div class="cat-tail"></div><div class="cat-legs"><i></i><i></i><i></i><i></i></div><div class="cat-body"></div><div class="cat-head"></div>
     <div class="cat-eyes">••</div><div class="cat-muzzle">ω</div>
   </div><img class="cat-img" src="assets/cat/${cat.pattern}_${cat.age}.png" alt="" onerror="this.style.display='none'">`;
 }
@@ -4439,7 +4473,7 @@ function makeCommandDraft(event, target, command, extra = {}) {
     lastMoveAt:performance.now(),
     lastClientX:event.clientX,
     lastClientY:event.clientY,
-    liveAnchorIndex:CONFIG.stage1.roamPoints.indexOf(getRoamPoint(gameState)),
+    liveAnchorIndex:getRoamPoint(gameState).index,
     lastCatMoveAt:0,
     ...extra,
   };
@@ -4571,6 +4605,8 @@ function updateLiveToyPlay(draft, clientX, clientY) {
   }
   const available = getAvailableRoamPoints(gameState);
   if (!available.length) return;
+  // 着地前に追跡先を差し替えない。空中で折り返す動きを防ぐ。
+  if (catElement.classList.contains('jumping') && draft.catAnimation?.playState === 'running') return;
   if (isNegativeAffinity(result.affinity)) {
     if (now - draft.lastCatMoveAt < feel.followWaitMs || draft.totalDistance < feel.distance) return;
     const farthest = available.reduce((best, point) => {
@@ -4578,9 +4614,9 @@ function updateLiveToyPlay(draft, clientX, clientY) {
       const distance = Math.hypot(point.x - toyPoint.x, point.y - toyPoint.y);
       return distance > bestDistance ? point : best;
     }, available[0]);
-    const targetIndex = CONFIG.stage1.roamPoints.indexOf(farthest);
+    const targetIndex = farthest.index;
     if (targetIndex !== draft.liveAnchorIndex) {
-      const from = CONFIG.stage1.roamPoints[draft.liveAnchorIndex] || getCatPoint(gameState);
+      const from = available.find(p => p.index === draft.liveAnchorIndex) || getCatPoint(gameState);
       animateLiveCatMove(draft, catElement, from, farthest, Math.max(.8, speed));
       draft.liveAnchorIndex = targetIndex;
     }
@@ -4598,8 +4634,8 @@ function updateLiveToyPlay(draft, clientX, clientY) {
       : available.filter(point => ["floor","box","tower"].includes(point.surface));
   const targetIndex = getNearestRoamIndex(toyPoint, points);
   if (targetIndex === draft.liveAnchorIndex) return;
-  const from = CONFIG.stage1.roamPoints[draft.liveAnchorIndex] || getCatPoint(gameState);
-  const to = CONFIG.stage1.roamPoints[targetIndex];
+  const from = available.find(p => p.index === draft.liveAnchorIndex) || getCatPoint(gameState);
+  const to = available.find(p => p.index === targetIndex);
   animateLiveCatMove(draft, catElement, from, to, speed);
   draft.liveAnchorIndex = targetIndex;
   draft.lastCatMoveAt = now;
@@ -4664,27 +4700,10 @@ function animateLiveCatMove(draft, catElement, from, to, speed) {
   const matrix = new DOMMatrixReadOnly(computed.transform === "none" ? undefined : computed.transform);
   from = { ...from, x:parseFloat(computed.left) / parentRect.width * 100, y:parseFloat(computed.top) / parentRect.height * 100, scale:Math.hypot(matrix.a, matrix.b) || from.scale };
   draft.catAnimation?.cancel?.();
-  catElement.style.left = `${to.x}%`;
-  catElement.style.top = `${to.y}%`;
+  catElement.style.left = to.x+"%";
+  catElement.style.top = to.y+"%";
   catElement.style.transform = `translate(-50%,-50%) scale(${to.scale})`;
-  if (typeof catElement.animate !== "function") return;
-  const jumping = from.surface !== to.surface || Math.abs(from.y - to.y) > 9 || speed > .72;
-  const duration = (jumping ? Math.max(430, 720 - speed * 170) : Math.max(520, 920 - speed * 190)) * (CONFIG.playFeel[draft.affinity]?.moveScale || 1);
-  if (jumping) {
-    const apexY = Math.min(from.y, to.y) - Math.max(6, Math.min(14, Math.abs(from.y - to.y) * .4 + 6));
-    draft.catAnimation = catElement.animate([
-      { left:`${from.x}%`, top:`${from.y}%`, transform:`translate(-50%,-50%) scale(${from.scale * .94}) rotate(-3deg)` },
-      { left:`${from.x + (to.x - from.x) * .5}%`, top:`${apexY}%`, transform:`translate(-50%,-50%) scale(${(from.scale + to.scale) * .53}) rotate(6deg)`, offset:.5 },
-      { left:`${to.x}%`, top:`${to.y}%`, transform:`translate(-50%,-50%) scale(${to.scale * .92}) rotate(-2deg)`, offset:.9 },
-      { left:`${to.x}%`, top:`${to.y}%`, transform:`translate(-50%,-50%) scale(${to.scale}) rotate(0deg)` },
-    ], { duration, easing:"cubic-bezier(.32,.06,.28,1)" });
-    return;
-  }
-  draft.catAnimation = catElement.animate([
-    { left:`${from.x}%`, top:`${from.y}%`, transform:`translate(-50%,-50%) scale(${from.scale})` },
-    { left:`${from.x + (to.x - from.x) * .5}%`, top:`${from.y + (to.y - from.y) * .5 - 1}%`, transform:`translate(-50%,-50%) scale(${(from.scale + to.scale) / 2})`, offset:.5 },
-    { left:`${to.x}%`, top:`${to.y}%`, transform:`translate(-50%,-50%) scale(${to.scale})` },
-  ], { duration, easing:"linear" });
+  draft.catAnimation = animateFelineTravel(catElement,from,to,CONFIG.playFeel[draft.affinity]?.moveScale || 1);
 }
 
 function movePlayObjects(clientX, clientY) {
@@ -4698,7 +4717,7 @@ function movePlayObjects(clientX, clientY) {
   const result = resolveInteraction(cat, "play", item);
   if (playDraft.catElement && result.referenceStage.id !== "fear") {
     const factor = result.referenceStage.id === "sweet" ? .72 : .42;
-    const roam = CONFIG.stage1.roamPoints[gameState.ui.roamIndex];
+    const roam = getRoamPoint(gameState);
     playDraft.catElement.style.left = `${roam.x + (x - roam.x) * factor}%`;
     playDraft.catElement.style.top = `${roam.y + (y - roam.y) * factor}%`;
   }
@@ -4738,10 +4757,10 @@ function scheduleRoam() {
       const stage = getHeartStage(catNow.heart);
       const availablePoints = getAvailableRoamPoints(gameState);
       const preferred = stage.id === "fear"
-        ? CONFIG.stage1.roamPoints.map((point,index) => ({ point,index })).filter(entry => availablePoints.includes(entry.point) && entry.point.distance === "far")
+        ? availablePoints.map(point => ({point,index:point.index})).filter(entry => entry.point.distance === "far")
         : stage.id === "sweet"
-          ? CONFIG.stage1.roamPoints.map((point,index) => ({ point,index })).filter(entry => availablePoints.includes(entry.point) && entry.point.distance === "near")
-          : CONFIG.stage1.roamPoints.map((point,index) => ({ point,index })).filter(entry => availablePoints.includes(entry.point));
+          ? availablePoints.map(point => ({point,index:point.index})).filter(entry => entry.point.distance === "near")
+          : availablePoints.map(point => ({point,index:point.index}));
       let next = preferred[Math.floor(Math.random() * preferred.length)].index;
       if (next === gameState.ui.roamIndex) next = preferred[(preferred.findIndex(entry => entry.index === next) + 1) % preferred.length].index;
       dispatch({ type:"ROAM_CAT", index:next });
