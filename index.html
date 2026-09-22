@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#f4bfc7">
-  <title>ホゴネコ｜保護から卒業までモック v0.14</title>
+  <title>ホゴネコ｜保護から卒業までモック v0.18</title>
   <style>
     :root {
       color-scheme: light;
@@ -1604,6 +1604,54 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
     }
+    /* v0.16: compact preparation / five independent actions */
+    .field-kit { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .field-kit .gear-card { width:100%; min-height:78px; }
+    .field-switch { display:block; width:100%; border:0; background:#fff7ef; color:#8b6268; border-radius:10px; padding:10px 6px; font-size:10px; }
+    .prepared-bait { display:flex; justify-content:center; min-height:36px; gap:8px; padding:4px; }
+    .prepared-bait button { border:1px solid #dec6bb; border-radius:9px; background:#fff; font-size:16px; padding:3px 10px; }
+    .field-choice-overlay { position:absolute; inset:58px 0 0; z-index:65; background:#55413955; display:grid; place-items:center; padding:18px; }
+    .field-choice-sheet { width:100%; max-height:85%; min-height:0; display:flex; flex-direction:column; border-radius:20px; overflow:hidden; background:var(--paper); }
+    .field-choice-sheet header { display:flex; align-items:center; justify-content:space-between; padding:15px; }
+    .field-choice-sheet h2 { margin:0; font-size:18px; }
+    .field-choice-sheet header button { border:0; border-radius:50%; width:32px; height:32px; background:#f4d9dd; }
+    .field-choice-sheet .inventory-grid { overflow-y:auto; }
+    .field-choice-sheet button:disabled { opacity:.42; }
+    .capture-footprint { width:132px; height:82px; position:relative; }
+    .capture-scale { width:310px; height:192.5758px; transform:scale(.42580645); transform-origin:0 0; }
+    .capture-scale .capture-cage { width:310px; height:192.5758px; }
+    .five-slots { gap:7px; width:auto; }
+    .five-slots .command-slot { width:52px; height:52px; min-width:52px; }
+    .five-slots .command-emoji { font-size:25px; }
+    .five-slots .command-slot strong { font-size:6px; }
+    .five-slots .command-slot small { font-size:7px; }
+    .inventory-tabs { overflow-x:auto; }
+    .layout-edge-palette { grid-template-rows:auto auto minmax(0,1fr) auto; }
+    .layout-edge-palette.side-left,.layout-tray-toggle.side-left { left:6px; right:auto; }
+    .layout-side-switch { border:0; border-radius:8px; padding:6px 0; font-size:9px; background:#f3d9dd; color:#8c5966; }
+    .stage:has(.layout-edge-palette.side-left) > .screen-guide { right:8px; }
+    .vessel,.item-water { width:68px; height:38px; border-radius:50%; border:4px solid #fff3e5; background:#d39786; box-shadow:0 5px 6px #71534730; }
+    .vessel::before,.vessel::after { display:none!important; }
+    .vessel-liquid { position:absolute; inset:5px 5px; border-radius:50%; background:#805b3e; transform:scale(var(--portion)); transition:transform .35s; }
+    .water-vessel { background:#a1bcc2; border-color:#e8f5ef; }
+    .water-vessel .vessel-liquid { background:#6bbbc9; box-shadow:inset 2px 2px 0 #d4faff; }
+    .food-dots { position:absolute; inset:6px 0; text-align:center; color:#bba17a; font-size:11px; transform:scale(var(--portion)); }
+    .shed-hair { position:absolute; z-index:3; width:38px; height:30px; background:none; border:0; padding:0; transform:rotate(-12deg); }
+    .shed-hair i { position:absolute; width:21px; height:7px; border-top:2px solid #8e8076b0; border-radius:50%; top:7px; left:5px; }
+    .shed-hair i:nth-child(2){top:11px;left:10px;transform:rotate(55deg)} .shed-hair i:nth-child(3){top:16px;left:2px;transform:rotate(-23deg)} .shed-hair i:nth-child(4){top:5px;left:15px;transform:rotate(105deg)} .shed-hair i:nth-child(5){top:20px;left:8px;transform:rotate(12deg)}
+    .purr-note { position:absolute; pointer-events:none; z-index:21; transform:translate(-50%,-105px); color:#af737d; font-size:11px; animation:purr-wave 1s ease-in-out infinite; }
+    .purr-note span { display:block; text-align:center; font-size:22px; line-height:1; }
+    .purring .cat-body { animation:purr-body .24s ease-in-out infinite alternate; }
+    .purring .cat-eyes { transform:scaleY(.28); }
+    .nibbling .cat-head { animation:meal-nibble .7s ease-in-out infinite alternate; }
+    .care-animation.groom .care-hand { animation:groom-stroke .45s ease-in-out infinite alternate; }
+    .care-animation.water-pour .care-hand { color:#6bbbc9; }
+    .surgery-day span { display:block!important; }
+    @keyframes purr-wave {50%{opacity:.55;transform:translate(-50%,-109px)}}
+    @keyframes purr-body {to{translate:0 1px}}
+    @keyframes meal-nibble {to{rotate:8deg;translate:0 4px}}
+    @keyframes groom-stroke {from{transform:translate(-20px,-35px) rotate(-20deg)}to{transform:translate(20px,-12px) rotate(15deg)}}
+    @media(max-width:340px){.five-slots{gap:5px}.five-slots .command-slot{width:48px;height:48px;min-width:48px}}
   </style>
 </head>
 <body>
@@ -1769,8 +1817,8 @@ const CONFIG = {
     stayOption: true,
   },
   economy: {
-    startCoins: 1800,
-    adRewardCoins: 300,
+    startCoins: 50,
+    adRewardCoins: 50,
     purchasePacks: [
       {id:"p1",coins:1000,label:"応援パック小"},
       {id:"p2",coins:3000,label:"応援パック大"},
@@ -1799,7 +1847,7 @@ const CONFIG = {
     adoptionEventDay: 7,
     campaign: {
       intakeThreshold: 50,
-      clinicCost: 700,
+      clinicCost: 12,
       bodyGoal: 3000,
       intakeItems: [
         { id:"box", emoji:"📦", label:"かくれ箱", value:20, note:"姿を隠せる場所" },
@@ -1980,19 +2028,17 @@ let gameState = {
   week: { weekIndex: 0, dayOfWeek: CONFIG.game.weekStart },
   season: CONFIG.seasons.order[0],
   coins: CONFIG.economy.startCoins,
-  inventory: { mouse:1, feather:1, ball:2, treat:4, food_dry:8, food_wet:8, food_fish:10, clean_paper:8, clean_wipe:4, clean_spray:2 },
+  inventory: { mouse:1, feather:0, ball:0, treat:0, food_dry:3, food_wet:0, food_fish:0, clean_paper:6, clean_wipe:0, clean_spray:0, box:1, bowl:1, litter:1, water:1 },
   durability: Object.fromEntries(CONFIG.items.filter(item => item.durability).map(item => [item.id, item.durability])),
   rooms: [{
     id: "room_mock_01",
     sizeId: "s",
     floor: [
       { itemId: "box", x: 9, y: 72 },
-      { itemId: "tower", x: 71, y: 57 },
-      { itemId: "plant", x: 7, y: 44 },
       { itemId: "bowl", x: 38, y: 80 },
       { itemId: "litter", x: 75, y: 78 },
     ],
-    wall: [{ itemId: "shelf", x: 60, y: 38 }],
+    wall: [],
     cats: [],
   }],
   cats: [initialCat],
@@ -2005,7 +2051,7 @@ let gameState = {
     equippedHand: "mouse",
     equippedContact: null,
     equippedFood: "food_dry",
-    equippedCleaner: "clean_wipe",
+    equippedCleaner: "clean_paper",
     modal: null,
     reaction: null,
     catFocus: null,
@@ -2301,7 +2347,7 @@ function getAvailableRoamPoints(state) {
   const placed = getPlaced(getRoom(state));
   const world = document.querySelector('[data-room-world]')?.getBoundingClientRect();
   const width = world?.width || 375, height = world?.height || 560;
-  const platforms = {box:{width:88,top:11},tower:{width:78,top:20},shelf:{width:86,top:7}};
+  const platforms = {box:{width:88,top:11},tower:{width:78,top:20},shelf:{width:86,top:7},hammock:{width:78,top:18}};
   return CONFIG.stage1.roamPoints.flatMap((base,index) => {
     const point = {...base,index};
     if (!point.requiresItem) return [point];
@@ -3292,11 +3338,11 @@ function dispatch(action) {
     const reactionId = gameState.ui.reaction.id;
     window.setTimeout(() => dispatch({ type: "CLEAR_REACTION", id: reactionId }), 3400);
   }
-  if (action.type === "START_CARE" && gameState.ui.careAnimation && gameState.ui.careAnimation !== previousState.ui.careAnimation) {
+  if (gameState.ui.careAnimation && gameState.ui.careAnimation.id !== previousState.ui.careAnimation?.id) {
     const careId = gameState.ui.careAnimation.id;
     window.setTimeout(() => dispatch({ type:"FINISH_CARE", id:careId }), CONFIG.stage1.careAnimationMs);
   }
-  if (action.type === "FIELD_ADD_BAIT" && gameState.campaign.phase === "field" && gameState.campaign.bait.length) {
+  if (action.type === "FINISH_FIELD_PREP" && gameState.campaign.trapWaiting && !previousState.campaign.trapWaiting) {
     const token = gameState.campaign.trapToken;
     window.setTimeout(() => dispatch({ type:"TRAP_READY", token }), 2600);
   }
@@ -3424,7 +3470,7 @@ function decorateScreen(state) {
 
 function resumeCampaignTimers() {
   const phase = gameState.campaign.phase;
-  if (phase === "field" && gameState.campaign.trapPlaced && gameState.campaign.bait.length && !gameState.campaign.trapReady) {
+  if (phase === "field" && gameState.campaign.trapWaiting && !gameState.campaign.trapReady) {
     const token = gameState.campaign.trapToken;
     window.setTimeout(() => dispatch({ type:"TRAP_READY", token }), 2600);
   }
@@ -3484,7 +3530,7 @@ function renderMapShop(state) {
   const shopId = state.campaign.shopId || "super";
   const meta = {
     super:{ place:"スーパー", emoji:"🛒", products:[{id:"food_dry",emoji:"◉",label:"いつものカリカリ",price:40},{id:"food_wet",emoji:"🥫",label:"ウェットフード",price:80},{id:"food_fish",emoji:"🐟",label:"お魚ごはん",price:100}] },
-    petshop:{ place:"ペットショップ", emoji:"🧸", products:[{id:"feather",emoji:"🪶",label:"羽根",price:40},{id:"ball",emoji:"⚪",label:"ボール",price:50},{id:"scratch",emoji:"🪵",label:"爪とぎ",price:120}] },
+    petshop:{ place:"ペットショップ", emoji:"🧸", products:[{id:"feather",emoji:"🪶",label:"羽根",price:40},{id:"ball",emoji:"⚪",label:"ボール",price:50},{id:"scratch",emoji:"🪵",label:"爪とぎ",price:120},{id:"groom_comb",emoji:"🪮",label:"コーム・8回分",price:80},{id:"groom_wipe",emoji:"🧴",label:"猫用ウェット・6回分",price:60},{id:"clean_paper",emoji:"🧻",label:"掃除ペーパー・8回分",price:40},{id:"clean_wipe",emoji:"🧼",label:"掃除シート・4回分",price:60},{id:"clean_spray",emoji:"🫧",label:"消臭クリーナー・2回分",price:80}] },
     clinic:{ place:"動物病院", emoji:"🏥", products:[] },
   }[shopId];
   const products = meta.products.length ? meta.products.map(product => `<button class="shop-product" data-action="buy-shop-item" data-item="${product.id}" data-price="${product.price}" ${state.coins < product.price ? "disabled" : ""}><span>${product.emoji}</span><strong>${product.label}</strong><small>💰 ${product.price}</small></button>`).join("") : `<div class="shop-product"><span>🩺</span><strong>診察</strong><small>保護後に利用</small></div>`;
@@ -4050,15 +4096,13 @@ function renderSchedule(state, cat) {
     const isPast = day < today;
     const isGoal = day === eventDay;
     const log = logs.find(entry => entry.day === day);
-    const noteworthy = Boolean(log) || isToday || isGoal;
+    const noteworthy = Boolean(log) || day === 1 || day === 5 || isGoal;
     const title = log ? log.title : day === 1 ? firstLog.title
       : isGoal ? "譲渡会"
-        : isToday ? "いっしょに暮らしている"
-          : isPast ? "記録なし" : "予定なし";
+        : "";
     const note = log ? log.note : day === 1 ? firstLog.note
       : isGoal ? goalText
-        : isToday ? "心とからだを育てる"
-          : "";
+        : "";
     const classes = ["timeline-card", noteworthy ? "" : "quiet", isToday ? "today" : "", day > today ? "future" : ""].filter(Boolean).join(" ");
     const dayLabel = `${day}日目${isToday ? "・今日" : ""}${isGoal ? "・目標" : ""}`;
     return `<div class="${classes}"><small>${dayLabel}</small><strong>${title}</strong><span>${note}</span></div>`;
@@ -4131,7 +4175,7 @@ app.addEventListener("click", event => {
   if (action === "tap-cat") dispatch({ type: "TAP_CAT" });
   if (action === "release-cat") dispatch({ type: "RELEASE_CAT" });
   if (action === "pan-room") dispatch({ type: "SET_ROOM_PAN", pan:Number(target.dataset.pan) });
-  if (action === "tap-trouble") dispatch({ type: "TAP_TROUBLE", problem: target.dataset.problem });
+  if (action === "tap-trouble") dispatch({ type: "TAP_TROUBLE", problem: target.dataset.problem, hairId:target.dataset.hair });
   if (action === "tap-clue") dispatch({ type: "TAP_CLUE" });
   if (action === "open-inventory") dispatch({ type: "OPEN_INVENTORY" });
   if (action === "open-slot-menu") dispatch({ type:"OPEN_SLOT_MENU", tab:target.dataset.tab });
@@ -4191,7 +4235,7 @@ app.addEventListener("pointerdown", event => {
   }
 
   const fieldSource = event.target.closest("[data-field-drag]");
-  if (fieldSource && gameState.campaign.phase === "field") {
+  if (fieldSource && !fieldSource.disabled && gameState.campaign.phase === "field") {
     event.preventDefault();
     const kind = fieldSource.dataset.fieldDrag;
     const emoji = kind === "trap" ? "▥" : { food_dry:"◉", food_wet:"🥫", food_fish:"🐟" }[fieldSource.dataset.food] || "●";
@@ -4490,7 +4534,7 @@ function startCommandDrag(draft, clientX, clientY) {
   draft.ghost = ghost;
   if (draft.fromInventory) draft.target.closest(".modal-layer")?.classList.add("dragging-source");
   const selector = draft.command === "food"
-    ? '[data-drop-target="food"]'
+    ? draft.itemId === "water_refill" ? '.item-water[data-drop-target="food"]' : '.item-bowl[data-drop-target="food"]'
     : draft.command === "clean"
       ? '[data-drop-target="clean"]'
       : draft.contactId ? ".cat-object, .held-cat" : draft.itemId ? ".stage" : null;
@@ -4505,7 +4549,7 @@ function moveCommandDrag(draft, clientX, clientY) {
   draft.readyElements?.forEach(element => element.classList.remove("drop-hover"));
   const point = document.elementFromPoint(clientX, clientY);
   let dropElement = null;
-  if (draft.command === "food") dropElement = point?.closest?.('[data-drop-target="food"]');
+  if (draft.command === "food") dropElement = point?.closest?.(draft.itemId === "water_refill" ? '.item-water[data-drop-target="food"]' : '.item-bowl[data-drop-target="food"]');
   if (draft.command === "clean") dropElement = point?.closest?.('[data-drop-target="clean"]');
   if (draft.command === "cat") {
     dropElement = draft.contactId
@@ -4533,7 +4577,7 @@ function completeCommandDrag(draft, clientX, clientY) {
     return;
   }
   if (draft.command === "clean") {
-    dispatch({ type:"START_CARE", operation:"clean", cleanerId:draft.itemId, problem:draft.dropElement.dataset.problem });
+    dispatch({ type:"START_CARE", operation:"clean", cleanerId:draft.itemId, problem:draft.dropElement.dataset.problem, hairId:draft.dropElement.dataset.hair });
     return;
   }
   if (draft.contactId) {
@@ -4741,7 +4785,9 @@ document.addEventListener("touchmove", event => {
 }, { passive:false });
 document.addEventListener("touchend", event => {
   const now = Date.now();
-  if (now - lastTouchEndAt < 320) event.preventDefault();
+  // Controls use touch-action to prevent zoom. Do not swallow a quick "open → close"
+  // or "close → another slot" tap merely because it follows the previous tap.
+  if (now - lastTouchEndAt < 320 && !event.target.closest('button,[role="button"],[data-action]')) event.preventDefault();
   lastTouchEndAt = now;
 }, { passive:false });
 document.addEventListener("dblclick", event => event.preventDefault());
@@ -4795,15 +4841,330 @@ document.addEventListener("visibilitychange", () => {
     return;
   }
   const elapsed = Math.max(0, Date.now() - gameState.lastSeenAt);
-  const count = Math.min(4, Math.floor(elapsed / CONFIG.stage1.awayEventMs));
-  const order = ["hunger", "litter", "vomit", "broken"];
-  dispatch({ type:"RETURN_FROM_AWAY", events:order.slice(0, count), at:Date.now() });
+  const ticks = Math.min(56, Math.floor(elapsed / CONFIG.stage1.awayEventMs));
+  dispatch({ type:"RETURN_FROM_AWAY", ticks, at:Date.now() });
 });
 
-saveGameState(gameState);
-render(gameState);
-scheduleRoam();
-window.setInterval(triggerAutoEvent, CONFIG.stage1.autoEventMs);
+// v0.16: preparation, direct care, and linked daily physiology.
+const FIELD_TRAPS = [
+  {id:"trap_standard",label:"標準保護器",emoji:"▥",unlocked:true},
+  {id:"trap_large",label:"ゆったり保護器",emoji:"▤",unlock:"ステージ2"},
+  {id:"trap_cover",label:"カバー付き保護器",emoji:"▣",unlock:"ステージ3"},
+];
+const TOUCH_TOOLS = [
+  {id:"pet",label:"撫でる",emoji:"✋"},{id:"pickup",label:"抱く",emoji:"🤲"},
+  {id:"comb",label:"コーム",emoji:"🪮",stock:"groom_comb"},
+  {id:"wipe",label:"ウェットで拭く",emoji:"🧴",stock:"groom_wipe"},
+];
+CONFIG.items.push({id:"water",label:"水入れ",kind:"placed",zone:"floor",affinityType:"food",essential:true,durability:16,body:{},price:0,starter:true});
+CONFIG.stage1.placedItems.push("water");
+CONFIG.stage1.defaultLayout.water={x:55,y:80,zone:"floor"};
+CONFIG.stage1.foods.push({id:"water_refill",label:"お水",emoji:"💧",affinityType:"food",water:true});
+TOOL_META.water={emoji:"💧"};
+
+function migrateLifeState(state) {
+  const fresh = !state.flags.lifeV016;
+  return {...state,flags:{...state.flags,lifeV016:true},
+    inventory:{groom_comb:0,groom_wipe:0,...state.inventory},
+    durability:{water:16,...state.durability},
+    campaign:{fieldTrap:"trap_standard",fieldFood:"food_dry",...state.campaign,trapWaiting:state.campaign.trapWaiting ?? Boolean(state.campaign.trapReady)},
+    ui:{touchMode:"pet",layoutSide:"right",...state.ui,equippedHand:state.ui.equippedHand || (fresh?"mouse":null),equippedContact:null},
+    rooms:state.rooms.map(room=>fresh&&!getPlaced(room).some(p=>p.itemId==="water")?{...room,floor:[...room.floor,{itemId:"water",x:55,y:80}]}:room),
+    cats:state.cats.map(cat=>({...cat,body:{satiety:cat.body.hunger?20:45,hydration:65,foodLevel:cat.body.hunger?0:50,waterLevel:100,bowlFood:"food_dry",digestion:[],lifeTicks:0,looseCoat:4,groomedTicks:0,hair:[],...cat.body}})),
+  };
+}
+const normalizeBeforeV016=normalizeLoadedState;
+normalizeLoadedState=state=>migrateLifeState(normalizeBeforeV016(state));
+gameState=migrateLifeState(gameState);
+
+// One simulation tick is three in-game hours. Numbers are prototype tuning, not medical guidance.
+function advanceCatLife(state, ticks=1) {
+  if(getCat(state).status!=="raising" && state.campaign.phase!=="room")return state;
+  let body={...getCat(state).body,digestion:[...(getCat(state).body.digestion||[])],hair:[...(getCat(state).body.hair||[])]};
+  const placed=new Set(getPlaced(getRoom(state)).map(p=>p.itemId));
+  let ate=false,drank=false,threwUp=false;
+  for(let i=0;i<Math.min(56,Math.max(0,Math.floor(ticks)));i++){
+    body.lifeTicks=(body.lifeTicks||0)+1;
+    body.satiety=Math.max(0,(body.satiety??45)-15);
+    body.hydration=Math.max(0,(body.hydration??65)-18);
+    const digested=body.digestion.filter(d=>d<=body.lifeTicks).length;
+    body.digestion=body.digestion.filter(d=>d>body.lifeTicks);
+    body.litter=Math.min(6,(Number(body.litter)||0)+digested);
+    if(placed.has("bowl")&&body.foodLevel>0&&body.satiety<85){
+      const portion=Math.min(50,body.foodLevel);body.foodLevel-=portion;body.satiety+=portion*.8;
+      body.digestion.push(body.lifeTicks+2);body.weight+=CONFIG.care.feed.body.weight*(portion/50);ate=true;
+      if(body.satiety>100){body.vomit=Math.min(6,(Number(body.vomit)||0)+1);body.satiety=Math.max(0,body.satiety-45);body.digestion.pop();threwUp=true;}
+    }
+    if(placed.has("water")&&body.waterLevel>0&&body.hydration<70){const sip=Math.min(50,body.waterLevel);body.waterLevel-=sip;body.hydration=Math.min(100,body.hydration+sip*.8);drank=true;}
+    const groomed=body.groomedTicks>0;body.groomedTicks=Math.max(0,(body.groomedTicks||0)-1);body.looseCoat=Math.min(10,(body.looseCoat||0)+(groomed?.25:1.5));
+    const shed=groomed?(body.lifeTicks%3===0?1:0):Math.min(4,1+Math.floor(body.looseCoat/3));
+    for(let n=0;n<shed;n++){const seed=body.lifeTicks*11+n*17;body.hair.push({id:`${body.lifeTicks}-${n}`,x:12+(seed*13%72),y:57+(seed*7%31)});}
+    body.hair=body.hair.slice(-30);body.hunger=body.satiety<25;
+  }
+  let cat={...getCat(state),body};
+  let usedHandItems=state.ui.usedHandItems,lastAffinityLog=state.ui.lastAffinityLog;
+  if(ate){
+    const result=interactionResult(cat,"feed",getFood(body.bowlFood)),key=`feed_${body.bowlFood}`;
+    const application=getInteractionApplication(state,cat,result,Boolean(usedHandItems[key]));
+    cat={...cat,heart:application.nextHeart};
+    usedHandItems={...usedHandItems,[key]:true,heart_overflow:usedHandItems.heart_overflow||application.overflowUsed};
+    lastAffinityLog=affinityLog({...result,heartDelta:application.delta});
+  }
+  const showMeal=(ate||drank)&&getHeartStage(cat.heart).id!=="fear"&&!state.ui.layoutMode&&!state.ui.modal;
+  return {...state,cats:[cat],ui:{...state.ui,usedHandItems,lastAffinityLog,mealAt:showMeal?Date.now():null,mealKind:drank&&!ate?"water":"bowl",message:threwUp?"食べすぎて吐いてしまった":state.ui.message}};
+}
+
+const reduceBeforeV016=reduceGameState;
+reduceGameState=function(state,action){
+  const cat=getCat(state),c=state.campaign;
+  if(action.type==="BUY_SHOP_ITEM"){
+    const counts={groom_comb:8,groom_wipe:6,clean_paper:8,clean_wipe:4,clean_spray:2},next=reduceBeforeV016(state,action);
+    return next!==state&&counts[action.itemId]?{...next,inventory:{...next.inventory,[action.itemId]:(state.inventory[action.itemId]||0)+counts[action.itemId]}}:next;
+  }
+  if(action.type==="OPEN_FIELD_MENU")return {...state,ui:{...state.ui,modal:action.kind==="trap"?"fieldTraps":"fieldFoods"}};
+  if(action.type==="SELECT_FIELD_TRAP"){
+    if(c.trapWaiting||!FIELD_TRAPS.some(t=>t.id===action.id&&t.unlocked))return state;
+    return {...state,campaign:{...c,fieldTrap:action.id,trapId:c.trapPlaced?action.id:c.trapId},ui:{...state.ui,modal:null}};
+  }
+  if(action.type==="SELECT_FIELD_FOOD"){
+    if(c.trapWaiting||!getFood(action.id)||action.id==="water_refill")return state;
+    return {...state,campaign:{...c,fieldFood:action.id},ui:{...state.ui,modal:null}};
+  }
+  if(action.type==="FIELD_PLACE_TRAP"){
+    if(c.trapWaiting||!FIELD_TRAPS.some(t=>t.id===action.trapId&&t.unlocked))return state;
+    return reduceBeforeV016(state,action);
+  }
+  if(action.type==="FIELD_ADD_BAIT"){
+    if(c.trapWaiting||!c.trapPlaced||c.bait.includes(action.foodId)||c.bait.length>=CONFIG.capture.maxMix||action.foodId==="water_refill"||!(state.inventory[action.foodId]>=1))return state;
+    return {...state,campaign:{...c,bait:[...c.bait,action.foodId],trapToken:0,trapWaiting:false,trapReady:false,waitTicks:0}};
+  }
+  if(action.type==="REMOVE_FIELD_BAIT")return c.trapWaiting?state:{...state,campaign:{...c,bait:c.bait.filter(id=>id!==action.id)}};
+  if(action.type==="FINISH_FIELD_PREP"){
+    if(!c.trapPlaced||!c.bait.length||c.trapWaiting||c.bait.some(id=>!(state.inventory[id]>=1)))return state;
+    const inventory={...state.inventory};c.bait.forEach(id=>inventory[id]-=1);
+    return {...state,inventory,campaign:{...c,trapWaiting:true,trapToken:action.token||Date.now(),waitTicks:1},ui:{...state.ui,modal:null}};
+  }
+  if(action.type==="TRAP_READY"&&!c.trapWaiting)return state;
+  if(action.type==="OPEN_TRAP"){
+    if(!c.trapWaiting||!c.trapReady)return state;
+    const next=reduceBeforeV016(state,action);return {...next,inventory:state.inventory}; // Bait was consumed when preparation finished.
+  }
+  if(["TOGGLE_BAIT","PLACE_TRAP","WAIT_TRAP"].includes(action.type))return state;
+  if(action.type==="TOGGLE_LAYOUT_SIDE")return {...state,ui:{...state.ui,layoutSide:state.ui.layoutSide==="left"?"right":"left"}};
+  if(action.type==="OPEN_NICKNAME")return {...state,ui:{...state.ui,modal:"nickname"}};
+  if(action.type==="SET_NICKNAME"){
+    const next=reduceBeforeV016(state,action);return {...next,ui:{...next.ui,modal:state.ui.modal==="nickname"?null:next.ui.modal}};
+  }
+  if(action.type==="CONTACT_ACTION"){
+    if(!TOUCH_TOOLS.some(t=>t.id===action.contact))return state;
+    return {...state,ui:{...state.ui,touchMode:action.contact,equippedContact:null,modal:null}};
+  }
+  if(action.type==="OPEN_SLOT_MENU"&&action.tab==="touch")return {...state,ui:{...state.ui,modal:"touchTools"}};
+  if(action.type==="SET_INVENTORY_TAB"&&action.tab==="touch")return {...state,ui:{...state.ui,inventoryTab:"touch"}};
+  if(action.type==="EXECUTE_CONTACT"&&action.contact==="call"){
+    const next=reduceBeforeV016(state,action);return {...next,ui:{...next.ui,equippedHand:state.ui.equippedHand,equippedContact:null}};
+  }
+  if(action.type==="TAP_CAT"){
+    if(c.phase!=="room"||state.ui.layoutMode||state.ui.careAnimation||state.ui.holdingCat)return state;
+    const mode=state.ui.interactionMode||state.ui.touchMode||"pet";
+    if(mode==="comb"||mode==="wipe"){
+      const tool=TOUCH_TOOLS.find(t=>t.id===mode);if(!state.inventory[tool.stock])return {...state,ui:{...state.ui,modal:"touchTools"}};
+      return {...state,ui:{...state.ui,careAnimation:{id:Date.now()+Math.random(),operation:"groom",mode,stock:tool.stock,...getCatPoint(state),emoji:tool.emoji},reaction:null}};
+    }
+    const next=reduceBeforeV016({...state,ui:{...state.ui,interactionMode:mode}},action);
+    const liked=next.ui.lastAffinityLog&&isLikedAffinity(next.ui.lastAffinityLog.affinity)&&next.ui.pickupResult!=="fled"&&getHeartStage(cat.heart).id!=="fear";
+    return {...next,ui:{...next.ui,equippedHand:state.ui.equippedHand,equippedContact:null,purrUntil:liked?Date.now()+3400:null}};
+  }
+  if(action.type==="TAP_TROUBLE"){
+    if(state.ui.layoutMode)return state;
+    if(action.problem==="hunger"||action.problem==="water")return reduceGameState(state,{type:"START_CARE",operation:action.problem==="water"?"water":"food",foodId:action.problem==="hunger"?(state.ui.equippedFood==="water_refill"?"food_dry":state.ui.equippedFood):"water_refill"});
+    return reduceGameState(state,{type:"START_CARE",operation:"clean",problem:action.problem,hairId:action.hairId});
+  }
+  if(action.type==="START_CARE"){
+    const water=action.operation==="water"||action.foodId==="water_refill"||(action.operation==="food"&&state.ui.equippedFood==="water_refill");
+    if(state.ui.layoutMode||c.phase!=="room")return state;
+    if(state.ui.careAnimation){
+      const a=state.ui.careAnimation,level=water?cat.body.waterLevel:cat.body.foodLevel;
+      if((action.operation==="food"||water)&&a.operation===(water?"water":"food")&&!a.queuedFill&&level===0&&(water||state.inventory[a.foodId]>=1))return {...state,ui:{...state.ui,careAnimation:{...a,queuedFill:true}}};
+      return state;
+    }
+    if(action.operation==="food"||water){
+      const itemId=water?"water":"bowl",level=water?cat.body.waterLevel:cat.body.foodLevel;
+      if(!getPlaced(getRoom(state)).some(p=>p.itemId===itemId)||level>=100)return state;
+      const food=water?getFood("water_refill"):getFood(action.foodId||state.ui.equippedFood);
+      if(!food||!water&&!(state.inventory[food.id]>=.5))return {...state,ui:{...state.ui,modal:"inventory",inventoryTab:"food"}};
+      const point=getPlacedPoint(state,itemId,{x:38,y:80});
+      return {...state,ui:{...state.ui,modal:null,careAnimation:{id:Date.now()+Math.random(),operation:water?"water":"food",foodId:food.id,...point,emoji:water?"💧":food.emoji},reaction:null,catFocus:null}};
+    }
+    if(action.problem==="hair"){
+      const hair=cat.body.hair.find(h=>h.id===action.hairId)||cat.body.hair[0],tool=getCleaner(action.cleanerId||state.ui.equippedCleaner);
+      if(!hair||!tool||!state.inventory[tool.id])return state;
+      return {...state,ui:{...state.ui,careAnimation:{id:Date.now()+Math.random(),operation:"hair",hairId:hair.id,cleanerId:tool.id,x:hair.x,y:hair.y,emoji:tool.emoji}}};
+    }
+  }
+  if(action.type==="FINISH_CARE"){
+    const a=state.ui.careAnimation;if(!a||a.id!==action.id)return state;
+    if(a.operation==="food"||a.operation==="water"){
+      const water=a.operation==="water",key=water?"waterLevel":"foodLevel",portion=a.queuedFill?100:50,cost=portion/100,body={...cat.body,[key]:Math.min(100,(cat.body[key]||0)+portion)};
+      if(!water&&!(state.inventory[a.foodId]>=cost))return {...state,ui:{...state.ui,careAnimation:null}};
+      if(!water)body.bowlFood=a.foodId;
+      const bonus=state.ui.usedHandItems.care_trust?0:CONFIG.stage1.careTrust.dailyBonus;
+      return {...state,inventory:water?state.inventory:{...state.inventory,[a.foodId]:state.inventory[a.foodId]-cost},cats:[{...cat,body,heart:updateHeart(cat,bonus)}],ui:{...state.ui,careAnimation:null,usedHandItems:{...state.ui.usedHandItems,care_trust:true},reaction:bonus?makeReaction("match","♥","","clean"):null}};
+    }
+    if(a.operation==="groom"){
+      if(!state.inventory[a.stock])return {...state,ui:{...state.ui,careAnimation:null}};
+      const result=interactionResult(cat,"pet","touch"),application=getInteractionApplication(state,cat,result,Boolean(state.ui.usedHandItems['groom_'+a.mode]));
+      const body={...cat.body,looseCoat:Math.max(0,cat.body.looseCoat-(a.mode==="comb"?10:3)),groomedTicks:Math.max(cat.body.groomedTicks,a.mode==="comb"?4:1)};
+      const liked=isLikedAffinity(result.affinity)&&result.referenceStage.id!=="fear";
+      return {...state,inventory:{...state.inventory,[a.stock]:state.inventory[a.stock]-1},cats:[{...cat,body,heart:application.nextHeart}],ui:{...state.ui,careAnimation:null,purrUntil:liked?Date.now()+3400:null,lastAffinityLog:affinityLog({...result,heartDelta:application.delta}),usedHandItems:{...state.ui.usedHandItems,['groom_'+a.mode]:true,heart_overflow:state.ui.usedHandItems.heart_overflow||application.overflowUsed},reaction:reactionFromResult(result,application.delta,"")}};
+    }
+    if(a.operation==="hair"){
+      const tool=getCleaner(a.cleanerId);if(!tool||!state.inventory[tool.id])return {...state,ui:{...state.ui,careAnimation:null}};
+      const target=cat.body.hair.find(h=>h.id===a.hairId),sorted=[...cat.body.hair].sort((a,b)=>target?Math.hypot(a.x-target.x,a.y-target.y)-Math.hypot(b.x-target.x,b.y-target.y):0),remove=new Set(sorted.slice(0,tool.power*2).map(h=>h.id));
+      return {...state,inventory:{...state.inventory,[tool.id]:state.inventory[tool.id]-1},cats:[{...cat,body:{...cat.body,hair:cat.body.hair.filter(h=>!remove.has(h.id))}}],ui:{...state.ui,careAnimation:null}};
+    }
+  }
+  if(action.type==="LIFE_TICK")return advanceCatLife(state,action.ticks||1);
+  if(action.type==="ADVANCE_THREE_HOURS"){
+    if(c.phase==="field")return c.trapWaiting?reduceBeforeV016(state,action):state;
+    const next=advanceCatLife(state,1);return {...next,ui:{...next.ui,debugHours:(state.ui.debugHours||0)+3}};
+  }
+  if(action.type==="RETURN_FROM_AWAY")return {...advanceCatLife(state,action.ticks??action.events?.length??0),lastSeenAt:action.at};
+  if(action.type==="AUTO_EVENT"&&["hunger","litter","vomit"].includes(action.event))return advanceCatLife(state,1);
+  if(action.type==="NEXT_DAY"){
+    const advanced=advanceCatLife(state,8),next=reduceBeforeV016(advanced,action);
+    return {...next,cats:[{...getCat(next),body:{...getCat(advanced).body,days:getCat(next).body.days,weightHistory:getCat(next).body.weightHistory,neglectDays:getCat(next).body.neglectDays,broken:getCat(next).body.broken}}]};
+  }
+  let next=reduceBeforeV016(state,action);
+  if(["GO_RESCUE","NEXT_RESCUE"].includes(action.type))next={...next,campaign:{...next.campaign,trapWaiting:false,fieldTrap:c.fieldTrap||"trap_standard",fieldFood:c.fieldFood||"food_dry"}};
+  if(["START_INTAKE","NEXT_RESCUE"].includes(action.type)&&next!==state)next={...next,cats:[{...getCat(next),body:{...getCat(next).body,satiety:45,hydration:65,foodLevel:0,waterLevel:100,bowlFood:"food_dry",digestion:[],lifeTicks:0,looseCoat:4,groomedTicks:0,hair:[]}}]};
+  return next;
+};
+
+function renderFieldChoice(state) {
+  const trapMenu=state.ui.modal==="fieldTraps",items=trapMenu?FIELD_TRAPS:CONFIG.stage1.foods.filter(f=>!f.water);
+  return `<div class="field-choice-overlay" role="dialog" aria-modal="true" aria-label="${trapMenu?"保護器":"餌"}を選ぶ"><section class="field-choice-sheet"><header><h2>${trapMenu?"保護器":"餌"}を選ぶ</h2><button data-action="close-modal">×</button></header><div class="inventory-grid">${items.map(item=>`<button class="grid-cell ${item.id===(trapMenu?state.campaign.fieldTrap:state.campaign.fieldFood)?"equipped":""}" data-action="${trapMenu?"field-select-trap":"field-select-food"}" data-id="${item.id}" ${trapMenu&&!item.unlocked||!trapMenu&&state.inventory[item.id]<1?"disabled":""}><span class="big-emoji">${item.emoji}</span><strong>${item.label}</strong><small>${trapMenu?item.unlocked?"所持 1":item.unlock:`×${state.inventory[item.id]||0}`}</small></button>`).join("")}</div></section></div>`;
+}
+renderField=function(state){
+  const c=state.campaign,trap=FIELD_TRAPS.find(t=>t.id===c.fieldTrap)||FIELD_TRAPS[0],food=getFood(c.fieldFood)||getFood("food_dry");
+  const status=!c.trapPlaced?"保護器を草地へ":!c.bait.length?"餌を保護器へ":c.trapReady?"ガタガタ…":c.trapWaiting?"……":"準備ができたら、少し離れよう";
+  const fieldTrap=c.trapPlaced?`<button class="trap ${c.trapReady?"ready":""}" style="left:${c.trapPosition.x}%;top:${c.trapPosition.y}%;bottom:auto" ${c.trapReady?'data-action="open-trap" aria-label="保護器を確認"':"disabled"}><span class="trap-bait">${c.bait.map(id=>getFood(id)?.emoji||"◉").join("")}</span></button>`:"";
+  const body=`<div class="field-scene" data-field-drop="scene"><div class="field-bush"></div><span class="field-eyes">••</span><span class="field-tail"></span><span class="field-pawprints">•　•　 •</span>${state.areas.a1?.tnrCount?`<div class="field-tnr-cat">${renderCatArt(getCat(state))}</div>`:""}<span class="trap-status">${status}</span>${fieldTrap}</div>
+  <section class="field-gear field-kit"><div><button class="gear-card" data-field-drag="trap" data-trap="${trap.id}" ${c.trapWaiting?"disabled":""}><span>${trap.emoji}</span><strong>${trap.label}</strong><small>草地へ運ぶ</small></button><button class="field-switch" data-action="field-menu" data-kind="trap" ${c.trapWaiting?"disabled":""}>保護器を切り替え ▾</button></div><div><button class="gear-card" data-field-drag="bait" data-food="${food.id}" ${c.trapWaiting||!c.trapPlaced||state.inventory[food.id]<1||c.bait.includes(food.id)?"disabled":""}><span>${food.emoji}</span><strong>${food.label}</strong><small>保護器へ運ぶ · ×${state.inventory[food.id]||0}</small></button><button class="field-switch" data-action="field-menu" data-kind="food" ${c.trapWaiting?"disabled":""}>餌を切り替え ▾</button></div></section>
+  <div class="prepared-bait">${c.bait.map(id=>`<button data-action="remove-field-bait" data-id="${id}" ${c.trapWaiting?"disabled":""}>${getFood(id)?.emoji} ${c.trapWaiting?"":"×"}</button>`).join("")}</div>
+  ${!c.trapWaiting?`<button class="campaign-button" data-action="finish-field-prep" ${!c.trapPlaced||!c.bait.length?"disabled":""}>準備おわり・少し離れる</button>`:""}`;
+  const html=renderCampaignShell(state,"住宅街",body,"");return html+(state.ui.modal==="fieldTraps"||state.ui.modal==="fieldFoods"?renderFieldChoice(state):"");
+};
+const inspectBeforeV016=renderTrapInspect;
+renderTrapInspect=(state,cat)=>inspectBeforeV016(state,cat).replace('<div class="capture-cage">','<div class="capture-footprint"><div class="capture-scale"><div class="capture-cage">').replace('<div class="capture-cage-cover"></div></div>','<div class="capture-cage-cover"></div></div></div></div>');
+const guideBeforeV016=getScreenGuide;
+getScreenGuide=function(state){
+  if(state.campaign.phase==="intake"&&getRoomComfortBreakdown(state).missingEssential.length)return {title:"ごはん皿・水・トイレを用意",detail:"押し入れから、足りない必需品を床へ置こう。好みに関係なく必要です。",target:'.layout-edge-palette'};
+  if(state.campaign.phase==="field")return {title:state.campaign.trapWaiting?"保護器の様子を見よう":"保護器と餌を準備しよう",detail:state.campaign.trapWaiting?"揺れたら保護器をタップ。自動で猫が来るのを待ちます。":"切り替えメニューで選び、草地へ保護器、保護器へ餌を運びます。餌は3種類まで。『準備おわり』までは時間制限なし。"};
+  if(state.campaign.phase==="room"&&!state.ui.layoutMode)return {title:"この子と過ごそう",detail:"よぶはタップ、長押しで呼び方変更。さわるで選んだ道具は猫を直接触って使います。ごはん・水はお皿を押すたび半分ずつ。"};
+  return guideBeforeV016(state);
+};
+const inventoryBeforeV016=renderInventory;
+renderInventory=function(state){
+  if(state.ui.inventoryTab==="touch")return renderTouchTools(state);
+  let html=inventoryBeforeV016({...state,inventory:{...state.inventory,water_refill:1}});
+  // The play grid contains toys only. Contact actions have their own slot/menu.
+  html=html.replace(/<div class="grid-cell[^>]*data-action="contact-action"[\s\S]*?<\/div>/g,"");
+  html=html.replace('<nav class="inventory-tabs" aria-label="かばんの分類">','<nav class="inventory-tabs" aria-label="かばんの分類"><button class="inventory-tab" data-action="inventory-tab" data-tab="touch">さわる</button>');
+  return html.replace(/(<span class="stock">)×1(<\/span><span class="big-emoji">💧)/,'$1補充可$2');
+};
+function renderTouchTools(state){
+  return `<div class="modal-layer menu-modal" role="dialog" aria-modal="true" aria-label="さわる方法を選ぶ"><section class="menu-sheet"><header class="sheet-head"><small>選んだら、部屋の猫を直接触って使う</small><h2>さわる</h2></header><div class="inventory-grid">${TOUCH_TOOLS.map(t=>`<button class="grid-cell ${state.ui.touchMode===t.id?"equipped":""}" data-action="contact-action" data-contact="${t.id}" ${t.stock&&!state.inventory[t.stock]?"disabled":""}><span class="big-emoji">${t.emoji}</span><strong>${t.label}</strong><small>${t.stock?`残り${state.inventory[t.stock]||0}回`:t.id==="pickup"?"気分によって逃げる":"猫をなぞる"}</small></button>`).join("")}</div><button class="field-switch" data-action="close-modal">とじる</button></section></div>`;
+}
+function renderNicknameEdit(state){
+  const name=getCallName(getCat(state)).replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;');
+  return `<div class="modal-layer" role="dialog" aria-modal="true" aria-label="呼び方を変える"><section class="menu-sheet"><header class="sheet-head"><h2>なんて呼ぼう？</h2><small>正式な名前は変わりません</small></header><div class="nickname-card"><label for="cat-nickname">呼び方</label><div class="nickname-edit"><input id="cat-nickname" value="${name}" maxlength="8"><button data-action="save-nickname">これで呼ぶ</button></div></div><button class="field-switch" data-action="close-modal">閉じる</button></section></div>`;
+}
+renderCommandDock=function(state){
+  const hand=getItem(state.ui.equippedHand),food=getFood(state.ui.equippedFood),cleaner=getCleaner(state.ui.equippedCleaner),touch=TOUCH_TOOLS.find(t=>t.id===state.ui.touchMode)||TOUCH_TOOLS[0];
+  const slot=(tab,label,emoji,name,detail,command='')=>`<button class="command-slot" data-action="open-slot-menu" data-tab="${tab}" ${command?`data-command="${command}"`:""} data-slot-label="${label}" aria-label="${label}・${name}"><span class="command-emoji">${emoji}</span><strong>${name}</strong><small>${detail}</small></button>`;
+  return `<nav class="command-dock five-slots" aria-label="部屋で使うもの"><button class="command-slot" data-action="call-cat" data-slot-label="よぶ" aria-label="呼ぶ。長押しで呼び方を変える"><span class="command-emoji">📣</span><strong>よぶ</strong></button>${slot('touch','ふれあい',touch.emoji,touch.label,touch.stock?state.inventory[touch.stock]||0:'')}${slot('play','あそぶ',{mouse:'🐭',feather:'🪶',ball:'⚪'}[hand?.id]||'＋',hand?.label||'玩具',hand?getDurability(state,hand.id):'','cat')}${slot('food','ごはん',food.emoji,food.label,food.water?'∞':`×${state.inventory[food.id]||0}`,'food')}${slot('clean','そうじ',cleaner?.emoji||'＋',cleaner?.label||'道具',`×${state.inventory[cleaner?.id]||0}`,'clean')}</nav>`;
+};
+const paletteBeforeV016=renderLayoutPalette;
+renderLayoutPalette=state=>paletteBeforeV016(state).replace('class="layout-edge-palette"',`class="layout-edge-palette side-${state.ui.layoutSide}"`).replace('</aside>','<button class="layout-side-switch" data-action="toggle-layout-side" aria-label="押し入れの左右を入れ替え">⇄ 左右</button></aside>');
+const placedBeforeV016=renderPlacedItem;
+renderPlacedItem=function(placed,state,clue){
+  if(placed.itemId!=="bowl"&&placed.itemId!=="water")return placedBeforeV016(placed,state,clue);
+  if(getBrokenItemId(getCat(state))===placed.itemId)return placedBeforeV016(placed,state,clue);
+  const water=placed.itemId==="water",level=water?getCat(state).body.waterLevel:getCat(state).body.foodLevel;
+  const layout=state.ui.layoutMode,problem=water?"water":"hunger";
+  return `<div class="placed-item item-${placed.itemId} floor-placement vessel ${water?"water-vessel":""} ${level>0?"filled":"empty"}" style="left:${placed.x}%;top:${placed.y}%;--portion:${(level||0)/100};right:auto;bottom:auto" ${layout?`data-layout-item="${placed.itemId}"`:`data-action="tap-trouble" data-problem="${problem}" data-drop-target="food"`} role="button" tabindex="0" aria-label="${water?"水入れ":"ごはん皿"}。タップで半分補充"><span class="vessel-liquid"></span>${!water&&level>0?'<span class="food-dots">•••••</span>':''}</div>`;
+};
+const roomLifeBeforeV016=renderRoomLife;
+renderRoomLife=function(state,cat,food,roam){
+  let html=roomLifeBeforeV016(state,cat,food,roam);
+  const purr=!state.ui.layoutMode&&state.ui.purrUntil>Date.now();
+  if(purr)html=html.replace('class="cat-object ','class="cat-object purring ')+`<span class="purr-note" style="left:${roam.x}%;top:${roam.y}%">ごろごろ<span>〰 〰</span></span>`;
+  if(!state.ui.layoutMode&&state.ui.mealAt>Date.now()-3500)html=html.replace('class="cat-object ','class="cat-object nibbling ');
+  if(!state.ui.layoutMode)html+=(cat.body.hair||[]).map(h=>`<button class="shed-hair" style="left:${h.x}%;top:${h.y}%" data-action="tap-trouble" data-problem="hair" data-hair="${h.id}" data-drop-target="clean" aria-label="落ちた毛を掃除"><i></i><i></i><i></i><i></i><i></i></button>`).join('');
+  return html;
+};
+const careRenderBeforeV016=renderCareAnimation;
+renderCareAnimation=a=>careRenderBeforeV016(a).replace('care-animation clean',`care-animation ${a.operation==="groom"?"groom":a.operation==="water"?"food water-pour":"clean"}`);
+const renderBeforeV016=render;
+render=function(state){
+  renderBeforeV016(state);if(titleScreenOpen)return;
+  if(state.ui.modal==="touchTools")app.querySelector('.stage')?.insertAdjacentHTML('beforeend',renderTouchTools(state));
+  if(state.ui.modal==="nickname")app.querySelector('.stage')?.insertAdjacentHTML('beforeend',renderNicknameEdit(state));
+  if(state.ui.layoutSide==="left")app.querySelector('.layout-tray-toggle')?.classList.add('side-left');
+};
+const scheduleBeforeV016=renderSchedule;
+renderSchedule=function(state,cat){
+  let html=scheduleBeforeV016(state,cat).replaceAll('予定なし','').replaceAll('記録なし','');
+  const goal=cat.age==="kitten"?CONFIG.cat.weightGoal.kitten:CONFIG.stage1.campaign.bodyGoal;
+  html=html.replace(/(<div class="[^"]*timeline-card[^"]*"><small>5日目[^<]*<\/small>)<strong>[^<]*<\/strong><span>[^<]*<\/span>/,`$1<strong>手術予定</strong><span>体重${goal.toLocaleString('ja-JP')}g以上</span>`);
+  return html.replace(/class="([^"]*timeline-card[^"]*)"(?=><small>5日目)/,(_,c)=>`class="${c.replace('quiet','')} surgery-day"`);
+};
+const debugBeforeV016=renderDebugPanel;
+renderDebugPanel=state=>debugBeforeV016(state).replace('<div class="debug-tools">',`<span>満腹 ${Math.round(getCat(state).body.satiety)}・水分 ${Math.round(getCat(state).body.hydration)}・消化待ち ${getCat(state).body.digestion.length}</span><div class="debug-tools">`);
+
+app.addEventListener('click',event=>{
+  if(Date.now()<suppressClickUntil)return;
+  const target=event.target.closest('[data-action]');if(!target||target.disabled)return;
+  const action=target.dataset.action;
+  if(action==='field-menu')dispatch({type:'OPEN_FIELD_MENU',kind:target.dataset.kind});
+  if(action==='field-select-trap')dispatch({type:'SELECT_FIELD_TRAP',id:target.dataset.id});
+  if(action==='field-select-food')dispatch({type:'SELECT_FIELD_FOOD',id:target.dataset.id});
+  if(action==='remove-field-bait')dispatch({type:'REMOVE_FIELD_BAIT',id:target.dataset.id});
+  if(action==='finish-field-prep')dispatch({type:'FINISH_FIELD_PREP'});
+  if(action==='toggle-layout-side')dispatch({type:'TOGGLE_LAYOUT_SIDE'});
+  if(action==='call-cat')dispatch({type:'EXECUTE_CONTACT',contact:'call'});
+});
+let callHold=null,catStroke=null;
+app.addEventListener('pointerdown',event=>{
+  if(event.button!==0)return;
+  if(event.target.closest('[data-action="call-cat"]')){
+    event.preventDefault();event.stopImmediatePropagation();
+    callHold={x:event.clientX,y:event.clientY,id:event.pointerId,long:false};
+    callHold.timer=setTimeout(()=>{if(callHold){callHold.long=true;suppressClickUntil=Date.now()+500;dispatch({type:'OPEN_NICKNAME'});}},600);return;
+  }
+  if(event.target.closest('.cat-object')&&!gameState.ui.layoutMode&&!gameState.ui.modal&&!gameState.ui.careAnimation&&gameState.campaign.phase==='room')catStroke={x:event.clientX,y:event.clientY,id:event.pointerId,moved:false};
+},true);
+window.addEventListener('pointermove',event=>{
+  if(callHold&&Math.hypot(event.clientX-callHold.x,event.clientY-callHold.y)>10){clearTimeout(callHold.timer);callHold.cancelled=true;}
+  if(catStroke&&catStroke.id===event.pointerId&&Math.hypot(event.clientX-catStroke.x,event.clientY-catStroke.y)>9){catStroke.moved=true;event.preventDefault();}
+},{passive:false});
+window.addEventListener('pointerup',event=>{
+  if(callHold&&callHold.id===event.pointerId){const hold=callHold;callHold=null;clearTimeout(hold.timer);event.preventDefault();suppressClickUntil=Date.now()+400;if(!hold.long&&!hold.cancelled)dispatch({type:'EXECUTE_CONTACT',contact:'call'});}
+  if(catStroke&&catStroke.id===event.pointerId){const stroke=catStroke;catStroke=null;if(stroke.moved){suppressClickUntil=Date.now()+400;dispatch({type:'TAP_CAT'});}}
+},true);
+window.addEventListener('pointercancel',()=>{if(callHold)clearTimeout(callHold.timer);callHold=null;catStroke=null;});
+triggerAutoEvent=function(){
+  if(titleScreenOpen||document.hidden||getCat(gameState).status!=='raising'||commandDraft||playDraft||gameState.ui.careAnimation||document.activeElement?.matches('input'))return;
+  dispatch({type:'LIFE_TICK',ticks:1});
+  if(gameState.campaign.phase==='room'&&!gameState.ui.layoutMode&&Math.random()<.2){
+    const items=getPlaced(getRoom(gameState)).filter(p=>!getItem(p.itemId)?.essential&&getDurability(gameState,p.itemId)>0);
+    if(items.length)dispatch({type:'AUTO_EVENT',event:'broken',itemId:items[Math.floor(Math.random()*items.length)].itemId});
+  }
+};
+
 </script>
+<script src="assets/cat-svg.js"></script>
+<script src="game-v017.js"></script>
 </body>
 </html>

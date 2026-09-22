@@ -1,0 +1,53 @@
+const {chromium}=require('playwright');const assert=require('node:assert/strict');const path=require('node:path');const fs=require('node:fs');const {pathToFileURL}=require('node:url');
+async function drag(page,source,dest){const a=await page.locator(source).boundingBox(),b=await page.locator(dest).boundingBox();assert(a&&b);await page.mouse.move(a.x+a.width/2,a.y+a.height/2);await page.mouse.down();await page.mouse.move(b.x+b.width/2,b.y+b.height*.65,{steps:14});await page.mouse.up();}
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
+ const page=await browser.newPage({viewport:{width:375,height:812}}),errors=[];page.on('pageerror',e=>errors.push(String(e)));
+ await page.goto(pathToFileURL(path.resolve(__dirname,'../index.html')).href);
+ // Legacy physiology fixture uses purchased supplies, not the release starter kit.
+ await page.evaluate(()=>{Object.assign(gameState.inventory,{food_wet:8,food_dry:8,groom_comb:8,groom_wipe:6,clean_paper:8,clean_wipe:4});});
+ await page.locator('[data-action="start-game"]').click();for(let i=0;i<3;i++)await page.locator('[data-action="next-story"]').click();
+ await page.locator('[data-action="toggle-guide"]').click();
+ await page.locator('[data-kind="trap"]').click();assert.equal(await page.locator('.field-choice-sheet .grid-cell').count(),3);await page.locator('[data-id="trap_standard"]').click();
+ await drag(page,'[data-field-drag="trap"]','.field-scene');await drag(page,'[data-field-drag="bait"]','.trap');
+ await page.waitForTimeout(3000);assert.equal(await page.evaluate(()=>gameState.campaign.trapReady),false,'bait preparation timed out');
+ await page.locator('[data-kind="food"]').click();await page.locator('[data-id="food_wet"]').click();await drag(page,'[data-field-drag="bait"]','.trap');
+ const trapSize=await page.locator('.trap').boundingBox();
+ await page.reload();await page.locator('[data-action="start-game"]').click();await page.waitForTimeout(2800);assert.equal(await page.evaluate(()=>gameState.campaign.trapReady),false,'reloaded prep timed out');
+ const stock=await page.evaluate(()=>gameState.inventory.food_dry);await page.locator('[data-action="finish-field-prep"]').click();await page.locator('[data-action="open-trap"]').waitFor({timeout:5000});await page.locator('[data-action="open-trap"]').click({force:true});await page.locator('[data-action="go-clinic"]').waitFor();
+ assert.equal(await page.evaluate(()=>gameState.inventory.food_dry),stock-1,'bait consumed twice');
+ const resultSize=await page.locator('.capture-footprint').boundingBox();assert(Math.abs(resultSize.width-trapSize.width)<1);assert(Math.abs(resultSize.height-trapSize.height)<1);
+ fs.mkdirSync(path.join(__dirname,'screenshots'),{recursive:true});await page.screenshot({path:path.join(__dirname,'screenshots/v016-capture.png')});
+ await page.locator('[data-action="go-clinic"]').click();await page.locator('[data-action="start-naming"]').waitFor();await page.locator('[data-action="start-naming"]').click();await page.locator('#campaign-cat-name').fill('はる');await page.locator('[data-action="start-intake"]').click();
+ assert(await page.locator('.layout-palette-item[data-item="water"]').count());await page.locator('[data-action="toggle-layout-side"]').click();assert(await page.locator('.layout-edge-palette.side-left').count());
+ await page.evaluate(()=>{gameState.cats[0].types=['human','touch'];gameState.cats[0].intakeEnv=100;const room=getRoom(gameState);room.floor=CONFIG.stage1.placedItems.filter(id=>getItem(id).zone==='floor').map(id=>({itemId:id,...CONFIG.stage1.defaultLayout[id]}));room.wall=[{itemId:'shelf',...CONFIG.stage1.defaultLayout.shelf}];render(gameState);});
+ await page.locator('[data-action="call-intake-cat"]').click();await page.locator('[data-action="close-schedule-intro"]').waitFor();
+ const schedule=await page.locator('.schedule-panel').innerText();assert(!schedule.includes('予定なし'));assert(schedule.includes('手術予定'));assert(schedule.includes(await page.evaluate(()=>getCat(gameState).age==='kitten'?'700g以上':'3,000g以上')));
+ await page.locator('[data-action="close-schedule-intro"]').click();assert.equal(await page.locator('.command-slot').count(),5);
+ const toy=await page.evaluate(()=>gameState.ui.equippedHand);await page.locator('[data-action="call-cat"]').click();assert.equal(await page.evaluate(()=>gameState.ui.equippedHand),toy);
+ const callBox=await page.locator('[data-action="call-cat"]').boundingBox();await page.mouse.move(callBox.x+20,callBox.y+20);await page.mouse.down();await page.waitForTimeout(700);await page.mouse.up();await page.waitForTimeout(450);assert(await page.locator('[aria-label="呼び方を変える"]').count());await page.locator('#cat-nickname').fill('はるる');await page.locator('[data-action="save-nickname"]').click();assert.equal(await page.evaluate(()=>getCallName(getCat(gameState))),'はるる');assert.equal(await page.evaluate(()=>getCat(gameState).name),'はる');
+ const checks=await page.evaluate(()=>{
+  let s=JSON.parse(JSON.stringify(gameState));s.ui.careAnimation=null;s.ui.layoutMode=false;s.ui.modal=null;s.cats[0].heart=85;s.cats[0].heartCap=100;s.cats[0].body={...s.cats[0].body,foodLevel:0,waterLevel:0,satiety:35,hydration:25,litter:0,vomit:0,digestion:[],hair:[],looseCoat:8};
+  const finish=(a)=>{s=reduceGameState(s,a);if(s.ui.careAnimation)s=reduceGameState(s,{type:'FINISH_CARE',id:s.ui.careAnimation.id});};
+  const old=s.inventory.food_dry;finish({type:'TAP_TROUBLE',problem:'hunger'});const half=s.cats[0].body.foodLevel;finish({type:'TAP_TROUBLE',problem:'hunger'});const full=s.cats[0].body.foodLevel;finish({type:'TAP_TROUBLE',problem:'hunger'});const used=old-s.inventory.food_dry;
+  finish({type:'TAP_TROUBLE',problem:'water'});const water=s.cats[0].body.waterLevel;
+  const beforeMeal=s.cats[0].body.satiety;s=advanceCatLife(s,1);const ate=s.cats[0].body.foodLevel===50&&s.cats[0].body.satiety>beforeMeal&&s.cats[0].body.digestion.length===1;
+  s.cats[0].body.foodLevel=0;s=advanceCatLife(s,2);const poop=s.cats[0].body.litter>0;
+  s.cats[0].body.satiety=90;s.cats[0].body.foodLevel=50;s.cats[0].body.vomit=0;s=advanceCatLife(s,1);const vomit=s.cats[0].body.vomit===1&&s.cats[0].body.satiety===70;
+  const ungroomed=JSON.parse(JSON.stringify(s));ungroomed.cats[0].body.hair=[];ungroomed.cats[0].body.groomedTicks=0;ungroomed.cats[0].body.looseCoat=8;
+  s.cats[0].body.hair=[];s.ui.touchMode='comb';const combStock=s.inventory.groom_comb;finish({type:'TAP_CAT'});const combUsed=s.inventory.groom_comb===combStock-1;const protectedHair=advanceCatLife(s,3).cats[0].body.hair.length,normalHair=advanceCatLife(ungroomed,3).cats[0].body.hair.length;
+  const purr=s.ui.purrUntil>Date.now();s=advanceCatLife(s,3);const hair=s.cats[0].body.hair.length;if(hair)finish({type:'TAP_TROUBLE',problem:'hair',hairId:s.cats[0].body.hair[0].id});const cleaned=s.cats[0].body.hair.length<hair;
+  s.cats[0].body.foodLevel=0;const queueStock=s.inventory.food_dry;s=reduceGameState(s,{type:'TAP_TROUBLE',problem:'hunger'});s=reduceGameState(s,{type:'TAP_TROUBLE',problem:'hunger'});s=reduceGameState(s,{type:'FINISH_CARE',id:s.ui.careAnimation.id});const queued=s.cats[0].body.foodLevel===100&&s.inventory.food_dry===queueStock-1;
+  return {half,full,used,water,ate,poop,vomit,combUsed,protectedHair,normalHair,purr,cleaned,queued};
+ });
+ assert.deepEqual([checks.half,checks.full,checks.used,checks.water],[50,100,1,50]);for(const k of ['ate','poop','vomit','combUsed','purr','cleaned','queued'])assert(checks[k],k+JSON.stringify(checks));assert(checks.protectedHair<checks.normalHair);
+ await page.evaluate(()=>{gameState.cats[0].heart=85;gameState=advanceCatLife(gameState,3);gameState.ui.catFocus=null;gameState.ui.reaction=null;gameState.ui.guideExpanded=false;render(gameState);});
+ await page.locator('[data-tab="touch"]').first().click();await page.locator('[data-contact="comb"]').click();assert.equal(await page.evaluate(()=>gameState.ui.equippedHand),toy);await page.locator('.cat-object').click({force:true});await page.waitForTimeout(1700);
+ await page.screenshot({path:path.join(__dirname,'screenshots/v016-room.png')});
+ await page.locator('[data-tab="food"][data-command]').click();assert(await page.locator('[data-food="water_refill"]:not(.unavailable)').count());await page.locator('[data-food="water_refill"]').click();assert.equal(await page.evaluate(()=>gameState.ui.equippedFood),'water_refill');
+ await page.locator('[data-action="toggle-layout"]').click();await page.screenshot({path:path.join(__dirname,'screenshots/v016-layout.png')});
+ assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ await page.setViewportSize({width:375,height:667});await page.evaluate(()=>{gameState.ui.layoutMode=false;gameState.ui.modal='schedule';render(gameState);});
+ const scheduleFits=await page.locator('.schedule-timeline').evaluate(n=>{const r=n.getBoundingClientRect(),p=n.closest('[data-schedule-scroll]').getBoundingClientRect();return r.bottom<=p.bottom&&r.top>=p.top;});assert(scheduleFits,'seven-day schedule does not fit');
+ await page.waitForTimeout(400);await page.screenshot({path:path.join(__dirname,'screenshots/v016-schedule.png')});
+ assert.equal(errors.length,0,errors.join('\n'));console.log('PASS v016',checks);
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1});

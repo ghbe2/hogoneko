@@ -6,6 +6,9 @@ const path=require('node:path');
  const page=await browser.newPage({viewport:{width:375,height:667}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(pathToFileURL(path.resolve(__dirname,'../index.html')).href);
  const result=await page.evaluate(()=>{
+  gameState.inventory.shelf=1;gameState.inventory.tower=1;
+  gameState.rooms[0].wall=[{itemId:'shelf',...CONFIG.stage1.defaultLayout.shelf}];
+  gameState.rooms[0].floor.push({itemId:'tower',...CONFIG.stage1.defaultLayout.tower});
   titleScreenOpen=false;gameState.campaign.phase='room';gameState.cats[0].types=['chase','ambush'];gameState.ui.modal=null;render(gameState);
   const room=getRoom(gameState);room.wall=[{itemId:'shelf',x:30,y:36}];room.floor=[{itemId:'tower',x:70,y:60},{itemId:'box',x:15,y:72}];render(gameState);
   const first=getAvailableRoamPoints(gameState);const shelf=first.find(p=>p.id==='shelf');

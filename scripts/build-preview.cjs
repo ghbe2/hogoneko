@@ -10,7 +10,13 @@ const salt = crypto.randomBytes(16), iv = crypto.randomBytes(12);
 const iterations = 210000;
 const key = crypto.pbkdf2Sync(password, salt, iterations, 32, 'sha256');
 const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-const encrypted = Buffer.concat([cipher.update(fs.readFileSync(path.join(root, 'index.html'))), cipher.final(), cipher.getAuthTag()]);
+// Inline local game modules before encryption; deployed preview remains self-contained.
+const source = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/<script src="([^"]+)"><\/script>/g, (_, relative) => {
+  const file = path.resolve(root, relative);
+  if (!file.startsWith(root + path.sep)) throw new Error('External script not allowed: ' + relative);
+  return '<script>\n' + fs.readFileSync(file, 'utf8').replace(/<\/script/gi, '<\\/script') + '\n</script>';
+});
+const encrypted = Buffer.concat([cipher.update(source), cipher.final(), cipher.getAuthTag()]);
 const payload = {salt:salt.toString('base64'),iv:iv.toString('base64'),data:encrypted.toString('base64'),iterations};
 const template = fs.readFileSync(path.join(__dirname, 'preview-gate.html'), 'utf8');
 fs.mkdirSync(path.join(root, 'docs'), {recursive:true});

@@ -9,6 +9,8 @@ const path=require('node:path'),assert=require('node:assert/strict');
  await page.goto(pathToFileURL(path.resolve(__dirname,'../index.html')).href);
  const setup=async phase=>page.evaluate(phase=>{
    titleScreenOpen=false;gameState.campaign.phase=phase;
+   // Gesture regression fixture: furniture is purchased before laying it out.
+   for(const id of CONFIG.stage1.placedItems)gameState.inventory[id]=1;
    // 通常の受け入れ完了後は呼びかけ済みフラグが残る。その実データで検証する。
    gameState.campaign.intakeCalled=phase==='room';
    gameState.cats[0].types=['chase','ambush'];gameState.cats[0].name='はる';

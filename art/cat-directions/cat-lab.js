@@ -1,0 +1,263 @@
+'use strict';
+// Standalone experiment: phenotype is persistent; pose never rerolls markings.
+const NS='http://www.w3.org/2000/svg';
+const KEY='hogoneko-svg-lab-v1';
+const choices={
+ age:{adult:'成猫',kitten:'子猫'},body:{slim:'すらっと',round:'どっしり'},head:{sharp:'F シャープ',oval:'G 横長',ruff:'H ほお毛'},eyes:{slant:'すまし目',round:'まんまる',droop:'半目'},ears:{tall:'大きな耳',small:'小さな耳',tilted:'片耳ぴこ'},tail:{long:'長い尾',short:'短い尾',none:'尾なし'},eyeColor:{gold:'きいろ',green:'みどり',blue:'あお',odd:'オッドアイ'},mood:{neutral:'いつもの顔',happy:'うれしい',wary:'警戒'},headCoat:{tabby:'キジトラ',tortie:'錆',calico:'三毛',tux:'ハチワレ',black:'黒',cream:'クリーム'},bodyCoat:{tabby:'キジトラ',tortie:'錆',calico:'三毛',tux:'白黒',black:'黒',cream:'クリーム'},legCoat:{tabby:'キジトラ',tortie:'錆',calico:'三毛',tux:'白いくつ下',black:'黒',cream:'クリーム'},tailCoat:{tabby:'キジトラ',tortie:'錆',calico:'三毛',tux:'白黒',black:'黒',cream:'クリーム'}
+};
+// Palette and layout are explicit variants, not a new random pattern every frame.
+const coats={};
+function coat(id,label,family,color,variant,rare=false){coats[id]={label,family,color,variant,rare};}
+for(const [color,name] of Object.entries({black:'黒',white:'白',brown:'茶',gray:'灰'}))for(let v=0;v<3;v++)coat(color==='brown'&&v===0?'tabby':`tabby_${color}_${v}`,`きじ・${name} ${'ABC'[v]}`,'tabby',color,v);
+for(const [color,name] of Object.entries({yellow:'黄色',black:'黒',gray:'グレー'}))for(let v=0;v<3;v++)coat(color==='black'&&v===0?'tortie':`tortie_${color}_${v}`,`さび・${name} ${'ABC'[v]}${color==='gray'?'（レア）':''}`,'tortie',color,v,color==='gray');
+coat('calico','みけ A','calico','standard',0);coat('calico_B','みけ B','calico','standard',1);coat('calico_split','みけ・ハチワレ風（レア）','calico','standard',2,true);
+for(const [color,name] of Object.entries({black:'黒',gray:'グレー',brown:'茶'}))for(let v=0;v<3;v++)coat(color==='black'&&v===0?'tux':`tux_${color}_${v}`,`はちわれ・${name} / ${['目の上','ゆるい割れ','くっきり'][v]}`,'tux',color,v);
+coat('black','くろ','black','black',0);coat('white','しろ','white','white',0);coat('cream','クリーム','cream','cream',0);
+for(const k of ['headCoat','bodyCoat','legCoat','tailCoat'])choices[k]=Object.fromEntries(Object.entries(coats).map(([k,v])=>[k,v.label]));
+choices.body.skinny='がりがり';choices.earCut={none:'なし',left:'左耳カット',right:'右耳カット'};
+choices.eyes.asym='左右非対称';
+Object.assign(choices.tail,{hook:'カギ尻尾',curl:'巻き尾',bob:'団子尾'});
+choices.mood={neutral:'いつもの顔',happy:'うれしい・らんらん',angry:'怒り・シャー',wary:'警戒'};
+choices.muzzle={none:'なし',cream:'クリームの口元',white:'白い口元',black:'黒ひげ模様',split:'ハチワレひげ模様'};
+choices.whiskers={normal:'ふつう',long:'長い',short:'短い',curved:'くるん',none:'なし'};
+const defaults={age:'adult',body:'round',head:'oval',eyes:'round',ears:'small',earCut:'none',tail:'short',eyeColor:'gold',mood:'neutral',muzzle:'none',whiskers:'normal',headCoat:'tortie',bodyCoat:'tortie',legCoat:'tortie',tailCoat:'calico',seed:3207};
+let dna={...defaults};try{const saved=JSON.parse(localStorage.getItem(KEY));if(saved){for(const k of Object.keys(choices))if(choices[k][saved[k]])dna[k]=saved[k];if(Number.isInteger(saved.seed)&&saved.seed>=0)dna.seed=saved.seed>>>0;}}catch{}
+let pose='sit',paused=matchMedia('(prefers-reduced-motion: reduce)').matches,showParts=false,time=0,last=0,poseTime=0,transition=null,rig=null,serial=0;
+const $=s=>document.querySelector(s),labels={sit:'すわる',walk:'あるく',jump:'ジャンプ',sleep:'ねる',punch:'ネコパンチ',dash:'ダッシュ',wall:'ガリガリ・壁',scratch:'つめとぎ',knead:'ふみふみ',eat:'ごはん',poop:'うんち',vomit:'げろ'};
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let v=Math.imul(seed^seed>>>15,1|seed);v^=v+Math.imul(v^v>>>7,61|v);return((v^v>>>14)>>>0)/4294967296;};}
+function hash(s){let h=0;for(const c of s)h=(Math.imul(h,31)+c.charCodeAt(0))|0;return h>>>0;}
+const path=(d,fill,extra='')=>`<path d="${d}" fill="${fill}" ${extra}/>`;
+function markings(type,part,seed){
+ const meta=coats[type]||coats.tabby;type=meta.family;
+ const r=rng((seed+hash(part)+meta.variant*1709)>>>0),v=meta.variant;
+ const colors={tabby:{black:'#595650',white:'#e9e5db',brown:'#a9793c',gray:'#a4aaa9'}[meta.color],tortie:meta.color==='yellow'?'#d2a14d':meta.color==='gray'?'#727981':'#302d29',calico:'#f4f0e7',tux:{black:'#292d2d',gray:'#858e92',brown:'#95603d'}[meta.color],black:'#292d2d',white:'#f5f2e8',cream:'#e8c78a'};
+ let svg=`<rect x="-180" y="-180" width="360" height="360" fill="${colors[type]}"/>`;
+ if(type==='tabby'){
+  const stripe=meta.color==='brown'?'#4f3826':meta.color==='black'?'#232627':'#62686b';
+  for(let i=0;i<(v===1?6:9);i++){const y=-115+i*(v===1?43:29),j=r()*8,end=v===1?8:-10;
+   svg+=path(`M-94 ${y} Q-42 ${y-6} ${end} ${y+10+j} Q-48 ${y+(v===1?19:9)} -85 ${y+18}Z`,stripe);
+   if(v===2){for(let k=0;k<3;k++)svg+=`<ellipse cx="${23+k*20}" cy="${y+k*4}" rx="6" ry="9" fill="${stripe}"/>`;}
+   else svg+=path(`M94 ${y+6} Q43 ${y} 16 ${y+17} Q52 ${y+16} 88 ${y+26}Z`,stripe);
+  }
+  if(part==='head')svg+=path('M-29 -80L-15 -13 -8 -42 0 -10 7 -45 18 -15 29 -80Z',stripe);
+ }
+ if(type==='tortie'||type==='calico'){
+  const faces=[[[-38,-27,34,45],[44,-24,29,36]],[[-29,-36,41,42],[47,18,28,24]],[[-41,-24,31,44],[39,-30,32,40]]];
+  const spots=part.startsWith('leg')?(part==='legNearBackLower'?[[0,15,40,65]]:[]):part==='tail'?[[22,-48,31,37],[78,13,23,25]]:part.startsWith('ear')?[[v===1?35:-36,-57,38,44]]:faces[v];
+  for(const [i,spot] of spots.entries()){
+   const [sx,sy,rx,ry]=spot,x=sx+(r()-.5)*4,y=sy+(r()-.5)*4,c=type==='tortie'?(meta.color==='yellow'?'#514234':meta.color==='gray'?'#c7b5a0':'#bd702d'):i%2?'#c7803a':'#292d2d';
+   svg+=path(`M${x-rx} ${y} C${x-rx} ${y-ry*.65} ${x-rx*.5} ${y-ry} ${x} ${y-ry} C${x+rx*.7} ${y-ry} ${x+rx} ${y-ry*.4} ${x+rx} ${y} C${x+rx} ${y+ry*.7} ${x+rx*.3} ${y+ry} ${x} ${y+ry} C${x-rx*.7} ${y+ry} ${x-rx} ${y+ry*.4} ${x-rx} ${y}Z`,c);
+  }
+ }
+ if(type==='tux'||type==='calico'&&v===2)svg+=part==='head'?path(['M0 -37Q-10 -4 -39 18L-38 62H42L40 19Q14 -4 0 -37Z','M-4 -10Q-12 13 -36 30L-28 62H42L36 29Q13 16 -4 -10Z','M0 -39L-13 14 -36 36 -26 62H37L32 32 12 11Z'][v], '#f6f2e8'):part.startsWith('leg')?'<rect x="-100" y="22" width="200" height="130" fill="#f6f2e8"/>':path('M-12 -103Q-53 -40 -32 65L-51 119H57L32 60Q48 -25 13 -95Z','#f6f2e8');
+ return svg;
+}
+const headPaths={sharp:'M-63 -4 L-37 -33 Q0 -48 35 -31 L64 -4 42 7 53 16 23 24 Q0 40 -24 24 L-54 15 -42 7Z',oval:'M-60 -12 Q-57 -41 0 -38 Q62 -40 63 -9 Q68 25 4 31 Q-57 34 -62 9Z',ruff:'M-52 -24 Q0 -41 51 -25L52 -4 66 9 52 12 63 23 40 24 36 35 17 31Q0 41 -21 31L-38 35 -41 24 -61 23 -51 13 -66 8 -52 -6Z'};
+const bodyPath='M0 -88 C-32 -88 -35 -42 -46 -10 C-66 44 -51 78 -27 85 Q0 94 29 85 C60 79 67 39 47 -7 C34 -42 32 -88 0 -88Z';
+function buildCat(svg,prefix,d,ground=375,scale=1){
+ const id=prefix+'-'+(++serial);let defs='',debug=[];
+ function part(name,shape,coat,extra='',patternPart=name){
+  const clip=id+'-'+name;defs+=`<clipPath id="${clip}">${path(shape,'#fff')}</clipPath>`;
+  debug.push(name);return `<g data-part="${name}" ${extra}><g clip-path="url(#${clip})">${markings(coat,patternPart,d.seed)}</g>${path(shape,'none','class="part-outline" stroke="#a85759" stroke-width="1.2" stroke-dasharray="4 3"')}</g>`;
+ }
+ const upper='M-10 0C-13 10 -9 23 -6 32Q0 37 6 32C9 21 12 8 9 0Q0 -9 -10 0Z';
+ const thigh='M-18 -5C-34 0 -30 22 -10 34Q0 39 9 31C19 20 28 6 18 -4Q0 -16 -18 -5Z';
+ const lower='M-6 0Q-7 13 -6 22C-16 24 -15 34 -6 35C2 37 10 32 8 26Q5 22 6 0Q0 -6 -6 0Z';
+ function leg(name){return `<g data-part="${name}">${part(name+'Upper',name.includes('Back')?thigh:upper,d.legCoat,'',name+'Upper')}${part(name+'Lower',lower,d.legCoat,'',name+'Lower')}</g>`;}
+ let content='';
+ content+=leg('legFarBack');
+ const tailShape=({short:'M-5 4Q33 10 37 -17Q40 -31 28 -32Q20 -31 23 -21Q24 -9 -3 -13Z',hook:'M-5 8Q59 23 64 -27L65 -49Q64 -55 57 -53L32 -40Q25 -36 29 -30Q31 -26 37 -29L48 -35Q49 6 -5 -10Z',curl:'M-5 8C76 39 110 -39 69 -65C31 -88 4 -29 37 -13C62 1 81 -33 58 -43Q45 -48 43 -35Q43 -28 51 -28C59 -16 34 -16 32 -35C28 -61 69 -56 73 -30C78 5 28 11 -5 -10Z',bob:'M-4 7C8 22 31 17 34 2C43 -12 23 -30 11 -22C-5 -25 -11 -6 -4 7Z'})[d.tail]||'M-5 8Q76 30 85 -25Q89 -70 59 -73Q42 -75 43 -59Q44 -49 55 -51Q68 -54 67 -33Q66 7 -5 -12Z';
+ content+=part('tail',tailShape,d.tailCoat);
+ content+=`<g data-part="body">${part('rump','M-46 -12C-66 44 -51 78 -27 85Q0 94 29 85C60 79 67 39 47 -12Z',d.bodyCoat,'','body')}${part('chest','M0 -88C-32 -88 -35 -42 -46 -10L-49 7Q0 20 50 7L47 -7C34 -42 32 -88 0 -88Z',d.bodyCoat,'','body')}</g>`;
+ for(const name of ['legFarFront','legNearBack','legNearFront'])content+=leg(name);
+ const earL=d.earCut==='right'?'M-47 4L-51 -64 -44 -56 -37 -64 -13 0Q-27 18 -47 4Z':'M-47 4L-51 -76Q-48 -81 -43 -75L-13 0Q-27 18 -47 4Z';
+ const earR=d.earCut==='left'?'M13 0L37 -64 45 -56 50 -64 49 4Q28 18 13 0Z':'M13 0L44 -77Q48 -81 50 -73L49 4Q28 18 13 0Z';
+ // A single coat fill covers the union of face and ears: no overlapping color seams.
+ defs+=`<clipPath id="${id}-headUnion">${path(headPaths[d.head],'white')}<path data-clip-ear="L" d="${earL}"/><path data-clip-ear="R" d="${earR}"/></clipPath>`;
+ let head=part('earL',earL,d.headCoat)+part('earR',earR,d.headCoat)+part('head',headPaths[d.head],d.headCoat);
+ head+=`<g data-part="headSkin" clip-path="url(#${id}-headUnion)">${markings(d.headCoat,'head',d.seed)}</g><g data-part="headRear"><g clip-path="url(#${id}-headUnion)"></g></g>`;
+ // Inner ears stay attached to their independently rotating outer ears.
+ head+=`<g data-part="innerL" clip-path="url(#${id}-earL)">${path('M-44 -36L-46 -67 -29 -37Z','#daa397')}</g><g data-part="innerR" clip-path="url(#${id}-earR)">${path('M29 -38L44 -68 45 -33Z','#daa397')}</g>`;
+ head+='<g data-part="face"></g>';
+ content+=`<g data-part="headRig">${head}</g>`;
+ svg.innerHTML=`<defs>${defs}</defs><g class="floor"><path d="M65 ${ground+1}H655" stroke="#c6cebb" stroke-width="1"/></g><g data-part="props"></g><g data-part="travel"><g data-part="age">${content}</g></g><g data-part="effects"></g>`;
+ const nodes={};svg.querySelectorAll('[data-part]').forEach(n=>nodes[n.dataset.part]=n);
+ const out={svg,nodes,d:{...d},ground,scale,id,surface:CatSurface.get(coats[d.bodyCoat],d.seed),surfaceYaw:null};
+ for(const part of ['earL','earR','head'])nodes[part].querySelector('g').style.display='none';
+ nodes.headRear.querySelector('g').innerHTML=CatSurface.project(CatSurface.get(coats[d.headCoat],(d.seed+hash('head'))>>>0),180);
+ paintFace(out,0,false);return out;
+}
+function eyeShape(kind,mood,x,y,side){
+ if(kind==='asym'){kind=side===-1?'slant':'droop';y+=side===-1?-2:2;}
+ const profile={round:[12,14,14,0],slant:[16,5,10,-4],droop:[16,1,13,0]}[kind];
+ let [w,top,bottom,tilt]=profile;
+ if(mood==='happy'){w+=1;top+=kind==='round'?2:5;bottom+=2;}
+ const l=y-tilt*side,r=y+tilt*side;
+ if(mood==='angry')return `M${x-w} ${l+5*side}Q${x} ${y-top*.55+3} ${x+w} ${r-5*side}Q${x+w*.7} ${y+bottom} ${x} ${y+bottom}Q${x-w*.8} ${y+bottom} ${x-w} ${l+5*side}Z`;
+ return `M${x-w} ${l}C${x-w} ${y-top} ${x-w*.45} ${y-top} ${x} ${y-top}C${x+w*.6} ${y-top} ${x+w} ${y-top*.6} ${x+w} ${r}C${x+w*.85} ${y+bottom} ${x+w*.4} ${y+bottom} ${x} ${y+bottom}C${x-w*.5} ${y+bottom} ${x-w} ${y+bottom*.6} ${x-w} ${l}Z`;
+}
+function paintFace(r,t,sleep){
+ const d=r.d,eye=d.eyeColor==='green'?'#a9c06a':d.eyeColor==='blue'?'#72b9c8':'#e7c855';
+ const blink=sleep||Math.sin(t*.72)>0.997,mood=d.mood;
+ const spacing=d.head==='oval'?29:27;
+ const muzzleColor={cream:'#e8c78a',white:'#f6f2e8',black:'#292d2d',split:'#f6f2e8'}[d.muzzle];
+ let face=muzzleColor?path('M0 13C-13 8 -28 19 -19 28Q-7 33 0 26Q11 34 22 27C30 17 12 9 0 13Z',muzzleColor):'';
+ if(d.muzzle==='split')face+=path('M0 16Q-11 9 -18 18L-12 26 0 22Z','#292d2d');
+ for(const side of [-1,1]){
+  const x=side*spacing,y=d.head==='ruff'?0:-3;
+  if(blink)face+=path(`M${x-12} ${y+3}Q${x} ${y+10} ${x+12} ${y+3}`,'none','stroke="#252a27" stroke-width="2.3" stroke-linecap="round"');
+  else {
+   const shape=eyeShape(d.eyes,mood,x,y,side);
+   const clip=r.id+'-eye-'+side;
+   face+=`<defs><clipPath id="${clip}">${path(shape,'white')}</clipPath></defs>${path(shape,d.eyeColor==='odd'&&side===1?'#72b9c8':eye)}<g clip-path="url(#${clip})"><ellipse cx="${x+(mood==='wary'?-3:Math.sin(t*.5)*1.5)}" cy="${y+2}" rx="${mood==='happy'?9:mood==='wary'?5.8:2.7}" ry="12" fill="#252a27"/>${mood==='happy'?`<circle cx="${x-3}" cy="${y-4}" r="3.1" fill="#fffdf0"/>`:''}</g>`;
+  }
+ }
+ face+=path('M-4 16Q0 14 4 16L0 20Z','#bd8b7d')+path(d.head==='ruff'?'M0 20V24M0 24L-5 27M0 24L5 27':'M0 20V23Q-3 28 -6 24M0 23Q3 28 6 24','none','stroke="#5c5148" stroke-width="1.25" stroke-linecap="round"');
+ if(mood==='angry'&&!sleep)face+=path('M-11 23Q0 17 11 23L8 38Q0 44 -8 37Z','#572e30')+path('M-5 38Q0 29 5 38Z','#d89193')+path('M-9 24L-6 32 -3 23M3 23L6 32 9 24','#fff8e9');
+ if(d.whiskers!=='none'){
+  const w=d.whiskers==='long'?100:d.whiskers==='short'?57:80;
+  const whisker=d.whiskers==='curved'?`M-38 15Q-${w} -2 -${w} 14M-39 20Q-${w+9} 42 -${w} 25M39 15Q${w} -2 ${w} 14M40 20Q${w+9} 42 ${w} 25`:`M-38 15L-${w} 9M-39 20L-${w} 25M39 15L${w} 10M40 20L${w} 25`;
+  face+=path(whisker,'none','stroke="#9b9e91" stroke-width="1.1" stroke-linecap="round"');
+ }
+ r.nodes.face.innerHTML=face;
+}
+function poseModel(p,t){
+ const sit={bx:0,by:-87,br:0,bw:1,bh:1,hx:0,hy:-195,hr:0,hs:1,tx:39,ty:-25,tr:0,headTurn:1,lift:0,stretch:1,bend:0,yaw:0,frontBend:0,rumpRaise:0,legs:[[-31,-44,-37,0],[-19,-110,-19,0],[32,-42,40,0],[18,-108,18,0]],sleep:0};
+ if(p==='sit'){sit.hy+=Math.sin(t*1.4)*1.1;sit.tr=Math.sin(t*1.1)*5;return sit;}
+ if(p==='sleep')return{...sit,bx:4,by:-53,br:-82,bw:.86,bh:1,hx:-47,hy:-37,hr:-19,hs:.89,tx:60,ty:-25,tr:112,yaw:108,legs:[[-20,-12,-33,-3],[0,-15,2,-3],[27,-12,39,-3],[-12,-16,-25,-3]],sleep:1};
+ const walk={...sit,bx:7,by:-68,br:-86,bw:.73,bh:1.05,hx:-77,hy:-98,hr:-8,hs:.89,tx:78,ty:-72,tr:-42,headTurn:.88,yaw:90,frontBend:.08,rumpRaise:7,legs:[ [48,-65,43,0],[-49,-64,-60,0],[57,-61,48,0],[-44,-62,-56,0] ]};
+ if(p==='punch'){
+  const a=Math.pow(Math.max(0,Math.sin(t*4.3)),3);return{...sit,hx:-14,hr:-8,bend:-5*a,frontBend:.07,legs:[sit.legs[0],[-19,-110,-19-95*a,-105*a],sit.legs[2],sit.legs[3]]};
+ }
+ if(p==='dash'){
+  const phase=t*10,s=Math.sin(phase),tuck=(1+s)/2,m={...walk,by:-68-5*s,hy:-96-4*s,bend:11*s,stretch:1-.1*s,lift:Math.max(0,-s)*10,tr:-30,frontBend:.08-1.05*tuck,rumpRaise:7+5*s};
+  m.legs=m.legs.map((l,i)=>{const a=phase+(i>1?.28:0),q=(1+Math.sin(a))/2;return i%2?[l[0],l[1],-100+91*q,-7-50*q]:[l[0],l[1],100-82*q,-6-26*q];});return m;
+ }
+ if(p==='wall'){
+  const a=Math.sin(t*9);return{...sit,by:-90,hx:Math.sin(t*4)*1.2,hy:-195+Math.sin(t*9)*1.2,hr:0,bend:1.3*a,yaw:180,tx:0,ty:-15,tr:12,legs:[[-31,-44,-37,0],[-31,-112,-49,-147+14*a],[32,-42,40,0],[31,-112,49,-147-14*a]]};
+ }
+ if(p==='knead'){
+  const a=Math.sin(t*3.7),left=Math.max(0,a),right=Math.max(0,-a);
+  return{...sit,bx:a*.8,by:-87+Math.abs(a)*1.6,hy:-192+Math.abs(a)*1.6,hr:Math.sin(t*1.2)*2,bend:a*.8,legs:[sit.legs[0],[-19,-110-5*left,-19,-9*left],sit.legs[2],[18,-108-5*right,18,-9*right]]};
+ }
+ if(p==='scratch'){
+  const stroke=offset=>{const u=(t*1.3+offset)%1;return u<.72?[-95+50*u/.72,-2]:[-45-50*(u-.72)/.28,-2-7*Math.sin((u-.72)/.28*Math.PI)];};
+  const l=stroke(0),r=stroke(.5);return{...walk,by:-63,hy:-82,bend:2*Math.sin(t*8),hr:7,legs:[walk.legs[0],[-49,-61,...l],walk.legs[2],[-44,-59,...r]]};
+ }
+ if(p==='eat')return{...walk,hx:-103,hy:-39+Math.sin(t*7)*1.5,hr:28,bend:-11,hs:.82,headTurn:.75};
+ if(p==='poop')return{...walk,bx:8,by:-85,br:-38,bw:1.04,bh:.94,hx:-52,hy:-140,hr:12,bend:17,rumpRaise:14,tx:63,ty:-70,tr:-103,legs:[[35,-57,22,0],[-36,-85,-46,0],[47,-53,32,0],[-24,-82,-33,0]]};
+ if(p==='vomit'){
+  const a=Math.max(0,Math.sin(t*9))*(t%3.2<1.8?1:.15);return{...walk,bend:-13*a,by:-67+4*a,hx:-93,hy:-57+7*a,hr:25+8*a,hs:.86};
+ }
+ if(p==='walk'){
+  const phase=t*2*Math.PI/1.7;
+  walk.by+=Math.sin(phase*2)*1.1;walk.hy+=Math.sin(phase*2)*1.4;
+  walk.legs=walk.legs.map((l,i)=>{const u=(t/1.7+[0,.25,.5,.75][i])%1,swing=u>.64,w=swing?(u-.64)/.36:u/.64,reach=i%2?30:22;return[l[0],l[1],l[2]+(swing?reach-2*reach*w:-reach+2*reach*w),swing?-11*Math.sin(w*Math.PI):0];});walk.tr+=Math.sin(phase*.5)*4;return walk;
+ }
+ const cycle=t%2.6;
+ if(cycle<.3){const s=Math.sin(cycle/.3*Math.PI/2);return{...walk,by:-68+s*20,hy:-98+s*24,br:-88,frontBend:.22*s};}
+ if(cycle<.8){const u=(cycle-.3)/.5,a=Math.sin(Math.PI*u);return{...walk,lift:a*108,br:-82-13*Math.sin(u*Math.PI*2),stretch:1+.12*a,hy:-104,frontBend:.04,rumpRaise:5,legs:walk.legs.map((l,i)=>[l[0],l[1],l[2]+(i%2?-66:96)*a,-(i%2?38:12)*a])};}
+ if(cycle<1.03){const s=Math.sin((cycle-.8)/.23*Math.PI);return{...walk,by:-68+14*s,hy:-98+15*s,frontBend:.2*s};}
+ return walk;
+}
+function mixModel(a,b,u){const o={};for(const k in b)o[k]=k==='legs'?b[k].map((l,i)=>l.map((v,j)=>a[k][i][j]+(v-a[k][i][j])*u)):a[k]+(b[k]-a[k])*u;return o;}
+function scene(r,p,t){
+ const s=r.d.age==='kitten'?.74:1;let prop='',fx='';
+ if(p==='poop'){
+  if(t%3.2>1.1)fx='<ellipse cx="84" cy="0" rx="8" ry="5" fill="#796249"/>';
+ }
+ if(p==='vomit'&&t%3.2>1.75){const a=Math.min(1,(t%3.2-1.75)/.5);fx=`<ellipse cx="-111" cy="2" rx="${18*a}" ry="${5*a}" fill="#b9a578"/>${a<1?'<path d="M-107 -29Q-111 -13 -111 -2" fill="none" stroke="#b9a578" stroke-width="4" stroke-linecap="round"/>':''}`;}
+ if(p==='punch'&&Math.sin(t*4.3)>.65)fx='<path d="M-103 -136Q-120 -121 -119 -108M-109 -141Q-128 -122 -126 -107" fill="none" stroke="#b9baaa" stroke-width="2"/>';
+ r.nodes.props.innerHTML=prop;r.nodes.effects.innerHTML=fx;
+ r.nodes.props.setAttribute('transform',`translate(360 ${r.ground}) scale(${s})`);r.nodes.effects.setAttribute('transform',`translate(360 ${r.ground}) scale(${s})`);
+}
+function applyPose(r,m,t,p='sit'){
+ const n=r.nodes,d=r.d,young=d.age==='kitten',scale=r.scale*(young?.74:1),wide=d.body==='round'?1.13:d.body==='skinny'?.65:.89;
+ const tf=(key,v)=>n[key].setAttribute('transform',v);
+ tf('travel',`translate(360 ${r.ground-m.lift*scale})`);tf('age',`scale(${scale})`);
+ tf('body',`translate(${m.bx} ${m.by*(young?.9:1)}) rotate(${m.br}) scale(${m.bw*wide} ${m.bh*(young?.88:1)*m.stretch})`);
+ tf('chest',`rotate(${m.bend||0} 0 0)`);
+ tf('rump',`rotate(${-m.rumpRaise} 0 0)`);
+ const yaw=Math.round(m.yaw*10)/10;
+ if(r.surfaceYaw!==yaw){
+  const paint=CatSurface.project(r.surface,yaw);
+  n.chest.querySelector('g').innerHTML=paint;n.rump.querySelector('g').innerHTML=paint;
+  r.surfaceYaw=yaw;n.body.setAttribute('data-view-angle',yaw);
+ }
+ const rear=Math.max(0,Math.min(1,(m.yaw-120)/60));
+ n.face.style.opacity=1-rear;n.innerL.style.opacity=1-rear;n.innerR.style.opacity=1-rear;n.headRear.style.opacity=rear;
+ const rearOrder=rear>.5;
+ if(r.rearOrder!==rearOrder){
+  if(rearOrder){n.age.insertBefore(n.body,n.headRig);n.age.insertBefore(n.tail,n.headRig);}
+  else{n.age.insertBefore(n.body,n.legFarFront);n.age.insertBefore(n.tail,n.body);}
+  r.rearOrder=rearOrder;
+ }
+ const names=['legFarBack','legFarFront','legNearBack','legNearFront'];
+ names.forEach((name,i)=>{
+  let [hx,hy,px,py]=m.legs[i];if(young)hy*=.86;
+  const dx=px-hx,dy=py-hy,bend=(i%2===0?-.27:m.frontBend),kx=dx*.5+dy*bend,ky=dy*.5-dx*bend;
+  const a=-Math.atan2(kx,ky)*180/Math.PI,b=-Math.atan2(dx-kx,dy-ky)*180/Math.PI;
+  const thick=(d.body==='round'?1.13:d.body==='skinny'?.7:.9)*(i%2===0?1.2:.82);
+  tf(name,`translate(${hx} ${hy})`);
+  tf(name+'Upper',`rotate(${a}) scale(${thick} ${Math.max(1,Math.hypot(kx,ky))/32})`);
+  tf(name+'Lower',`translate(${kx} ${ky}) rotate(${b}) scale(${thick} ${Math.max(1,Math.hypot(dx-kx,dy-ky))/35})`);
+  if(p==='dash'){
+   // Forward kinematics: constant bone lengths; motion comes from swinging joints.
+   const phase=t*10+(i>1?.3:0),front=i%2===1;
+   const upperAngle=(front?57:-55)*Math.sin(phase),lowerAngle=upperAngle+(front?28:-30)+(front?25:18)*Math.cos(phase);
+   const upperLength=front?34:32,lowerLength=front?31:34;
+   const kneeX=-Math.sin(upperAngle*Math.PI/180)*upperLength,kneeY=Math.cos(upperAngle*Math.PI/180)*upperLength;
+   tf(name+'Upper',`rotate(${upperAngle}) scale(${thick} ${upperLength/32})`);
+   tf(name+'Lower',`translate(${kneeX} ${kneeY}) rotate(${lowerAngle}) scale(${thick} ${lowerLength/35})`);
+  }
+  n[name].style.opacity=i<2?.83:1;
+ });
+ n.tail.style.display=d.tail==='none'?'none':'';
+ tf('tail',`translate(${m.tx} ${m.ty}) rotate(${m.tr}) scale(${young?.85:1})`);
+ tf('headRig',`translate(${m.hx} ${m.hy*(young?.88:1)}) rotate(${m.hr}) scale(${m.hs*(young?1.15:1)*m.headTurn*(rear>.5?-1:1)} ${m.hs*(young?1.15:1)})`);
+ const earScale=d.ears==='small'?.76:1,angle=d.ears==='tilted'?23:0,alert=d.mood==='angry'?58:d.mood==='wary'?19:0;
+ tf('earL',`translate(-30 -10) rotate(${-alert}) scale(${earScale}) translate(30 10)`);tf('innerL',n.earL.getAttribute('transform'));
+ tf('earR',`translate(30 -10) rotate(${angle+alert+Math.sin(t*1.5)*1.3}) scale(${earScale}) translate(-30 10)`);tf('innerR',n.earR.getAttribute('transform'));
+ r.svg.querySelector('[data-clip-ear="L"]').setAttribute('transform',n.earL.getAttribute('transform'));
+ r.svg.querySelector('[data-clip-ear="R"]').setAttribute('transform',n.earR.getAttribute('transform'));
+ r.svg.querySelectorAll('.part-outline').forEach(p=>p.style.display=showParts?'':'none');
+ paintFace(r,t,m.sleep>.5);
+ scene(r,p,t);
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(dna));}catch{}}
+function rebuild(){
+ save();for(const k in choices)$('#'+k).value=dna[k];
+ $('#identity').textContent='ねこ '+dna.seed.toString(16).toUpperCase().padStart(4,'0');
+ rig=buildCat($('#hero'),'hero',dna);applyPose(rig,poseModel(pose,poseTime),poseTime,pose);
+ $('#snapshots').innerHTML=['sit','walk','jump','sleep'].map(p=>`<div class="snapshot"><svg viewBox="200 85 320 325" role="img" aria-label="${labels[p]}の同じ猫" data-preview="${p}"></svg><small>${labels[p]}</small></div>`).join('');
+ document.querySelectorAll('[data-preview]').forEach(svg=>{const p=svg.dataset.preview,mini=buildCat(svg,'mini-'+p,dna),t=p==='jump'?.55:.4;applyPose(mini,poseModel(p,t),t,p);});
+}
+const groups=[['かたち',[['age','年齢'],['body','体型'],['head','頭の形'],['ears','耳'],['earCut','耳カット（猫から見て）'],['tail','尾']]],['顔立ちと表情',[['eyes','目の形'],['eyeColor','目の色'],['mood','いまの気分'],['muzzle','口元のひげ模様'],['whiskers','髭の形']]],['部位ごとの柄・色・パターン',[['headCoat','頭'],['bodyCoat','体'],['legCoat','脚'],['tailCoat','尾']]]];
+$('#controls').innerHTML=groups.map(([label,fields])=>`<fieldset><legend>${label}</legend><div class="fields">${fields.map(([k,l])=>`<label class="field" for="${k}">${l}<select id="${k}">${Object.entries(choices[k]).map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label>`).join('')}</div></fieldset>`).join('');
+$('#controls').addEventListener('change',e=>{if(choices[e.target.id]){dna[e.target.id]=e.target.value;if($('#coat-link').checked&&['headCoat','bodyCoat'].includes(e.target.id)){dna.headCoat=e.target.value;dna.bodyCoat=e.target.value;}rebuild();}});
+const familyWeights={tabby:28,tortie:26,calico:26,tux:8,black:4,white:4,cream:4};
+function pickWeighted(r,weights){let n=r()*Object.values(weights).reduce((a,b)=>a+b,0);for(const [key,w] of Object.entries(weights)){n-=w;if(n<0)return key;}return Object.keys(weights).at(-1);}
+function pickCoat(r){const family=pickWeighted(r,familyWeights),all=Object.entries(coats).filter(([,m])=>m.family===family);const rare=all.some(([,m])=>m.rare)&&r()<.05;const pool=all.filter(([,m])=>m.rare===rare);return pool[Math.floor(r()*pool.length)][0];}
+function sampleDNA(seed,base=defaults,onlyCoat=false){
+ const r=rng(seed),out={...base};
+ if(!onlyCoat)for(const k of Object.keys(choices)){if(k==='mood'||k.endsWith('Coat'))continue;const opts=Object.keys(choices[k]);out[k]=opts[Math.floor(r()*opts.length)];}
+ out.bodyCoat=pickCoat(r);out.headCoat=r()<.90?out.bodyCoat:pickCoat(r);
+ out.legCoat=r()<.85?out.bodyCoat:pickCoat(r);out.tailCoat=r()<.85?out.bodyCoat:pickCoat(r);
+ out.seed=Math.floor(r()*0xffffffff);return out;
+}
+function shuffle(onlyCoat=false){dna=sampleDNA(crypto.getRandomValues(new Uint32Array(1))[0],dna,onlyCoat);rebuild();}
+$('#shuffle').onclick=()=>shuffle();$('#coat-shuffle').onclick=()=>shuffle(true);
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
+ const presets={F:{body:'slim',head:'sharp',eyes:'slant',ears:'tall',tail:'long',headCoat:'tabby',bodyCoat:'tabby',legCoat:'tabby',tailCoat:'tabby'},G:{body:'round',head:'oval',eyes:'round',ears:'small',tail:'short',headCoat:'tortie',bodyCoat:'tortie',legCoat:'tortie',tailCoat:'calico'},H:{body:'slim',head:'ruff',eyes:'droop',ears:'tilted',tail:'none',headCoat:'tux',bodyCoat:'tux',legCoat:'tux',tailCoat:'tux'}};
+ Object.assign(dna,presets[b.dataset.preset]);rebuild();
+});
+function setPose(next){if(!labels[next])return;transition={from:poseModel(pose,poseTime),elapsed:0};pose=next;poseTime=paused?({jump:.55,punch:.365,dash:.18,wall:.13,scratch:.18,knead:.25,eat:.5}[pose]??2):0;$('#pose-label').textContent=labels[pose]+(pose==='knead'?' / 超なつき時の動作確認':'');document.querySelectorAll('[data-pose]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.pose===pose));if(paused){transition=null;applyPose(rig,poseModel(pose,poseTime),poseTime,pose);}}
+$('.poses').innerHTML=Object.entries(labels).map(([p,label])=>`<button data-pose="${p}" aria-pressed="${p===pose}">${label}</button>`).join('');
+document.querySelectorAll('[data-pose]').forEach(b=>b.onclick=()=>setPose(b.dataset.pose));
+function syncPause(){$('#pause').textContent=paused?'動かす':'一時停止';$('#pause').setAttribute('aria-pressed',paused);}$('#pause').onclick=()=>{paused=!paused;syncPause();};syncPause();
+$('#parts').onchange=e=>{showParts=e.target.checked;rebuild();};
+$('#export').onclick=()=>{const clone=$('#hero').cloneNode(true);clone.setAttribute('xmlns',NS);clone.setAttribute('width','720');clone.setAttribute('height','440');const blob=new Blob([new XMLSerializer().serializeToString(clone)],{type:'image/svg+xml'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`hogoneko-${dna.seed}-${pose}.svg`;a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);};
+rebuild();
+function tick(now){const dt=last?Math.min((now-last)/1000,.05):0;last=now;if(!paused){time+=dt;poseTime+=dt;let model=poseModel(pose,poseTime);if(transition){transition.elapsed+=dt;const u=Math.min(1,transition.elapsed/.4);model=mixModel(transition.from,model,u*u*(3-2*u));if(u===1)transition=null;}applyPose(rig,model,poseTime,pose);}requestAnimationFrame(tick);}requestAnimationFrame(tick);
+// Read-only helpers make deterministic phenotype / pose checks possible.
+window.catLab={getDNA:()=>({...dna}),poseModel,markings,setPose,getPose:()=>pose,sampleDNA,coats,familyWeights};

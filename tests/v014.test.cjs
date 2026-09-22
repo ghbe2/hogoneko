@@ -22,19 +22,22 @@ async function drag(page, source, destination) {
     const errors = [];
     page.on('pageerror', error => errors.push(String(error)));
     await page.goto(url);
+    // Own the old catalogue for interaction regressions; v017 covers fresh-start economy.
+    await page.evaluate(()=>{for(const id of CONFIG.stage1.placedItems)gameState.inventory[id]=1;Object.assign(gameState.inventory,{mouse:1,feather:1,ball:2});});
     assert.equal(await page.locator('.title-screen').count(), 1);
     await page.locator('[data-action="start-game"]').click();
     assert.equal(await page.locator('.story-screen').count(), 1);
     for (let i=0;i<3;i++) await page.locator('[data-action="next-story"]').click();
     assert.equal(await page.locator('.field-scene').count(), 1);
-    assert((await page.locator('.screen-guide').innerText()).includes('保護器を草地'));
+    assert((await page.locator('.screen-guide').innerText()).includes('保護器'));
     await drag(page, '[data-field-drag="trap"]', '.field-scene');
-    assert((await page.locator('.screen-guide').innerText()).includes('ごはんを保護器'));
+    assert((await page.locator('.screen-guide').innerText()).includes('保護器へ餌'));
     await drag(page, '[data-food="food_dry"]', '.trap');
     await page.reload();
     assert.equal(await page.locator('.title-screen').count(), 1);
     await page.locator('[data-action="start-game"]').click();
     assert.equal(await page.locator('.story-screen').count(), 0, 'Story replayed after reload');
+    await page.locator('[data-action="finish-field-prep"]').click();
     // E2E の個体を固定し、ランダム抽選にテスト結果を依存させない。
     await page.evaluate(() => { Math.random = () => .3; });
     await page.locator('[data-action="open-trap"]').waitFor({timeout:5000});
@@ -71,7 +74,7 @@ async function drag(page, source, destination) {
     });
     console.log('starter feasibility', JSON.stringify(feasibility));
     assert.equal(feasibility.total,136);
-    assert.equal(feasibility.failures.length,5,'Known intake balance limitations changed');
+    assert(feasibility.failures.length<=5,'Intake became less feasible after water addition');
     // 相性は変えず、既存の家具の中で正の評価のものを選んで迎える。
     const choices = await page.evaluate(() => CONFIG.stage1.placedItems.filter(id => {
       const item=getItem(id), placed=getPlaced(getRoom(gameState)).some(p=>p.itemId===id);

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ホゴネコ｜SVGの猫研究室</title><link rel="stylesheet" href="cat-lab.css"></head>
+<body>
+<header><a href="index.html">← ビジュアル候補</a><span>HOGONEKO / CHARACTER LAB 01</span></header>
+<main>
+  <div class="heading"><div><small>形 × 柄 × 表情 × 動き</small><h1>同じ猫の、いろんな顔。</h1></div><p>パーツを組んで動かすSVG試作。<br>本編の猫・セーブデータには影響しません。</p></div>
+  <div class="lab">
+    <section class="viewer" aria-label="猫のプレビュー">
+      <div class="stage"><div class="stage-top"><span id="identity">ねこ 0001</span><span>LIVE SVG</span></div><svg id="hero" viewBox="150 0 420 440" role="img" aria-label="組み替えた猫の動作"></svg><div class="stage-bottom"><span id="pose-label">すわる</span><button id="pause" aria-pressed="false">一時停止</button></div></div>
+      <div class="poses" aria-label="動作"><button data-pose="sit" aria-pressed="true">すわる</button><button data-pose="walk" aria-pressed="false">あるく</button><button data-pose="jump" aria-pressed="false">ジャンプ</button><button data-pose="sleep" aria-pressed="false">ねる</button></div>
+      <div class="snapshots" id="snapshots" aria-label="同じ個体のポーズ一覧"></div>
+      <div class="actions"><button id="shuffle" class="primary">まるごとシャッフル ↻</button><button id="coat-shuffle">柄だけシャッフル</button></div>
+      <p class="caption">同じ柄が、正面→脇→背中へ回り込みます。壁ガリガリは後ろ姿、ふみふみは座り姿。</p>
+    </section>
+    <aside aria-label="パーツの組み替え">
+      <div class="panel-title"><h2>この子のつくり</h2><button id="export">SVGを保存 ↓</button></div>
+      <div class="presets"><button data-preset="F">F すまし</button><button data-preset="G">G とぼけ</button><button data-preset="H">H ぶすっ</button></div>
+      <div id="controls"></div>
+      <label class="check"><input id="coat-link" type="checkbox" checked> 手動変更も頭と体をそろえる</label>
+      <label class="check"><input id="parts" type="checkbox"> パーツの境目を見る（胴・各脚は2分割）</label>
+      <p class="note">抽選時：頭と体は90%で一致、10%で別抽選。きじ28%・さび26%・みけ26%・はちわれ8%・黒／白／クリーム各4%。さびのグレー、みけのハチワレ風は各系統内で5%（仮）。</p>
+    </aside>
+  </div>
+  <details class="limits"><summary>この試作で確認できること・まだできないこと</summary><p>輪郭の交換、36種の柄・色・配置、目と表情の分離、年齢差、胴2分割・各脚2分割の動作を検証します。胴の柄は同一の模様地図から向きに応じて投影する簡易立体表現です。壁ガリガリは背面、ふみふみは座り姿。ふみふみは超なつき時の想定ですが、ここでは自由に選んで確認できます。歩行・ダッシュはその場の動作見本です。全身の完全な立体回転、横顔専用パーツ、抱っこ、接地の精密調整は未実装。脚・尾と胴の柄の継ぎ目も調整途上です。保存するSVGは現在の静止ポーズです。</p></details>
+</main><script src="cat-surface.js"></script><script src="cat-lab.js"></script></body></html>
