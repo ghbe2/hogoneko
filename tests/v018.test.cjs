@@ -10,13 +10,14 @@ const {pathToFileURL}=require('node:url');
   await page.setViewportSize({width,height});
   const main=await page.locator('.main-command-row').boundingBox(),sub=await page.locator('.sub-command-row').boundingBox(),stage=await page.locator('.stage').boundingBox();
   assert.equal(await page.locator('.main-command').count(),3);assert.equal(await page.locator('.sub-command').count(),2);
-  assert(sub.y+sub.height<main.y);assert(sub.height<main.height*.7);assert(main.x>=0&&main.x+main.width<=width);
+  assert(sub.x>=main.x+main.width);assert(main.x>=0&&sub.x+sub.width<=width);
   assert((await page.locator('.sub-command-row').innerText()).includes('さわる'));assert(!(await page.locator('.command-dock').innerText()).includes('ふれあい'));
   assert(await page.locator('.sub-command strong').evaluateAll(nodes=>nodes.every(n=>n.scrollWidth<=n.clientWidth)), 'Sub labels truncated');
   const previous=await page.evaluate(()=>JSON.stringify([gameState.ui.equippedHand,gameState.ui.equippedFood,gameState.ui.equippedCleaner,gameState.ui.touchMode]));
   for(const tab of ['play','food','clean','touch']){
    console.log('open',width,tab);
-   await page.locator(`.command-dock [data-tab="${tab}"]`).tap();
+   if(tab==='touch'){const r=await page.locator('.command-dock [data-tab="touch"]').boundingBox();await page.mouse.move(r.x+20,r.y+20);await page.mouse.down();await page.waitForTimeout(650);await page.mouse.up();await page.waitForTimeout(450);}
+   else await page.locator(`.command-dock [data-tab="${tab}"]`).tap();
    const close=page.locator('.sheet-close');await close.waitFor();
    const rect=await close.boundingBox();assert(rect.y>=0&&rect.y+rect.height<=height,'close button off-screen');
    await close.tap();assert.equal(await page.evaluate(()=>gameState.ui.modal),null);

@@ -187,7 +187,7 @@ function poseModel(p,t){
  const sit={bx:0,by:-87,br:0,bw:1,bh:1,hx:0,hy:-195,hr:0,hs:1,tx:39,ty:-25,tr:0,headTurn:1,lift:0,stretch:1,bend:0,yaw:0,frontBend:0,rumpRaise:0,legs:[[-31,-44,-37,0],[-19,-110,-19,0],[32,-42,40,0],[18,-108,18,0]],sleep:0};
  if(p==='sit'){sit.hy+=Math.sin(t*1.4)*1.1;sit.tr=Math.sin(t*1.1)*5;return sit;}
  if(p==='sleep')return{...sit,bx:4,by:-53,br:-82,bw:.86,bh:1,hx:-47,hy:-37,hr:-19,hs:.89,tx:60,ty:-25,tr:112,yaw:108,legs:[[-20,-12,-33,-3],[0,-15,2,-3],[27,-12,39,-3],[-12,-16,-25,-3]],sleep:1};
- const walk={...sit,bx:7,by:-68,br:-86,bw:.73,bh:1.05,hx:-77,hy:-98,hr:-8,hs:.89,tx:78,ty:-72,tr:-42,headTurn:.88,yaw:90,frontBend:.08,rumpRaise:7,legs:[ [48,-65,43,0],[-49,-64,-60,0],[57,-61,48,0],[-44,-62,-56,0] ]};
+ const walk={...sit,bx:7,by:-68,br:-86,bw:.73,bh:1.05,hx:-77,hy:-98,hr:-8,hs:.89,tx:78,ty:-72,tr:-42,headTurn:.88,yaw:90,frontBend:.08,rumpRaise:7,legs:[ [70,-65,66,0],[-59,-64,-67,0],[77,-61,72,0],[-54,-62,-63,0] ]};
  if(p==='punch'){
   const a=Math.pow(Math.max(0,Math.sin(t*4.3)),3);return{...sit,hx:-14,hr:-8,bend:-5*a,frontBend:.07,legs:[sit.legs[0],[-19,-110,-19-95*a,-105*a],sit.legs[2],sit.legs[3]]};
  }

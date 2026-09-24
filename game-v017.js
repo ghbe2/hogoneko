@@ -82,6 +82,23 @@ normalizeLoadedState=function(state){const next=normalizeBeforeV017(state);retur
 function spendCoins(state,amount,label){return {...state,coins:state.coins-amount,economy:{...state.economy,spent:(state.economy?.spent||0)+amount,ledger:[...(state.economy?.ledger||[]),{label,amount,day:getCat(state).body.days+1}].slice(-100)}};}
 const reduceBeforeV017=reduceGameState;
 reduceGameState=function(state,action){
+  if(action.type==='ROAM_CAT'&&state.ui.careAnimation)return state;
+  if(action.type==='TOUCH_NOW'){
+    if(state.campaign.phase!=='room'||getCat(state).status!=='raising'||state.ui.layoutMode||state.ui.modal||state.ui.careAnimation)return state;
+    if(state.ui.holdingCat)return reduceBeforeV017(state,{type:'RELEASE_CAT'});
+    const mode=state.ui.touchMode||'pet',tool=TOUCH_TOOLS.find(t=>t.id===mode);
+    if(!tool)return state;
+    const anchor=action.point||getCatPoint(state);
+    if(tool.stock){
+      const next=reduceBeforeV017({...state,ui:{...state.ui,interactionMode:null}}, {type:'TAP_CAT'});
+      return next.ui.careAnimation?{...next,ui:{...next.ui,careAnimation:{...next.ui.careAnimation,...anchor,anchor}}}:next;
+    }
+    return {...state,ui:{...state.ui,careAnimation:{id:Date.now()+Math.random(),operation:'touch',mode,emoji:tool.emoji,...anchor,anchor},reaction:null}};
+  }
+  if(action.type==='FINISH_CARE'&&state.ui.careAnimation?.operation==='touch'){
+    const animation=state.ui.careAnimation;if(animation.id!==action.id)return state;
+    return reduceBeforeV017({...state,ui:{...state.ui,careAnimation:null,interactionMode:animation.mode}}, {type:'TAP_CAT'});
+  }
   if(action.type==='OPEN_SUPPLIES')return {...state,ui:{...state.ui,modal:'supplies',shopTab:action.tab||'furniture',shopNotice:null}};
   if(action.type==='SHOP_TAB')return {...state,ui:{...state.ui,shopTab:action.tab,shopNotice:null}};
   if(action.type==='OPEN_WALLET')return {...state,ui:{...state.ui,walletReturn:state.ui.modal,modal:'wallet'}};
@@ -163,7 +180,27 @@ renderCommandDock=function(state){
   const hand=getItem(state.ui.equippedHand),food=getFood(state.ui.equippedFood),cleaner=getCleaner(state.ui.equippedCleaner);
   const touch=TOUCH_TOOLS.find(t=>t.id===state.ui.touchMode)||TOUCH_TOOLS[0];
   const slot=(tab,label,emoji,name,detail,command)=>`<button class="command-slot main-command" data-action="open-slot-menu" data-tab="${tab}" data-command="${command}" data-slot-label="${label}" aria-label="${label}・${name}。タップで選ぶ、ドラッグで使う"><span class="command-emoji">${emoji}</span><strong>${name}</strong><small>${detail}</small></button>`;
-  return `<nav class="command-dock tiered-dock" aria-label="部屋で使うもの"><div class="sub-command-row" role="group" aria-label="サブ操作"><button class="command-slot sub-command" data-action="call-cat" aria-label="よぶ。長押しで呼び方を変える"><span class="command-emoji">📣</span><strong>よぶ</strong></button><button class="command-slot sub-command" data-action="open-slot-menu" data-tab="touch" aria-label="さわる・${touch.label}"><span class="command-emoji">${touch.emoji}</span><strong>さわる</strong></button></div><div class="main-command-row" role="group" aria-label="メイン操作">${slot('play','あそぶ',TOY_EMOJI[hand?.id]||'＋',hand?.label||'玩具',hand?getDurability(state,hand.id):'','cat')}${slot('food','ごはん',food.emoji,food.label,food.water?'∞':`×${state.inventory[food.id]||0}`,'food')}${slot('clean','そうじ',cleaner?.emoji||'＋',cleaner?.label||'道具',`×${state.inventory[cleaner?.id]||0}`,'clean')}</div></nav>`;
+  return `<nav class="command-dock tiered-dock side-dock" aria-label="部屋で使うもの"><div class="main-command-row" role="group" aria-label="メイン操作">${slot('play','あそぶ',TOY_EMOJI[hand?.id]||'＋',hand?.label||'玩具',hand?getDurability(state,hand.id):'','cat')}${slot('food','ごはん',food.emoji,food.label,food.water?'∞':`×${state.inventory[food.id]||0}`,'food')}${slot('clean','そうじ',cleaner?.emoji||'＋',cleaner?.label||'道具',`×${state.inventory[cleaner?.id]||0}`,'clean')}</div><div class="sub-command-row" role="group" aria-label="サブ操作"><button class="command-slot sub-command" data-action="call-cat" aria-label="よぶ。長押しで呼び方を変える"><span class="command-emoji">📣</span><strong>よぶ</strong></button><button class="command-slot sub-command" data-action="touch-now" data-tab="touch" aria-label="${state.ui.holdingCat?'下ろす':`さわる・${touch.label}`}。タップで実行、長押しで変更" ${state.ui.careAnimation?'disabled':''}><span class="command-emoji">${state.ui.holdingCat?'🤲':touch.emoji}</span><strong>${state.ui.holdingCat?'おろす':'さわる'}</strong></button><span class="touch-switch-hint">長押しで変更</span></div></nav>`;
+};
+const pointBeforeV019=getCatPoint;
+getCatPoint=state=>state.ui.careAnimation?.anchor||pointBeforeV019(state);
+const walkBeforeV019=animateCatWalk;
+animateCatWalk=function(from,to){
+  // Touching stops the cat where it was shown; do not start a zero-distance walk
+  // from subpixel rounding or resume its previous destination during the stroke.
+  if(gameState.ui.careAnimation?.anchor)return;
+  return walkBeforeV019(from,to);
+};
+function getVisibleTouchPoint(){
+  const point=getCatPoint(gameState),element=app.querySelector('.cat-object');
+  if(!element)return point;
+  const bounds=element.parentElement.getBoundingClientRect(),css=getComputedStyle(element),transform=new DOMMatrixReadOnly(css.transform);
+  return {...point,x:parseFloat(css.left)/bounds.width*100,y:parseFloat(css.top)/bounds.height*100,scale:Math.hypot(transform.a,transform.b)};
+}
+const careBeforeV019=renderCareAnimation;
+renderCareAnimation=function(animation){
+  if(animation.operation!=='touch')return careBeforeV019(animation);
+  return `<div class="care-animation touch-${animation.mode}" style="left:${animation.x}%;top:${animation.y}%" role="status" aria-label="${animation.mode==='pickup'?'抱き上げる':'撫でる'}"><span class="care-hand">${animation.emoji}</span></div>`;
 };
 renderPlayToy=itemId=>`<div class="play-toy" data-play-toy aria-hidden="true">${TOY_EMOJI[itemId]||'🧸'}</div>`;
 const placedBeforeV017=renderPlacedItem;
@@ -280,11 +317,14 @@ releaseStyle.textContent=`
 .cat-object .game-cat-svg{transform:scale(1.3)}
 .cat-object.walking .game-cat-svg,.cat-object.jumping .game-cat-svg{transform:scale(calc(var(--cat-facing,1)*1.3),1.3)}
 .capture-cat .game-cat-svg{transform:scale(1.6)}
-.command-dock.tiered-dock{display:flex;flex-direction:column;align-items:center;gap:11px;width:260px;bottom:15px}
-.main-command-row{display:flex;gap:19px;justify-content:center}.sub-command-row{display:flex;gap:8px;justify-content:center}
-.tiered-dock .main-command{width:68px;height:68px;min-width:68px}.tiered-dock .main-command .command-emoji{font-size:32px}.tiered-dock .main-command strong{font-size:8px}.tiered-dock .main-command::after{font-size:10px;padding:3px 9px;bottom:-10px}
-.tiered-dock .sub-command{display:flex;justify-content:center;gap:5px;width:88px;min-width:88px;height:40px;border-radius:24px;padding:4px 8px;background:rgba(255,250,244,.86);box-shadow:0 3px 8px #533a5220;cursor:pointer}
-.tiered-dock .sub-command .command-emoji{font-size:20px}.tiered-dock .sub-command strong{width:auto;font-size:10px}.tiered-dock .sub-command::after{display:none}
+.command-dock.tiered-dock{display:grid;grid-template-columns:minmax(0,1fr) 76px;align-items:center;gap:12px;width:calc(100% - 24px);max-width:350px;bottom:18px}
+.main-command-row{display:flex;gap:6px;justify-content:space-between}.sub-command-row{position:relative;display:flex;flex-direction:column;gap:8px;align-items:center}
+.tiered-dock .main-command{width:clamp(54px,17vw,68px);height:clamp(54px,17vw,68px);min-width:54px}.tiered-dock .main-command .command-emoji{font-size:30px}.tiered-dock .main-command strong{font-size:8px}.tiered-dock .main-command::after{font-size:10px;padding:3px 9px;bottom:-10px}
+.tiered-dock .sub-command{display:flex;justify-content:center;gap:3px;width:76px;min-width:76px;height:40px;border-radius:24px;padding:4px 5px;background:rgba(255,250,244,.94);box-shadow:0 3px 8px #533a5220;cursor:pointer}
+.tiered-dock .sub-command .command-emoji{font-size:18px;flex-shrink:0}.tiered-dock .sub-command strong{width:auto;font-size:10px;flex-shrink:0}.tiered-dock .sub-command::after{display:none}.tiered-dock .sub-command:disabled{opacity:.55;cursor:default}
+.touch-switch-hint{position:absolute;top:calc(100% + 3px);color:#816658;font-size:7px;white-space:nowrap;pointer-events:none}
+.care-animation.touch-pet{transform:translate(-50%,-110%)}.care-animation.touch-pet .care-hand{animation:touch-pet-stroke .4s ease-in-out infinite alternate;font-size:34px}.care-animation.touch-pickup .care-hand{animation:touch-lift .8s ease-in-out both}
+@keyframes touch-pet-stroke{from{transform:translate(-10px,-7px) rotate(-16deg)}to{transform:translate(12px,2px) rotate(12deg)}}@keyframes touch-lift{from{transform:translateY(10px)}to{transform:translateY(-26px)}}
 .closable-sheet-head{position:relative;padding-right:78px;flex:0 0 auto}.sheet-close{position:absolute;top:12px;right:10px;min-width:60px;min-height:40px;border:1px solid #e0c8bf;border-radius:13px;background:#fff;color:#785b57;font-size:12px;cursor:pointer;touch-action:manipulation}.inventory-menu-sheet .inventory-tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
 button,[role="button"]{touch-action:manipulation}
 .cat-object.nibbling{animation:none}.game-cat-svg .part-outline{display:none}

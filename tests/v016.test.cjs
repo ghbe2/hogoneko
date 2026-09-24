@@ -41,7 +41,7 @@ async function drag(page,source,dest){const a=await page.locator(source).boundin
  });
  assert.deepEqual([checks.half,checks.full,checks.used,checks.water],[50,100,1,50]);for(const k of ['ate','poop','vomit','combUsed','purr','cleaned','queued'])assert(checks[k],k+JSON.stringify(checks));assert(checks.protectedHair<checks.normalHair);
  await page.evaluate(()=>{gameState.cats[0].heart=85;gameState=advanceCatLife(gameState,3);gameState.ui.catFocus=null;gameState.ui.reaction=null;gameState.ui.guideExpanded=false;render(gameState);});
- await page.locator('[data-tab="touch"]').first().click();await page.locator('[data-contact="comb"]').click();assert.equal(await page.evaluate(()=>gameState.ui.equippedHand),toy);await page.locator('.cat-object').click({force:true});await page.waitForTimeout(1700);
+ await page.evaluate(()=>dispatch({type:'OPEN_SLOT_MENU',tab:'touch'}));await page.locator('[data-contact="comb"]').click();assert.equal(await page.evaluate(()=>gameState.ui.equippedHand),toy);await page.locator('.cat-object').click({force:true});await page.waitForTimeout(1700);
  await page.screenshot({path:path.join(__dirname,'screenshots/v016-room.png')});
  await page.locator('[data-tab="food"][data-command]').click();assert(await page.locator('[data-food="water_refill"]:not(.unavailable)').count());await page.locator('[data-food="water_refill"]').click();assert.equal(await page.evaluate(()=>gameState.ui.equippedFood),'water_refill');
  await page.locator('[data-action="toggle-layout"]').click();await page.screenshot({path:path.join(__dirname,'screenshots/v016-layout.png')});

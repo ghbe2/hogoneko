@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#f4bfc7">
-  <title>ホゴネコ｜保護から卒業までモック v0.18</title>
+  <title>ホゴネコ｜保護から卒業までモック v0.25</title>
   <style>
     :root {
       color-scheme: light;
@@ -3319,6 +3319,23 @@ function reduceGameState(state, action) {
 }
 
 function dispatch(action) {
+  // Expired reaction timers must not rebuild an open sheet (or restart its entrance).
+  if (action.type === "CLEAR_REACTION") {
+    if (!gameState.ui.reaction || gameState.ui.reaction.id !== action.id) return;
+    const previousPoint = getCatPoint(gameState);
+    gameState = reduceGameState(gameState, action);
+    saveGameState(gameState);
+    app.querySelectorAll('.reaction,.play-heart-burst').forEach(node => node.remove());
+    app.querySelector('.stage')?.classList.remove('responding');
+    app.querySelector('.cat-object')?.classList.remove('answering', 'fleeing');
+    if (!(gameState.ui.purrUntil > Date.now())) {
+      app.querySelectorAll('.purr-note').forEach(node => node.remove());
+      app.querySelector('.cat-object')?.classList.remove('purring');
+    }
+    const nextPoint = getCatPoint(gameState);
+    if (!gameState.ui.holdingCat && !gameState.ui.layoutMode && (previousPoint.x !== nextPoint.x || previousPoint.y !== nextPoint.y)) animateCatWalk(previousPoint, nextPoint);
+    return;
+  }
   const previousState = gameState;
   let previousPoint = getCatPoint(previousState);
   const visibleCat = document.querySelector('.cat-object');
@@ -3334,7 +3351,7 @@ function dispatch(action) {
   if ((previousPoint.x !== nextPoint.x || previousPoint.y !== nextPoint.y || previousPoint.scale !== nextPoint.scale) && !gameState.ui.holdingCat && !gameState.ui.layoutMode) {
     animateCatWalk(previousPoint, nextPoint, nextPoint.response ? 900 : CONFIG.stage1.roamWalkMs);
   }
-  if (gameState.ui.reaction) {
+  if (gameState.ui.reaction && gameState.ui.reaction.id !== previousState.ui.reaction?.id) {
     const reactionId = gameState.ui.reaction.id;
     window.setTimeout(() => dispatch({ type: "CLEAR_REACTION", id: reactionId }), 3400);
   }
@@ -4710,7 +4727,7 @@ function accrueLivePlayHeart(draft, catElement, result, segment, dt, speed) {
   const allowance = Math.max(0, Math.min(result.baseHeart - earnedToday, limit - cat.heart));
   if (allowance - draft.heartEarned < .099) return;
   draft.heartProgressMs += Math.max(0, Math.min(100, dt));
-  const interval = CONFIG.playFeel[result.affinity].tickMs;
+  const interval = CONFIG.playFeel[result.affinity].tickMs / (getItem(draft.itemId)?.playEfficiency || 1);
   while (draft.heartProgressMs >= interval && allowance - draft.heartEarned + .0001 >= .1) {
     draft.heartProgressMs -= interval;
     const before = earnedToday + draft.heartEarned;
@@ -5061,7 +5078,7 @@ const guideBeforeV016=getScreenGuide;
 getScreenGuide=function(state){
   if(state.campaign.phase==="intake"&&getRoomComfortBreakdown(state).missingEssential.length)return {title:"ごはん皿・水・トイレを用意",detail:"押し入れから、足りない必需品を床へ置こう。好みに関係なく必要です。",target:'.layout-edge-palette'};
   if(state.campaign.phase==="field")return {title:state.campaign.trapWaiting?"保護器の様子を見よう":"保護器と餌を準備しよう",detail:state.campaign.trapWaiting?"揺れたら保護器をタップ。自動で猫が来るのを待ちます。":"切り替えメニューで選び、草地へ保護器、保護器へ餌を運びます。餌は3種類まで。『準備おわり』までは時間制限なし。"};
-  if(state.campaign.phase==="room"&&!state.ui.layoutMode)return {title:"この子と過ごそう",detail:"よぶはタップ、長押しで呼び方変更。さわるで選んだ道具は猫を直接触って使います。ごはん・水はお皿を押すたび半分ずつ。"};
+  if(state.campaign.phase==="room"&&!state.ui.layoutMode)return {title:"この子と過ごそう",detail:"右のよぶ・さわるはタップですぐ実行。長押しで呼び方・さわり方を変更。あそぶは玩具を持って猫の前で動かそう。"};
   return guideBeforeV016(state);
 };
 const inventoryBeforeV016=renderInventory;
@@ -5074,7 +5091,7 @@ renderInventory=function(state){
   return html.replace(/(<span class="stock">)×1(<\/span><span class="big-emoji">💧)/,'$1補充可$2');
 };
 function renderTouchTools(state){
-  return `<div class="modal-layer menu-modal" role="dialog" aria-modal="true" aria-label="さわる方法を選ぶ"><section class="menu-sheet"><header class="sheet-head"><small>選んだら、部屋の猫を直接触って使う</small><h2>さわる</h2></header><div class="inventory-grid">${TOUCH_TOOLS.map(t=>`<button class="grid-cell ${state.ui.touchMode===t.id?"equipped":""}" data-action="contact-action" data-contact="${t.id}" ${t.stock&&!state.inventory[t.stock]?"disabled":""}><span class="big-emoji">${t.emoji}</span><strong>${t.label}</strong><small>${t.stock?`残り${state.inventory[t.stock]||0}回`:t.id==="pickup"?"気分によって逃げる":"猫をなぞる"}</small></button>`).join("")}</div><button class="field-switch" data-action="close-modal">とじる</button></section></div>`;
+  return `<div class="modal-layer menu-modal" role="dialog" aria-modal="true" aria-label="さわる方法を選ぶ"><section class="menu-sheet"><header class="sheet-head"><small>選んだら、右の「さわる」をタップして実行</small><h2>さわり方</h2></header><div class="inventory-grid">${TOUCH_TOOLS.map(t=>`<button class="grid-cell ${state.ui.touchMode===t.id?"equipped":""}" data-action="contact-action" data-contact="${t.id}" ${t.stock&&!state.inventory[t.stock]?"disabled":""}><span class="big-emoji">${t.emoji}</span><strong>${t.label}</strong><small>${t.stock?`残り${state.inventory[t.stock]||0}回`:t.id==="pickup"?"気分によって逃げる":"タップでなでる"}</small></button>`).join("")}</div><button class="field-switch" data-action="close-modal">とじる</button></section></div>`;
 }
 function renderNicknameEdit(state){
   const name=getCallName(getCat(state)).replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;');
@@ -5134,14 +5151,17 @@ app.addEventListener('click',event=>{
   if(action==='finish-field-prep')dispatch({type:'FINISH_FIELD_PREP'});
   if(action==='toggle-layout-side')dispatch({type:'TOGGLE_LAYOUT_SIDE'});
   if(action==='call-cat')dispatch({type:'EXECUTE_CONTACT',contact:'call'});
+  if(action==='touch-now'&&(event.detail===0||Date.now()>=suppressTouchClickUntil))dispatch({type:'TOUCH_NOW',point:getVisibleTouchPoint()});
 });
-let callHold=null,catStroke=null;
+let callHold=null,catStroke=null,suppressTouchClickUntil=0;
 app.addEventListener('pointerdown',event=>{
   if(event.button!==0)return;
-  if(event.target.closest('[data-action="call-cat"]')){
+  const quickAction=event.target.closest('[data-action="call-cat"],[data-action="touch-now"]');
+  if(quickAction){
+    if(callHold||quickAction.disabled)return;
     event.preventDefault();event.stopImmediatePropagation();
-    callHold={x:event.clientX,y:event.clientY,id:event.pointerId,long:false};
-    callHold.timer=setTimeout(()=>{if(callHold){callHold.long=true;suppressClickUntil=Date.now()+500;dispatch({type:'OPEN_NICKNAME'});}},600);return;
+    callHold={x:event.clientX,y:event.clientY,id:event.pointerId,long:false,touch:quickAction.dataset.action==='touch-now'};
+    callHold.timer=setTimeout(()=>{if(callHold){callHold.long=true;if(callHold.touch){suppressTouchClickUntil=Date.now()+500;dispatch({type:'OPEN_SLOT_MENU',tab:'touch'});}else{suppressClickUntil=Date.now()+500;dispatch({type:'OPEN_NICKNAME'});}}},600);return;
   }
   if(event.target.closest('.cat-object')&&!gameState.ui.layoutMode&&!gameState.ui.modal&&!gameState.ui.careAnimation&&gameState.campaign.phase==='room')catStroke={x:event.clientX,y:event.clientY,id:event.pointerId,moved:false};
 },true);
@@ -5150,7 +5170,7 @@ window.addEventListener('pointermove',event=>{
   if(catStroke&&catStroke.id===event.pointerId&&Math.hypot(event.clientX-catStroke.x,event.clientY-catStroke.y)>9){catStroke.moved=true;event.preventDefault();}
 },{passive:false});
 window.addEventListener('pointerup',event=>{
-  if(callHold&&callHold.id===event.pointerId){const hold=callHold;callHold=null;clearTimeout(hold.timer);event.preventDefault();suppressClickUntil=Date.now()+400;if(!hold.long&&!hold.cancelled)dispatch({type:'EXECUTE_CONTACT',contact:'call'});}
+  if(callHold&&callHold.id===event.pointerId){const hold=callHold;callHold=null;clearTimeout(hold.timer);event.preventDefault();if(hold.touch)suppressTouchClickUntil=Date.now()+400;else suppressClickUntil=Date.now()+400;if(!hold.long&&!hold.cancelled)dispatch(hold.touch?{type:'TOUCH_NOW',point:getVisibleTouchPoint()}:{type:'EXECUTE_CONTACT',contact:'call'});}
   if(catStroke&&catStroke.id===event.pointerId){const stroke=catStroke;catStroke=null;if(stroke.moved){suppressClickUntil=Date.now()+400;dispatch({type:'TAP_CAT'});}}
 },true);
 window.addEventListener('pointercancel',()=>{if(callHold)clearTimeout(callHold.timer);callHold=null;catStroke=null;});
@@ -5166,5 +5186,13 @@ triggerAutoEvent=function(){
 </script>
 <script src="assets/cat-svg.js"></script>
 <script src="game-v017.js"></script>
+<script src="assets/storybook-art.js"></script>
+<script src="game-v020.js"></script>
+<script src="game-v021.js"></script>
+<script src="game-v022.js"></script>
+<script src="assets/life-art.js"></script>
+<script src="game-v023.js"></script>
+<script src="game-v024.js"></script>
+<script src="game-v025.js"></script>
 </body>
 </html>

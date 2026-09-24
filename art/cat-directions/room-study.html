@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ホゴネコ｜絵本の部屋</title><link rel="stylesheet" href="room-study.css"></head>
+<body><header><a href="index.html">← デザイン研究室</a><span>HOGONEKO / ROOM STUDY 01</span></header>
+<main><section class="intro"><small>猫が主役の、絵本の一頁。</small><h1>余白のある、<br>小さなおうち。</h1><p>線を足すより、形を揃える。<br>少し歪んだ木、静かな壁、ぽってりした器。<br>猫と同じ言葉で、部屋を描きます。</p><div class="swatches" id="palettes" aria-label="配色"><button data-theme="oat" aria-pressed="true"><i style="background:#e9dfc6"></i>オーツと木</button><button data-theme="sage" aria-pressed="false"><i style="background:#bbc6ad"></i>セージの壁</button><button data-theme="rose" aria-pressed="false"><i style="background:#dbc0b4"></i>くすんだローズ</button></div><div class="options"><label><input id="furniture" type="checkbox" checked> 家具を置く</label><label><input id="cat-visible" type="checkbox" checked> 猫を置く</label><label>猫の柄 <select id="cat-choice"><option value="tortie">サビ</option><option value="tabby">キジトラ</option><option value="tux">白黒</option></select></label></div><p class="hint">左右にドラッグ／下の目印をタップ<br>広さはスマホ画面の約2枚分。<br>配置・世話の操作は未接続のデザイン試作です。</p></section>
+<section class="preview" aria-label="部屋のデザイン試作"><div class="scene-controls"><label>季節 <select id="season"><option value="spring">春</option><option value="summer">夏</option><option value="autumn">秋</option><option value="winter">冬</option></select></label><label>時間 <select id="daytime"><option value="morning">朝</option><option value="day" selected>昼</option><option value="evening">夕方</option><option value="night">夜・閉 curtain</option></select></label><p id="scene-caption" aria-live="polite"></p></div><div class="phone"><div class="game-top"><span>おうち</span><span>日曜日 <b>1,100</b></span></div><div class="room-viewport" id="viewport">
+<svg id="room" viewBox="0 0 450 760" role="img" aria-label="大きな窓と木の床、猫のいる絵本風の部屋">
+<defs><clipPath id="window-view"><path d="M101 93L294 90 298 306 104 310Z"/></clipPath></defs>
+<path fill="var(--wall)" d="M0 0H900V760H0Z"/>
+<path fill="var(--floor)" d="M0 429Q247 425 451 430T900 428V760H0Z"/>
+<path d="M0 427Q251 423 449 428T900 426L900 438Q650 440 449 439T0 440Z" fill="var(--skirting)"/>
+<g fill="none" stroke="var(--grain)" stroke-width="1.7" opacity=".6"><path d="M0 499Q320 501 540 497T900 499M0 581Q204 584 489 580T900 582M0 670Q212 667 488 671T900 669M123 440L128 499M547 440L551 498M356 501L360 581M791 500L794 582M167 583L171 669M632 582L640 670M408 671L410 760M848 670L852 760"/></g>
+<!-- The window is architecture; the shelf below is a removable object. -->
+<path fill="var(--wood-dark)" d="M86 76L308 73 315 324 91 329Z"/>
+<path fill="var(--cream)" d="M94 83L302 81 305 316 97 320Z"/>
+<g id="outside" clip-path="url(#window-view)"></g>
+<path fill="var(--cream)" d="M193 86L202 86 205 316 196 318Z M98 214L305 211 305 220 99 223Z"/>
+<path fill="var(--wood)" d="M80 319L321 315 324 329 83 334Z"/>
+<path d="M66 73Q192 69 324 72" fill="none" stroke="var(--wood-dark)" stroke-width="7" stroke-linecap="round"/>
+<g id="open-curtains"><g id="curtain-left">
+<path fill="var(--cloth)" d="M68 79L120 78Q109 165 82 225L93 357Q68 367 43 356L51 219Z"/>
+<path d="M87 85Q79 157 65 222L68 348M108 84Q95 181 79 223" stroke="var(--cloth-line)" stroke-width="3" fill="none"/>
+<path d="M48 225L83 222 82 232 47 235Z" fill="var(--wood)"/>
+ </g><use href="#curtain-left" transform="translate(390 0) scale(-1 1)"/></g>
+<g id="closed-curtains" style="display:none"><path d="M66 78Q130 72 198 79L199 346Q173 354 149 347Q126 358 101 350Q79 357 57 350Z M200 79Q260 73 322 78L330 349Q306 357 283 348Q260 357 239 349Q218 356 199 346Z" fill="var(--cloth)"/><path d="M83 86Q74 214 76 342M112 84Q105 233 111 344M147 85Q137 224 149 340M177 85Q172 213 180 341M218 85Q228 221 219 341M253 85Q246 221 255 343M282 84Q277 224 286 341M308 84Q312 220 310 343" fill="none" stroke="var(--cloth-line)" stroke-width="3"/><path d="M198 80L200 346" stroke="var(--wood-dark)" stroke-width="2" opacity=".4"/></g>
+<g class="furnishing">
+<!-- Window perch. A consistent dark underside, never a blurred shadow. -->
+<path d="M116 360L300 356 303 371 120 376Z" fill="var(--wood-dark)"/>
+<path d="M112 353L302 350 301 362 115 366Z" fill="var(--wood)"/>
+<path d="M139 373L145 396 152 395 151 371M272 369L269 394 276 395 282 368" fill="var(--wood-dark)"/>
+<!-- Low cat tower, silhouettes instead of rope texture. -->
+<ellipse cx="420" cy="527" rx="49" ry="9" fill="var(--contact)"/>
+<path d="M380 505Q418 491 463 508L459 521Q416 532 380 518Z" fill="var(--wood)"/>
+<path d="M409 335L429 334 429 511 411 514Z" fill="var(--rope)"/>
+<path d="M411 359L427 356M412 395L428 392M412 460L428 457" stroke="var(--wood)" stroke-width="2"/>
+<path d="M371 408Q415 393 462 406L464 419Q418 433 373 422Z" fill="var(--wood-dark)"/>
+<path d="M370 402Q413 388 463 402Q460 419 372 417Z" fill="var(--wood)"/>
+<path d="M382 329Q417 316 451 327L451 339Q417 352 383 340Z" fill="var(--wood-dark)"/>
+<path d="M381 325Q415 310 452 324Q450 341 382 337Z" fill="var(--cloth)"/>
+<!-- Paper carton / hiding place. -->
+<ellipse cx="83" cy="585" rx="56" ry="9" fill="var(--contact)"/>
+<path d="M29 508L109 502 124 576 39 584Z" fill="var(--wood)"/>
+<path d="M109 502L137 520 143 574 124 576Z" fill="var(--skirting)"/>
+<path d="M31 510L57 489 133 500 110 505Z" fill="var(--rope)"/>
+<path d="M56 540Q76 517 94 535L102 568 59 573Z" fill="var(--ink)"/>
+<path d="M75 503L90 502 93 516 79 517Z" fill="var(--cream)" opacity=".65"/>
+<!-- Ceramic dishes: broad forms and one inner color. -->
+<ellipse cx="237" cy="673" rx="37" ry="7" fill="var(--contact)"/>
+<path d="M203 650Q237 642 273 650L267 671Q236 683 210 671Z" fill="var(--ceramic)"/>
+<ellipse cx="238" cy="651" rx="33" ry="9" fill="var(--cream)"/><ellipse cx="238" cy="652" rx="24" ry="5" fill="var(--wood-dark)"/>
+<ellipse cx="328" cy="661" rx="32" ry="6" fill="var(--contact)"/>
+<path d="M296 641Q328 635 359 641L354 659Q327 670 301 659Z" fill="var(--leaf)"/>
+<ellipse cx="328" cy="642" rx="29" ry="8" fill="var(--cream)"/><ellipse cx="328" cy="643" rx="22" ry="5" fill="var(--sky)"/>
+<!-- Far side of the room: chair, storage, plant, litter tray. -->
+<path d="M660 83L814 81 815 282 661 284Z" fill="var(--wood-dark)"/><path d="M669 90L805 89 807 272 670 275Z" fill="var(--cream)"/>
+<path d="M691 253L714 223 734 231 759 180 787 253Z" fill="var(--leaf-light)"/><circle cx="713" cy="130" r="17" fill="var(--cloth)"/>
+<path d="M721 249Q744 179 778 135M749 193Q725 170 732 153Q754 158 759 176M764 159Q765 128 789 129Q790 149 764 159" stroke="var(--leaf)" stroke-width="4" fill="var(--leaf)"/>
+<ellipse cx="581" cy="536" rx="62" ry="10" fill="var(--contact)"/>
+<path d="M531 417L543 414 539 533 530 534M616 415L628 418 637 529 628 533" fill="var(--wood-dark)"/>
+<path d="M523 332Q576 315 628 330L620 441 533 443Z" fill="var(--wood)"/>
+<path d="M536 339Q575 329 617 339L610 407 542 410Z" fill="var(--cloth)"/>
+<path d="M520 432Q575 420 632 431L634 449Q577 461 523 449Z" fill="var(--wood-dark)"/>
+<path d="M519 426Q575 415 632 426L631 438Q576 451 521 438Z" fill="var(--cloth)"/>
+<path d="M756 377Q750 327 775 293M760 345Q726 337 728 316Q753 313 760 345M765 322Q767 294 793 293Q796 315 765 322M757 362Q780 331 800 347Q789 370 757 362" fill="var(--leaf)" stroke="var(--leaf)" stroke-width="3"/>
+<path d="M730 367Q756 361 783 366L775 402Q758 413 740 402Z" fill="var(--ceramic)"/>
+<path d="M704 404L830 400 831 511 706 516Z" fill="var(--wood)"/><path d="M715 418L819 415 818 451 715 456Z" fill="var(--rope)"/><path d="M715 466L819 461 819 502 715 505Z" fill="var(--rope)"/>
+<path d="M759 434L777 433M760 484L778 483" stroke="var(--wood-dark)" stroke-width="5" stroke-linecap="round"/>
+<path d="M716 515L715 532M817 512L820 529" stroke="var(--wood-dark)" stroke-width="8"/>
+<ellipse cx="735" cy="679" rx="70" ry="10" fill="var(--contact)"/>
+<path d="M663 634Q736 617 809 634L799 679Q735 693 675 680Z" fill="var(--leaf)"/>
+<ellipse cx="736" cy="635" rx="69" ry="17" fill="var(--cream)"/><ellipse cx="736" cy="637" rx="57" ry="11" fill="var(--rope)"/>
+</g>
+<g id="room-cat"><ellipse cx="235" cy="602" rx="33" ry="6" fill="var(--contact)"/><image id="cat-image" href="room-assets/tortie.svg" x="150" y="410" width="170" height="194"/></g>
+</svg><span class="room-note">絵本の部屋 / 配色と形の試作</span></div>
+<div class="pan-controls"><button data-pan="0" aria-label="部屋の左側" aria-pressed="true"></button><button data-pan="450" aria-label="部屋の右側" aria-pressed="false"></button></div><div class="game-bottom"><span>かばん</span><span>もよう替え</span><span>おでかけ</span><span>予定</span><span>手帳</span></div></div></section>
+<section class="rules"><small>DESIGN GRAMMAR</small><h2>「雑」ではなく、<br>揃えて省く。</h2><article><b>01 / 輪郭に同じ癖</b><p>直線を少しだけ反らす。器も木も、角を鋭くしすぎない。</p></article><article><b>02 / 質感は描きすぎない</b><p>木目・縄・葉脈は数本だけ。猫の目と模様をいちばん豊かに。</p></article><article><b>03 / 奥行きは色面で</b><p>影は単色。ぼかし・光沢・グラデーションを足さない。</p></article><article><b>04 / 家具を増やしても静か</b><p>木、陶器、布の色を共通化。床に自動の敷物は置かない。</p></article><p class="hint">窓は固定。棚や器は別パーツ。<br>今後の配置変更にも使える描き方です。</p></section></main>
+<script src="room-study.js"></script></body></html>
