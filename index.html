@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#f4bfc7">
-  <title>ホゴネコ｜保護から卒業までモック v0.25</title>
+  <title>ホゴネコ｜保護から卒業までモック v0.27</title>
   <style>
     :root {
       color-scheme: light;
@@ -2083,6 +2083,7 @@ let gameState = {
 };
 
 const DEFAULT_GAME_STATE = JSON.parse(JSON.stringify(gameState));
+let loadedSaveTimestamp = null;
 gameState = loadSavedGameState(DEFAULT_GAME_STATE);
 let titleScreenOpen = true;
 
@@ -2113,6 +2114,7 @@ function loadSavedGameState(defaultState) {
     if (!raw) return JSON.parse(JSON.stringify(defaultState));
     const save = JSON.parse(raw);
     if (!save || save.version !== SAVE_SCHEMA_VERSION || !save.state) return JSON.parse(JSON.stringify(defaultState));
+    loadedSaveTimestamp = Number.isFinite(save.savedAt) ? save.savedAt : null;
     const restored = mergeSavedState(defaultState, save.state);
     // 導入追加前のセーブは進行を尊重し、保護をやり直させない。
     if (!save.state.onboarding) restored.onboarding.status = restored.flags.firstIntake || restored.cats[0]?.status === "raising" || restored.album.length ? "done" : restored.campaign.phase !== "town" ? "active" : "new";
@@ -3465,7 +3467,7 @@ function getScreenGuide(state) {
   if (phase === "room") return {title:"猫の返事を見ながら、遊ぼう", detail:"あそぶの丸をつかみ、部屋で玩具を揺らしてみて。小さな♥が10回で大きな♥ひとつ。好きなものほど育つのが速く、苦手なら距離を取ります。"};
   const guides = {
     town:[getCat(state).status === "raising" ? "買い物へ、またはおうちへ" : "住宅街で猫を探そう", "地図の行き先をタップ。ステージ2以降はまだ未解放です。"],
-    shop:["必要なものを買おう", "商品をタップして購入。地図へ戻るから、おうちにも帰れます。"],
+    shop:["必要なものを買おう", "商品をタップして購入。「街へ戻る」から、おうちにも帰れます。"],
     graduation:["旅立ちの準備を確認しよう", "心とからだの準備を確認。まだなら、もう1日一緒に過ごせます。"],
     result:["この子の旅立ちを見届けよう", "記録を残して街へ。次の出会いではチュートリアルは繰り返しません。"],
   };
@@ -3552,7 +3554,7 @@ function renderMapShop(state) {
   }[shopId];
   const products = meta.products.length ? meta.products.map(product => `<button class="shop-product" data-action="buy-shop-item" data-item="${product.id}" data-price="${product.price}" ${state.coins < product.price ? "disabled" : ""}><span>${product.emoji}</span><strong>${product.label}</strong><small>💰 ${product.price}</small></button>`).join("") : `<div class="shop-product"><span>🩺</span><strong>診察</strong><small>保護後に利用</small></div>`;
   const body = `<section class="shop-sheet"><div class="shop-hero"><span>${meta.emoji}</span><strong>${meta.place}</strong></div><div class="shop-products">${products}</div></section>`;
-  return renderCampaignShell(state, meta.place, body, `<button class="campaign-button secondary" data-action="back-town">地図へ戻る</button>`);
+  return renderCampaignShell(state, meta.place, body, `<button class="campaign-button secondary" data-action="back-town">街へ戻る</button>`);
 }
 
 function renderField(state) {
@@ -4852,14 +4854,7 @@ function triggerAutoEvent() {
 }
 
 document.addEventListener("visibilitychange", () => {
-  if (titleScreenOpen || gameState.campaign.phase !== "room") return;
-  if (document.hidden) {
-    dispatch({ type:"LEAVE_ROOM", at:Date.now() });
-    return;
-  }
-  const elapsed = Math.max(0, Date.now() - gameState.lastSeenAt);
-  const ticks = Math.min(56, Math.floor(elapsed / CONFIG.stage1.awayEventMs));
-  dispatch({ type:"RETURN_FROM_AWAY", ticks, at:Date.now() });
+  dispatch({ type:"SYNC_REAL_TIME", at:Date.now() });
 });
 
 // v0.16: preparation, direct care, and linked daily physiology.
@@ -5194,5 +5189,7 @@ triggerAutoEvent=function(){
 <script src="game-v023.js"></script>
 <script src="game-v024.js"></script>
 <script src="game-v025.js"></script>
+<script src="game-v026.js"></script>
+<script src="game-v027.js"></script>
 </body>
 </html>

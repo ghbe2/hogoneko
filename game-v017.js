@@ -156,7 +156,7 @@ function shopTabs(state){return `<nav class="release-shop-tabs">${[['furniture',
 function renderSupplies(state){return `<div class="release-overlay" role="dialog" aria-modal="true" aria-label="ショップ"><section class="release-sheet"><header><small>部屋に戻ると、買ったものが使えます</small><h2>買いそろえる</h2><button data-action="open-wallet">● ${state.coins} ＋</button></header>${shopTabs(state)}<p class="shop-notice" role="status">${state.ui.shopNotice||'気になるものを少しずつ。家具は繰り返し使えます。'}</p><div class="release-product-scroll"><div class="shop-products">${shopProducts(state,state.ui.shopTab||'furniture')}</div></div><button class="campaign-button secondary" data-action="close-modal">戻る</button></section></div>`;}
 renderMapShop=function(state){
   const id=state.campaign.shopId,clinic=id==='clinic',name=id==='super'?'スーパー':clinic?'動物病院':'ペットショップ';
-  return renderCampaignShell(state,name,`<section class="shop-sheet"><div class="release-shop-heading"><h1>${name}</h1><button data-action="open-wallet">● ${state.coins} ＋</button></div><p class="shop-notice" role="status">${state.ui.shopNotice||'買ったものは、かばん・押し入れへ。'}</p>${clinic?'<div class="clinic-price-list"><p>初診・ワクチン　<strong>12 コイン</strong></p><p>手術・卒業ケア　<strong>18 コイン</strong></p><small>保護・卒業の流れで利用します。ゲーム内の仮価格です。</small></div>':`<div class="shop-products">${shopProducts(state,null,id)}</div>`}</section>`,`<button class="campaign-button secondary" data-action="back-to-town">地図へ戻る</button>`);
+  return renderCampaignShell(state,name,`<section class="shop-sheet"><div class="release-shop-heading"><h1>${name}</h1><button data-action="open-wallet">● ${state.coins} ＋</button></div><p class="shop-notice" role="status">${state.ui.shopNotice||'買ったものは、かばん・押し入れへ。'}</p>${clinic?'<div class="clinic-price-list"><p>初診・ワクチン　<strong>12 コイン</strong></p><p>手術・卒業ケア　<strong>18 コイン</strong></p><small>保護・卒業の流れで利用します。ゲーム内の仮価格です。</small></div>':`<div class="shop-products">${shopProducts(state,null,id)}</div>`}</section>`,`<button class="campaign-button secondary" data-action="back-town">街へ戻る</button>`);
 };
 function renderWallet(state){
   const busy=Boolean(state.ui.adToken);
@@ -343,4 +343,4 @@ button,[role="button"]{touch-action:manipulation}
 document.head.append(releaseStyle);
 saveGameState(gameState);render(gameState);scheduleRoam();
 requestAnimationFrame(animateGameCats);
-window.setInterval(triggerAutoEvent,CONFIG.stage1.autoEventMs);
+window.setInterval(()=>dispatch({type:'SYNC_REAL_TIME',at:Date.now()}),30000);
