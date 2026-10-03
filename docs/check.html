@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#efe1d6">
+  <title>ホゴネコ｜プレビュー</title>
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#efe1d6;color:#75594f;font-family:"Yu Gothic",Meiryo,sans-serif}
+    body{min-height:100svh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 32%,#fffaf4,transparent 75%),#efe1d6}
+    main{width:min(100%,340px);padding:34px 24px;text-align:center;background:#fffaf4e8;border:1px solid #ead4cc;border-radius:28px;box-shadow:0 18px 45px #60472d10}
+    .paw{font-size:36px}h1{font-size:32px;letter-spacing:.13em;margin:12px 0}p{font-size:12px;line-height:1.9;color:#998078}
+    label{display:block;text-align:left;font-size:11px;margin:26px 0 8px}input,button{width:100%;font:inherit;border-radius:12px;min-height:48px;padding:12px}
+    input{font-size:16px;border:1px solid #dfc8c0;background:#fff;color:#473b3a}input:focus{outline:2px solid #d67d90;outline-offset:2px}
+    button{border:0;background:#d47c90;color:white;font-weight:bold;margin-top:16px;box-shadow:0 4px 0 #ae6173;cursor:pointer}button:disabled{opacity:.6;cursor:wait}
+    #error{min-height:36px;margin:14px 0 0;color:#b14c65;font-size:11px}small{font-size:9px;color:#ad958c}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="paw" aria-hidden="true">🐾</div><h1>ホゴネコ</h1>
+    <p>クライアント向けプレビュー<br>お知らせしたパスワードでお入りください。</p>
+    <form id="entry">
+      <label for="password">閲覧用パスワード</label>
+      <input id="password" type="password" required autocomplete="current-password" autocapitalize="none" spellcheck="false" aria-describedby="error">
+      <button id="enter" type="submit">プレビューを開く</button>
+      <p id="error" role="status" aria-live="polite"></p>
+    </form>
+    <small>開発中のモックです</small>
+  </main>
+  <script>
+    const payload = {"salt":"fe0jkFSs9VafS39OgwelDQ==","iv":"EwnRv7nYAZJao6S1","data":"GihP3l886ybIvXo3hbTkTOA7l/G7H2DVNaJu7F6L2vsOf1+THdqST/0lo6svEUTlHy3LzUPT3QelrGkQvGjpfe2Yvl3d4QYf0zFZjcjCAiIEuFUKuYqgjYLMhJ7/pNe8kuLdlNcefemqOtKb5bPFzIiyXnnu3Sn2GRboaaswxYF5FTMkUnXhnYQ6L55x0Gvj5d7C/AHvCjxBrDs6diW5RMoMLGXaPJqTZzzG1Kol5FxAI2//MzOxagrST6q9/lCGWN41a2Ll9w/Ksmy+CUSnmvcO0gOU5TxfKM3B694/yqV51E90/u2lQSwHmJxSlGc158jslj1G3Tfs85Ed02a0epcEbKajegfzH+tFTGflt+8R2r3NNWZXeYA6qqHNFGEA5lRE0OvEnCzFMBSDVtuoaWAFA/rPeSIprIyvuLGWITvliOX+3yVWYSlVMTGU2vQ/7UqjP8zoWDZyMcVYi+z5f2MtTjJoI7ITTK+c3feUvkVdO+2ydoowd1ijE42iGh+dioViXZOsP8ORsDLi99L40D9rt7hM+aU+bysuaDCeYAsa4PJ83EmP7MGu5kn+tk5TAY5zLQNgeSgujIKKKQT+JsjRhFrutsAnv9oNbQU0+/AjXy6xjOz58pf+SsI44sx6Ji+1tkiJ0wte1o3OowhE2H7x1gNl/qV6eywdzVatJWfhFZfyC10EYD0ZIvXJvYpcrs+T6T2E0GWIC6oyKjimu8XyOoYikvWPkCZADp0whuzW656XrWnSZtONbwb7tOgaudc2Wh1PvVRfdllc1DFAGF55Il9P6O8C/J96PEG2NR2a1flL6K0eenFp9wamGNFyMyVVlcxqOh6pYQPfTLkd72P0Eynbw2e75yC3pxAJ34zjaCYQ/Q/uEN7V/7SaKNe5RrE85SIeUBhr4fPEhRgjygoE5QBCgYvBKc8SE8uTLdJV/lOc/n75S8jB8iA0n+q0ozTo4sOKGTRc7KTBa8V0J1frDCKRhneV5DC4L9TrxopHP+z0oAc/wHmTbZaCxYwHUieq9DR3D28PrlI1prxqRh//NuStaNbMparMd+3DJTywvaMPlc7NPDkFoF3Z31SdJPsAGpL/+d8PkuI9h23BBmmEpkmtF00QmeldBzU69Ki3eZDYC+xHcMvfHmz0gsXT0G3uuReb46N3b8yb7f7oWavqMZVWXUvlhYC7DwMhmWtIJlwVe+BJdGSMYXgDt2w0+4cUa/8onhkJf2WF1kNbPbNV45IrYhqMQPuD56w/oWpmxj8brztyjKb1LimG8RzAhbDsPakAQiF353G9C+E6OiN4M4kjQjYca91Y1OWbc4cqlGQ2PSR8c9IPwHAHRxUuPlKk1MWDwRUd3DbQBooNlj/SgKUgLuJ2xU2Q7ERYXoyR8J9S+TlI0MIvBTL8edQ8wiY2i8Ef9SqR8htrTj/6yfbMT8MF2OK4FxwxmfsdkSbf0cVky40yzdZQlP519AIkeruDlZZjy9Q3OR2gL6eJCzmi+hPdBVUHTqrk5qL0hvzU/npxH3Q5M4z0OQ7CrT7qBZOe9A9RgDwslan//cskFVeeeNwKGwxpmVEywBwwnCnQ98e92y1XzDPgLfMiYyrPF80ozyBUb83bffDPuIKAeyXzaWEJ9Gbd3FLOSFsV47evbD1yUkGDiM2TCNu0SN68gkbYZK5aKHZliCi5gSOqqj9fBN9uT7ZmDhbvch/i0Y7ZcXLcZwS56ILMr2XSPPKLAFMSvevvJaj4QsQfpip79UJJkwMVkM8fpNWroUtGCD2tBpaLObE8DyNirY8JzAvwYWb60bIYUI4aOusT/2/CsreayIv8ECMTgl3McAnat/s+Nt/REAs9MdAmATzfhw3XUG6BUhkT3cmJCXPA7olnrktLI073iZ4Juv+2fAwg4vLZkeiOAY0zxsq5YqGmqXj9ZxA97NpsvTQlBkKScujruy7WUu9dndADk8XZYve9NPdk08NUAnA/+ZEBWKZ7099tSeF5A5Sg7WqU74ER6GnIPCkrZBSCbUKsOEmuwmsRcz3NITqbgKVb6YPrgk3X8ghGWAzS5xZAqxRVlYPRs29MXT18PD/lrOff4AEeDKJ05PNOb817rGhjB67f5wT5a3MUJi0AuUlZokIqpDslTyZ1cIcc0ShAlVV4iDVr8Z638ELtGZCtiZZEhHk7fJtwP7iffxqc2rU7cIIeRkIzCMbkZwTp8q1FtOaEzFHQ1ZjKbRxpKKIbrDF1ENqGQcDkIPSeo56Ti+C4j3u+q457FGqMwTJhlnp9TOEgsP9+PHtvwR/diudZNPSGlZ5uLes0yI6Vj3QwMc9DPaaUgNXafaJqYdM2nNy92dU3zdymR2Xz+9BQ1l7feA7hna50N6UEMPreron5++JWt5gtRrdb80kQ7MON/U/1bIXMLMx4+NJicqMVz3WSM30tyb70US2GxPQ5z80VNSwNjbb1HlmWzgmcA+XyE09bYjvr85IzmnbZZGqYKk8uElboxS3w8WzbpsoUSmwvxRXDxm91xWLzDMqyFDrWuW+NZ2/zT+jS96NNFyNFVdWeEMia2ju/Fkb4rjPvzeDa94oycwqqMiH77W4/UDq8bbjOyAG/6yA75PXHJScdgwhII33PSu8IrdOKgIcyEmfxkNlkjUaNC0NQ6DurACqdEiRhIEibAv0gEeWuypMmyUxqUPXeb1SLzMEFXJspZ9CBZy2CYYQT1HhxVi5DdZjjXOoneVKSrKzUQlMu/84xpvi17oTf3Y0G2N9G4EMg78YzODxzwIcMxoFAIlrMkOSlEOfcQEEByMVamsMuPY7gABo3gsU93wgA83JCpUCNVboDaBP5jbOfmlzM99PuoQB0SCfJBWvB2Ge4gXR7EjbLLgVTbHpElxe9JPb8lH1mEVz1CW33aoyGKEyiHzlpVhvjUUn9fca5onQkfkgPxBOIvnyiV28HgluNuwW9Qa1c5Avhst0hLCntN5/P/mXpJs/drkwYTWbxFJyGHlB/AwYHNgmvCTw5uWtEqQUB6CkI3bHyvWy9tVTSM6b0ZCjq0f/tuaBzQg72v7pr1+XCDAKEGhYuaP8HD+ejv6muCIRqOj8fNtlJLfP9HBbk2cv9epzi2/ckAOJACH+2qeDpXgZs7OBmudiLkU4Em9MEzNmA6VXkiCMFfy8pusGfFPfP5m9/kZv1vg+d2cGLKpUDilaGj9UB+NlDhOiqMeey8a661qF3SMmR5HhOFXc63+IklmAgLYXlq2lkL6Wpr3ls+2LWwh/MuUA08pmo2yYTu03K/6CElu/IpbL+AgY3Mbcig1r+OT4PjKmeAhdt2W9t01GKrX9DJ/Oq/+9BB0T684jmLLyhUMcgg6FP9h2ELZn+5+3IKDMhJ4+L45UK//gxDVC7by8V8ud7r0MXy7j1U4KDF8ME9g4LVrJ6gmMcxBH6BvKMP4hL87/IkjqT+g1EMKY7Mv6KwyR27O6ILlZod4mw1i4l4boKGFrAdLnGRGQJcMBPVb0Qt4xU0jrsZzCdK84HQCUnVfiALfNyQ+dKkwCdTzXBbP4E2aZIAQgLS5ZPoZwKw81elc/OSTFBaZNyUvorDWkkY/QsQqPJOqQoinWifkKdOzNYv5i8huW6kceZELQPFSMeb9VVoeWekK2xfsGn86f6vfDycoEO2p6RW5mcQ1oNY5cyG0wKUcRmtm1WfcluDUkf00S16qURzroOsxMdmuUQPdin4vVcXZXrpYxbrUzgryFlSJYQMyUMli/S8is6wGGDHGytzLyFoj5hetJ0jN6K1QhOlt5OFeBfxB1w9FSTPZ7r1PGRPbKSoLXAwLjSGAMea3o4pTlBNIp7vpTZxMbrnxEndWq43361kz+ZnnB7NRq0ZVknHI3us5y/vUO4cpaLf7kLlgTUzRitS+dc566+wTtj3sEoxnCiHhAtnCI6/So6JPhuApHFitGh1KD+Cnz9hghzC06ul+frY5a2Ucu8QfH219MZV8z6j4EWFQg2i/sEPgZh/qf3OotgrVH281iOY0EHtCi4hC8dSEtlXV4wNsblOkgn14yOQzUWQgTcajfZJN0+oUU7ETJJdpzV1fR6p5G72aRgCETNsmiBN9aFmLaNfevUDSLlpvJjJuhAkPcUJhubGryqbZ0++nb+dNHuAtQ9749dybg0B/4lYLjOzFTvTdZ1/7POKrcxYCLcsgR33noN+1WrO2/oLNRnE13VqSKeYA1PWdpPZLeMFcT2rt4NI+O0QAiXhGPQaN6Sc9uI4+Sfh06uiiUxwiAQ2SUDmyPRq+ZVZugU4fTA9fNApkOhpHvO/oBuNZHFc10aqc83D4iZg2+US0p4J9t7WD0BYNvIxRHvyFEcNCnfZAr+ftTlJpY0pvQ13pjGgV+xzRUdXYMJZGCT535jrtIu3onqn/LYRxcXgpESW59d8iIJYm8VGkPPbv3pSxexaElhX2A5xjDVhhhQ2MfyZniZ0jE2dRr6rXsIboJVKUSSottiNczdEAW5JQkngO3xiNAYLsVbIO3/c9rJzXFe5/E8kW+PM3bqFlYFIYIC52T0/lE4Foxq74ryZ6+YMm/MhvX0xbOD5rtyZbCkGsIAvNWCSEwv/+9J1hkVgY15owVuKwuzFq2Bmnn6lZUVNJwlKVIfbHkSp42W8JYB5ONWrLSc80tnYdCH6a+q3iIMOc4TgxWaoXK+BKEMJQa5RtLh1Kqy24mKegmo3JJtWAqiFeOMKjR2NdGJEuV0GgI+MBCJICul2wh0g58bAPgMzC9MwQjrUl/Y91u/CEhz7cguQ9YZPnvdD74O2BxlXd9I/xSFVMzUAxWsNQGpSm6OBIAsvYv48dO4GTWnCeVE2BuzvTJ2PGuISNZsp8BXQHzxvfieU6juAzrQzwwriKEwcddSkaiStD0POFlHYPQ2eUAgsQ5Gqc7abs6hy3bnG2heAGMrxyKlIYVItxhyr1AS4LttQXZGxfteOU54JM7wmo5SnnBIWAgVsIVkmFOolMdNqL6Q6GRYcXSiUcPizO2bdv04Q3mtzlO3oFWoNiiRfvfH","iterations":210000};
+    const bytes = value => Uint8Array.from(atob(value), char => char.charCodeAt(0));
+    const sessionKey='hogoneko-preview-key:'+payload.salt;
+    let gateOpening=false;
+    async function unlock(key){
+      const data=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(payload.iv)},key,bytes(payload.data));
+      document.open();document.write(new TextDecoder().decode(data));document.close();
+    }
+    // A tab-scoped decryption key, never the password. New builds use a new salt.
+    const cachedKey=sessionStorage.getItem(sessionKey);
+    if(cachedKey){gateOpening=true;document.querySelector('#enter').disabled=true;
+      window.addEventListener('load',async()=>{try{const key=await crypto.subtle.importKey('raw',bytes(cachedKey),'AES-GCM',false,['decrypt']);await unlock(key);}catch{sessionStorage.removeItem(sessionKey);gateOpening=false;document.querySelector('#enter').disabled=false;}},{once:true});
+    }
+    document.querySelector('#entry').addEventListener('submit',async event => {
+      event.preventDefault();
+      if(gateOpening)return;
+      gateOpening=true;
+      const button=document.querySelector('#enter'), input=document.querySelector('#password'), error=document.querySelector('#error');
+      button.disabled=true;button.textContent='開いています…';error.textContent='';
+      if(!globalThis.crypto?.subtle){error.textContent='HTTPSのURLを、最新のブラウザで開いてください。';button.disabled=false;button.textContent='プレビューを開く';return;}
+      try {
+        const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(input.value),'PBKDF2',false,['deriveKey']);
+        const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:bytes(payload.salt),iterations:payload.iterations,hash:'SHA-256'},material,{name:'AES-GCM',length:256},true,['decrypt']);
+        const data=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(payload.iv)},key,bytes(payload.data));
+        input.value='';
+        try{sessionStorage.setItem(sessionKey,btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('raw',key)))));}catch{}
+        document.open();document.write(new TextDecoder().decode(data));document.close();
+      }catch{
+        gateOpening=false;
+        error.textContent='パスワードが違います。もう一度お試しください。';
+        button.disabled=false;button.textContent='プレビューを開く';input.focus();input.select();
+      }
+    });
+  </script>
+</body>
+</html>

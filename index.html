@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#f4bfc7">
-  <title>ホゴネコ｜保護から卒業までモック v0.29</title>
+  <title>ホゴネコ｜保護から卒業までモック v0.30</title>
   <style>
     :root {
       color-scheme: light;
@@ -2001,7 +2001,8 @@ const initialCat = {
   status: "candidate",
 };
 
-const SAVE_KEY = "hogoneko_mock_save";
+const SAVE_KEY = new URLSearchParams(location.search).get('check') === '1' ? 'hogoneko_check_save' : 'hogoneko_mock_save';
+if (SAVE_KEY === 'hogoneko_check_save' && new URLSearchParams(location.search).has('scenario')) localStorage.removeItem(SAVE_KEY);
 const SAVE_SCHEMA_VERSION = 1;
 
 let gameState = {
@@ -5193,5 +5194,6 @@ triggerAutoEvent=function(){
 <script src="game-v027.js"></script>
 <script src="game-v028.js"></script>
 <script src="game-v029.js"></script>
+<script src="game-v030.js"></script>
 </body>
 </html>

@@ -1,0 +1,18 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ホゴネコ｜チェックハブ</title><style>
+*{box-sizing:border-box}body{margin:0;background:#f3eee6;color:#473e38;font:15px/1.6 system-ui,sans-serif}main{max-width:900px;margin:auto;padding:24px 18px 60px}h1{font-size:27px;margin:8px 0}h2{font-size:19px;margin:30px 0 12px}p{color:#7d7067}a{color:inherit;text-decoration:none}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}.card{display:block;background:#fffdf8;border:1px solid #ded3c8;border-radius:16px;padding:16px;min-height:88px}.card:hover,.card:focus-visible{outline:2px solid #d77f96}.card small{display:block;color:#8a7b70;margin-top:6px;font-size:12px}.note{background:#e4ecde;border-radius:14px;padding:14px;font-size:13px}.back{display:inline-block;padding:10px 0;color:#a14c68}header small{letter-spacing:2px;color:#b0697e}</style></head><body><main>
+<header><small>HOGONEKO / CHECK HUB</small><h1>ホゴネコのチェック室</h1><p>見たい場面から、何度でも。</p></header>
+<div class="note">ここから始めるゲームはチェック専用セーブです。通常プレイのネコ・部屋・持ち物は変わりません。各カードは毎回その場面の初期状態から始まります。</div>
+<a class="back" href="index.html">← 通常プレイへ</a> ／ <a class="back" href="index.html?check=1">チェックの続きを開く</a>
+<h2>01　各フェーズを試す</h2><div class="grid" id="phases"></div>
+<h2>02　つまずき・分岐を試す</h2><div class="grid" id="branches"></div>
+<h2>03　デザインを見る</h2><div class="grid">
+<a class="card" href="art/cat-directions/cat-lab.html">ネコデザイン<small>形・柄・目・ポーズのSVG研究室</small></a>
+<a class="card" href="TYPE_MATCHUP_v0.1.html">ネコ性格表<small>タイプごとの好き・苦手</small></a>
+<a class="card" href="art/cat-directions/toy-study.html">アイテムデザイン<small>手持ち玩具</small></a>
+<a class="card" href="art/cat-directions/interior-toy-study.html">設置アイテム<small>置く玩具・インテリア</small></a>
+<a class="card" href="art/cat-directions/scene-study.html">画面デザイン<small>街・フィールド・店舗の背景</small></a>
+<a class="card" href="art/cat-directions/room-study.html">部屋デザイン<small>部屋の季節・時間</small></a></div>
+<script>
+const groups={phases:[['intro','初回チュートリアル','タイトル・ミニストーリーから'],['field','保護フィールド','保護器と餌を置くところから'],['capture','保護器が揺れた','タップしてネコと出会う'],['clinic','初診','診察・領収書・命名'],['naming','名前をつける','名前は空欄から'],['intake','おうちへ受け入れ','模様替え・名前を呼ぶ'],['room','育成 1日目','心50・初期の持ち物'],['surgery','手術 5日目','おでかけへの誘導から'],['event','譲渡会 7日目','手術済み・譲渡できる状態'],['result','譲渡のあと','卒業・次の保護へ'],['town','街とお店','買い物・広告支援']],branches:[['underweight','手術：体重不足','子猫690g・条件の確認'],['poor','手術：コイン不足','所持0・支援広告から復帰'],['tnr','譲渡会：TNR','心20・譲渡との違い'],['tnr-result','TNRのあと','地域に戻したあとの周回']]};
+for(const [id,rows] of Object.entries(groups))document.getElementById(id).innerHTML=rows.map(([key,title,note])=>`<a class="card" href="index.html?check=1&scenario=${key}">${title}<small>${note}</small></a>`).join('');
+</script></main></body></html>

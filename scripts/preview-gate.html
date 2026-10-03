@@ -32,18 +32,33 @@
   <script>
     const payload = __PREVIEW_PAYLOAD__;
     const bytes = value => Uint8Array.from(atob(value), char => char.charCodeAt(0));
+    const sessionKey='hogoneko-preview-key:'+payload.salt;
+    let gateOpening=false;
+    async function unlock(key){
+      const data=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(payload.iv)},key,bytes(payload.data));
+      document.open();document.write(new TextDecoder().decode(data));document.close();
+    }
+    // A tab-scoped decryption key, never the password. New builds use a new salt.
+    const cachedKey=sessionStorage.getItem(sessionKey);
+    if(cachedKey){gateOpening=true;document.querySelector('#enter').disabled=true;
+      window.addEventListener('load',async()=>{try{const key=await crypto.subtle.importKey('raw',bytes(cachedKey),'AES-GCM',false,['decrypt']);await unlock(key);}catch{sessionStorage.removeItem(sessionKey);gateOpening=false;document.querySelector('#enter').disabled=false;}},{once:true});
+    }
     document.querySelector('#entry').addEventListener('submit',async event => {
       event.preventDefault();
+      if(gateOpening)return;
+      gateOpening=true;
       const button=document.querySelector('#enter'), input=document.querySelector('#password'), error=document.querySelector('#error');
       button.disabled=true;button.textContent='開いています…';error.textContent='';
       if(!globalThis.crypto?.subtle){error.textContent='HTTPSのURLを、最新のブラウザで開いてください。';button.disabled=false;button.textContent='プレビューを開く';return;}
       try {
         const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(input.value),'PBKDF2',false,['deriveKey']);
-        const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:bytes(payload.salt),iterations:payload.iterations,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['decrypt']);
+        const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:bytes(payload.salt),iterations:payload.iterations,hash:'SHA-256'},material,{name:'AES-GCM',length:256},true,['decrypt']);
         const data=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(payload.iv)},key,bytes(payload.data));
         input.value='';
+        try{sessionStorage.setItem(sessionKey,btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('raw',key)))));}catch{}
         document.open();document.write(new TextDecoder().decode(data));document.close();
       }catch{
+        gateOpening=false;
         error.textContent='パスワードが違います。もう一度お試しください。';
         button.disabled=false;button.textContent='プレビューを開く';input.focus();input.select();
       }
