@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#f4bfc7">
-  <title>ホゴネコ｜保護から卒業までモック v0.34</title>
+  <title>ホゴネコ｜保護から卒業までモック v0.35</title>
   <style>
     :root {
       color-scheme: light;
@@ -4905,8 +4905,9 @@ function advanceCatLife(state, ticks=1) {
     }
     if(placed.has("water")&&body.waterLevel>0&&body.hydration<70){const sip=Math.min(50,body.waterLevel);body.waterLevel-=sip;body.hydration=Math.min(100,body.hydration+sip*.8);drank=true;}
     const groomed=body.groomedTicks>0;body.groomedTicks=Math.max(0,(body.groomedTicks||0)-1);body.looseCoat=Math.min(10,(body.looseCoat||0)+(groomed?.25:1.5));
-    const shed=groomed?(body.lifeTicks%3===0?1:0):Math.min(4,1+Math.floor(body.looseCoat/3));
-    for(let n=0;n<shed;n++){const seed=body.lifeTicks*11+n*17;body.hair.push({id:`${body.lifeTicks}-${n}`,x:12+(seed*13%72),y:57+(seed*7%31)});}
+    // Sparse, irregular shedding; grooming lowers the probability, not a fixed timer.
+    const shed=Math.random()<(groomed?.12:.45+body.looseCoat*.025)?1:0;
+    for(let n=0;n<shed;n++)body.hair.push({id:`${body.lifeTicks}-${n}`,x:10+Math.random()*78,y:59+Math.random()*29});
     body.hair=body.hair.slice(-30);body.hunger=body.satiety<25;
   }
   let cat={...getCat(state),body};
@@ -5194,5 +5195,6 @@ triggerAutoEvent=function(){
 <script src="game-v032.js"></script>
 <script src="game-v033.js"></script>
 <script src="game-v034.js"></script>
+<script src="game-v035.js"></script>
 </body>
 </html>
