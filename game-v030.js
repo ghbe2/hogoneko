@@ -33,7 +33,8 @@ if(checkMode && checkScenario){
    cat.lifeLog.push({day:5,kind:'surgery',title:'手術を終えた'});
   }
   if(checkScenario==='town')c.phase='town';
-  if(checkScenario==='park'){cat.status='candidate';cat.name='';cat.types=[];c.phase='field';c.area='a2';gameState.album=[{catId:'check-first-graduate',name:'見送り済みのネコ',outcome:'adopted',day:7,area:'a1'}];}
+  if(checkScenario==='park'){cat.status='candidate';cat.name='';cat.types=[];c.phase='field';c.area='a2';gameState.album=Array.from({length:8},(_,i)=>({catId:'check-graduate-'+i,name:'見送り済みのネコ',outcome:'adopted',day:7,area:'a1'}));}
+  if(checkScenario==='mountain'){cat.status='candidate';cat.name='';cat.types=[];c.phase='field';c.area='a4';gameState.album=['a1','a2','a3'].flatMap((area,k)=>Array.from({length:[8,12,16][k]},(_,i)=>({catId:`check-${area}-${i}`,name:'見送り済みのネコ',outcome:'adopted',day:7,area})));}
   gameState=reconcileVisit(gameState);
   if(['result','tnr-result'].includes(checkScenario))for(const type of ['OPEN_OUTING','OPEN_REQUIRED_VISIT','SEND_EVENT'])gameState=reduceGameState(gameState,{type});
   history.replaceState(null,'',location.pathname+'?check=1');

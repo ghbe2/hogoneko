@@ -17,7 +17,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),{pat
  }
  await open(url+'?check=1&scenario=room');await p.evaluate(()=>{gameState.coins=123;dispatch({type:'CLEAR_MESSAGE'});});await p.reload();await p.locator('.check-hub-link').waitFor();assert.equal(await p.evaluate(()=>gameState.coins),123);
  await p.locator('.check-hub-link').click();await p.locator('#phases a').first().waitFor();
- assert.equal(await p.locator('#phases a').count(),11);assert.equal(await p.locator('#branches a').count(),5);
+ assert.equal(await p.locator('#phases a').count(),11);assert.equal(await p.locator('#branches a').count(),6);
  const hub=p.url();const links=await p.locator('a.card').evaluateAll(nodes=>nodes.map(n=>new URLSearchParams(new URL(n.href).search).get('target')).filter(t=>t&&!t.includes('?')).map(t=>new URL(t,location.href).href));
  for(const link of links){await p.goto(link);await p.waitForTimeout(500);assert.equal(await p.locator('#password').count(),0,'session unlock '+link);assert(await p.locator('svg,table').count()>0,'rendered '+link);}
  await p.goto(hub);await p.screenshot({path:'tests/screenshots/v030-hub.png',fullPage:true});
