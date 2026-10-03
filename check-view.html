@@ -1,0 +1,11 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ホゴネコ｜チェックビュー</title><style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden}body{display:flex;flex-direction:column;background:#514940;font-family:system-ui,sans-serif}.check-toolbar{flex:none;display:flex;align-items:center;gap:12px;min-height:48px;padding:4px 12px;padding-top:max(4px,env(safe-area-inset-top));color:#eee5db}.check-toolbar a{display:flex;align-items:center;min-height:40px;color:white;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap}.check-toolbar span{font-size:11px;opacity:.8}iframe{display:block;border:0;width:100%;flex:1;min-height:0;background:#f3eee6}
+</style></head><body><nav class="check-toolbar" aria-label="チェック画面の操作"><a href="check.html">← チェック一覧へ戻る</a><span>確認用</span></nav><iframe id="preview" title="選んだチェック画面"></iframe><script>
+const target=new URLSearchParams(location.search).get('target')||'index.html?check=1';
+const allowed=['index.html','TYPE_MATCHUP_v0.1.html',...['cat-lab','toy-study','interior-toy-study','scene-study','room-study'].map(name=>'art/cat-directions/'+name+'.html')];
+const parsed=new URL(target,location.href),base=new URL('.',location.href);
+if(allowed.some(path=>parsed.pathname===new URL(path,base).pathname)&&parsed.origin===base.origin){
+ if(parsed.pathname===new URL('index.html',base).pathname)parsed.searchParams.set('check','1');
+ document.getElementById('preview').src=parsed.href;
+}else document.querySelector('.check-toolbar span').textContent='画面が見つかりません';
+</script></body></html>

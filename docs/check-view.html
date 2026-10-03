@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#efe1d6">
+  <title>ホゴネコ｜プレビュー</title>
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#efe1d6;color:#75594f;font-family:"Yu Gothic",Meiryo,sans-serif}
+    body{min-height:100svh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 32%,#fffaf4,transparent 75%),#efe1d6}
+    main{width:min(100%,340px);padding:34px 24px;text-align:center;background:#fffaf4e8;border:1px solid #ead4cc;border-radius:28px;box-shadow:0 18px 45px #60472d10}
+    .paw{font-size:36px}h1{font-size:32px;letter-spacing:.13em;margin:12px 0}p{font-size:12px;line-height:1.9;color:#998078}
+    label{display:block;text-align:left;font-size:11px;margin:26px 0 8px}input,button{width:100%;font:inherit;border-radius:12px;min-height:48px;padding:12px}
+    input{font-size:16px;border:1px solid #dfc8c0;background:#fff;color:#473b3a}input:focus{outline:2px solid #d67d90;outline-offset:2px}
+    button{border:0;background:#d47c90;color:white;font-weight:bold;margin-top:16px;box-shadow:0 4px 0 #ae6173;cursor:pointer}button:disabled{opacity:.6;cursor:wait}
+    #error{min-height:36px;margin:14px 0 0;color:#b14c65;font-size:11px}small{font-size:9px;color:#ad958c}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="paw" aria-hidden="true">🐾</div><h1>ホゴネコ</h1>
+    <p>クライアント向けプレビュー<br>お知らせしたパスワードでお入りください。</p>
+    <form id="entry">
+      <label for="password">閲覧用パスワード</label>
+      <input id="password" type="password" required autocomplete="current-password" autocapitalize="none" spellcheck="false" aria-describedby="error">
+      <button id="enter" type="submit">プレビューを開く</button>
+      <p id="error" role="status" aria-live="polite"></p>
+    </form>
+    <small>開発中のモックです</small>
+  </main>
+  <script>
+    const payload = {"salt":"2aFa0NfJSGUnfknJLyh39A==","iv":"ez//gFa0IIulPA/D","data":"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","iterations":210000};
+    const bytes = value => Uint8Array.from(atob(value), char => char.charCodeAt(0));
+    const sessionKey='hogoneko-preview-key:'+payload.salt;
+    let gateOpening=false;
+    async function unlock(key){
+      const data=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(payload.iv)},key,bytes(payload.data));
+      document.open();document.write(new TextDecoder().decode(data));document.close();
+    }
+    // A tab-scoped decryption key, never the password. New builds use a new salt.
+    const cachedKey=sessionStorage.getItem(sessionKey);
+    if(cachedKey){gateOpening=true;document.querySelector('#enter').disabled=true;
+      window.addEventListener('load',async()=>{try{const key=await crypto.subtle.importKey('raw',bytes(cachedKey),'AES-GCM',false,['decrypt']);await unlock(key);}catch{sessionStorage.removeItem(sessionKey);gateOpening=false;document.querySelector('#enter').disabled=false;}},{once:true});
+    }
+    document.querySelector('#entry').addEventListener('submit',async event => {
+      event.preventDefault();
+      if(gateOpening)return;
+      gateOpening=true;
+      const button=document.querySelector('#enter'), input=document.querySelector('#password'), error=document.querySelector('#error');
+      button.disabled=true;button.textContent='開いています…';error.textContent='';
+      if(!globalThis.crypto?.subtle){error.textContent='HTTPSのURLを、最新のブラウザで開いてください。';button.disabled=false;button.textContent='プレビューを開く';return;}
+      try {
+        const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(input.value),'PBKDF2',false,['deriveKey']);
+        const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:bytes(payload.salt),iterations:payload.iterations,hash:'SHA-256'},material,{name:'AES-GCM',length:256},true,['decrypt']);
+        const data=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(payload.iv)},key,bytes(payload.data));
+        input.value='';
+        try{sessionStorage.setItem(sessionKey,btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('raw',key)))));}catch{}
+        document.open();document.write(new TextDecoder().decode(data));document.close();
+      }catch{
+        gateOpening=false;
+        error.textContent='パスワードが違います。もう一度お試しください。';
+        button.disabled=false;button.textContent='プレビューを開く';input.focus();input.select();
+      }
+    });
+  </script>
+</body>
+</html>

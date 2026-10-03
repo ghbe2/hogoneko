@@ -41,7 +41,7 @@ if(checkMode && checkScenario){
 const checkStyle=document.createElement('style');checkStyle.textContent='.check-hub-link{display:inline-block;flex-shrink:0;background:#514940;color:white;padding:6px 8px;border-radius:20px;font:10px system-ui;text-decoration:none;margin-left:5px}.check-hub-link.floating{position:fixed;left:12px;top:12px;z-index:20000}';document.head.append(checkStyle);
 function mountCheckLink(){
  document.querySelectorAll('.check-hub-link').forEach(node=>node.remove());
- const link=document.createElement('a');link.className='check-hub-link';link.href='check.html';link.textContent=checkMode?'試用中・一覧へ':'チェック室';
+ const link=document.createElement('a');link.className='check-hub-link';link.href='check.html';link.target='_top';link.textContent=checkMode?'試用中・一覧へ':'チェック室';
  const host=document.querySelector('.hud-main,.campaign-place');
  if(host)host.append(link);else{link.classList.add('floating');document.body.append(link);}
 }
