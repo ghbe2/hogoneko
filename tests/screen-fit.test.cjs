@@ -1,0 +1,19 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),{pathToFileURL}=require('node:url'),path=require('node:path');
+(async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{const p=await b.newPage();const url=pathToFileURL(path.resolve('index.html')).href;
+for(const [w,h] of [[375,764],[320,520]]){await p.setViewportSize({width:w,height:h});
+for(const scenario of ['intro','field','capture','clinic','naming','intake','room','surgery','event','result','tnr-result','town']){
+await p.goto(url+'?check=1&scenario='+scenario);await p.waitForTimeout(100);
+const inspect=async(label)=>{await p.waitForTimeout(450);const bad=await p.evaluate(()=>[...document.querySelectorAll('body *')].filter(e=>e.clientHeight>30&&e.scrollHeight>e.clientHeight+3&&['auto','scroll'].includes(getComputedStyle(e).overflowY)).map(e=>({cls:e.className,over:e.scrollHeight-e.clientHeight})));console.log(w,h,label,JSON.stringify(bad));assert(bad.every(e=>/shop-products|inventory-grid|layout-edge-scroll|release-product-scroll|photo-strip|weight-scroll/.test(e.cls)),label+' unexpected scrolling');const over=await p.evaluate(()=>{const e=document.querySelector('.campaign-scroll');return e?e.scrollHeight-e.clientHeight:0;});assert(over<4,label+' content exceeds play viewport by '+over);assert(await p.evaluate(()=>[...document.querySelectorAll('.campaign-actions button,.schedule-panel>.schedule-actions button')].every(e=>{const r=e.getBoundingClientRect();return r.bottom<=innerHeight&&r.top>=0;})),label+' actions visible');if(process.env.SHOTS)await p.screenshot({path:`tests/screenshots/fit-${w}-${label}.png`});};
+await inspect(scenario);
+if(scenario==='intro'){await p.evaluate(()=>dispatch({type:'START_GAME'}));for(let i=0;i<3;i++){await inspect('story-'+i);if(i<2)await p.evaluate(()=>dispatch({type:'NEXT_STORY'}));}}
+if(scenario==='capture'){await p.evaluate(()=>dispatch({type:'OPEN_TRAP'}));await p.waitForTimeout(3000);await inspect('trap-result');}
+if(scenario==='event'){await p.evaluate(()=>{dispatch({type:'OPEN_OUTING'});dispatch({type:'OPEN_REQUIRED_VISIT'});});await inspect('graduation');}
+if(scenario==='clinic'){await p.evaluate(()=>dispatch({type:'FINISH_EXAM'}));await inspect('receipt');}
+if(scenario==='room')for(const modal of ['notebook','schedule','inventory','touchTools','nickname','wallet']){await p.evaluate(modal=>{gameState.ui.modal=modal;render(gameState);},modal);await inspect(modal);if(modal==='notebook')assert(await p.evaluate(()=>{const photo=document.querySelector('.photo-strip').getBoundingClientRect(),book=document.querySelector('.notebook').getBoundingClientRect();return photo.bottom<=book.bottom+1;}),'notebook photos fully visible');}
+if(scenario==='town')for(const shop of ['super','petshop','clinic']){await p.evaluate(shop=>{gameState.campaign.phase='shop';gameState.campaign.shopId=shop;render(gameState);},shop);await inspect(shop);}
+if(scenario==='surgery'){await p.evaluate(()=>{dispatch({type:'OPEN_OUTING'});dispatch({type:'OPEN_REQUIRED_VISIT'});});await inspect('operation');}
+}
+await p.goto(url+'?check=1&scenario=room');await p.evaluate(()=>{getCat(gameState).body.days=8;gameState.ui.modal='schedule';render(gameState);});await p.waitForTimeout(450);
+assert(await p.evaluate(()=>{const s=document.querySelector('.schedule-scroll'),weeks=s.querySelectorAll('.schedule-week'),r=weeks[1].getBoundingClientRect(),v=s.getBoundingClientRect();return weeks.length===2&&r.top>=v.top-2&&r.bottom<=v.bottom+2;}),'current seven days fit on week two');
+await p.evaluate(()=>{document.querySelector('.schedule-scroll').scrollTop=0;render(gameState);});assert.equal(await p.locator('.schedule-scroll').evaluate(e=>e.scrollTop),0,'past records retain scroll');
+}}finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
