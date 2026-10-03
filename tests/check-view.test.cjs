@@ -3,7 +3,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),{pat
  const p=await browser.newPage({viewport:{width:375,height:812}}),errors=[];p.on('pageerror',e=>errors.push(e.message));
  const url=process.env.TEST_HUB_URL||pathToFileURL(path.resolve('check.html')).href;await p.goto(url);
  if(await p.locator('#password').count()){await p.locator('#password').fill(process.env.MOCK_VIEW_PASSWORD);await p.locator('#enter').click();}
- await p.locator('a.card').first().waitFor();const count=await p.locator('a.card').count();assert.equal(count,21);
+ await p.locator('a.card').first().waitFor();const count=await p.locator('a.card').count();assert.equal(count,22);
  for(let i=0;i<count;i++){
   await p.locator('a.card').nth(i).click();await p.locator('.check-toolbar a').waitFor();
   const frame=p.frameLocator('#preview');await frame.locator('body').waitFor();
@@ -12,5 +12,5 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),{pat
   if(i===6)await p.screenshot({path:'tests/screenshots/check-view-room.png'});
   await p.locator('.check-toolbar a').click();await p.locator('a.card').first().waitFor();
  }
- assert.deepEqual(errors,[]);console.log('PASS: all 21 check screens open and return through a separate non-overlapping toolbar');
+ assert.deepEqual(errors,[]);console.log('PASS: all 22 check screens open and return through a separate non-overlapping toolbar');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

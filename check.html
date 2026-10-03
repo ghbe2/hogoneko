@@ -14,6 +14,7 @@
 <a class="card" href="art/cat-directions/room-study.html">部屋デザイン<small>部屋の季節・時間</small></a></div>
 <script>
 const groups={phases:[['intro','初回チュートリアル','タイトル・ミニストーリーから'],['field','保護フィールド','保護器と餌を置くところから'],['capture','保護器が揺れた','タップしてネコと出会う'],['clinic','初診','診察・領収書・命名'],['naming','名前をつける','名前は空欄から'],['intake','おうちへ受け入れ','模様替え・名前を呼ぶ'],['room','育成 1日目','心50・初期の持ち物'],['surgery','手術 5日目','おでかけへの誘導から'],['event','譲渡会 7日目','手術済み・譲渡できる状態'],['result','譲渡のあと','卒業・次の保護へ'],['town','街とお店','買い物・広告支援']],branches:[['underweight','手術：体重不足','子猫690g・条件の確認'],['poor','手術：コイン不足','所持0・支援広告から復帰'],['tnr','譲渡会：TNR','心20・譲渡との違い'],['tnr-result','TNRのあと','地域に戻したあとの周回']]};
+groups.branches.push(['park','公園・子猫のケア','1匹見送り済み・ステージ2の保護']);
 for(const [id,rows] of Object.entries(groups))document.getElementById(id).innerHTML=rows.map(([key,title,note])=>`<a class="card" href="index.html?check=1&scenario=${key}">${title}<small>${note}</small></a>`).join('');
 document.querySelectorAll('a.card,a[href="index.html?check=1"]').forEach(link=>{link.href='check-view.html?target='+encodeURIComponent(link.getAttribute('href'));});
 </script></main></body></html>

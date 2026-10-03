@@ -33,6 +33,7 @@ if(checkMode && checkScenario){
    cat.lifeLog.push({day:5,kind:'surgery',title:'手術を終えた'});
   }
   if(checkScenario==='town')c.phase='town';
+  if(checkScenario==='park'){cat.status='candidate';cat.name='';cat.types=[];c.phase='field';c.area='a2';gameState.album=[{catId:'check-first-graduate',name:'見送り済みのネコ',outcome:'adopted',day:7,area:'a1'}];}
   gameState=reconcileVisit(gameState);
   if(['result','tnr-result'].includes(checkScenario))for(const type of ['OPEN_OUTING','OPEN_REQUIRED_VISIT','SEND_EVENT'])gameState=reduceGameState(gameState,{type});
   history.replaceState(null,'',location.pathname+'?check=1');
