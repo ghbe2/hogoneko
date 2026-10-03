@@ -13,7 +13,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),{pat
     assert.equal(await p.evaluate(()=>gameState.campaign.shopId),shop);
     // Also test returning after purchase, and after closing the wallet overlay.
     if(shop!=='clinic')await p.locator('[data-action="buy-shop-item"]:not([disabled])').first().tap();
-    await p.locator('.release-shop-heading [data-action="open-wallet"]').tap();
+    await p.locator('[data-action="open-wallet"]').first().tap();
     await p.locator('[data-action="close-wallet"]').tap();
     const saved=await p.evaluate(()=>JSON.stringify({coins:gameState.coins,inventory:gameState.inventory,cats:gameState.cats}));
     await p.getByRole('button',{name:'街へ戻る',exact:true}).tap();

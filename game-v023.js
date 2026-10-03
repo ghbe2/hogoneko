@@ -15,7 +15,7 @@ renderPlacedItem=function(placed,state,...args){
 };
 const paperLife=renderRoomLife;
 renderRoomLife=function(...args){const t=document.createElement('template');t.innerHTML=paperLife(...args);
- t.content.querySelectorAll('.shed-hair').forEach(node=>{let n=0;for(const c of node.dataset.hair)n=(n*31+c.charCodeAt(0))>>>0;node.innerHTML=bookImage(LifeArt.hair[n%6],'life-hair');node.style.setProperty('--hair-angle',`${n%360}deg`);node.style.setProperty('--hair-size',`${15+n%7}px`);});
+ t.content.querySelectorAll('.shed-hair').forEach(node=>{let n=0;for(const c of node.dataset.hair)n=(n*31+c.charCodeAt(0))>>>0;node.innerHTML=bookImage(LifeArt.hair[n%6],'life-hair');node.style.setProperty('--hair-angle',`${n%360}deg`);node.style.setProperty('--hair-size',`${27+n%8}px`);});
  const mess=t.content.querySelector('.mess-object');if(mess)mess.innerHTML=bookImage(LifeArt.vomit,'life-vomit');return t.innerHTML;
 };
 const paperRender=render;

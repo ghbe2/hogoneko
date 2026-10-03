@@ -1,0 +1,29 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),{pathToFileURL}=require('node:url'),path=require('node:path');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
+ const p=await browser.newPage({viewport:{width:375,height:812},isMobile:true,hasTouch:true}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(pathToFileURL(path.resolve('index.html')).href);
+ const setup=async(options={})=>p.evaluate(options=>{titleScreenOpen=false;gameState.onboarding.status='done';const cat=getCat(gameState);Object.assign(cat,{status:'raising',name:'こはる',age:options.age||'adult',heart:75,heartCap:90,surgery:null,surgeryVisitDay:null,eventVisitDay:null,lifeLog:[{day:1,title:'こはると生活開始'}]});Object.assign(cat.body,{days:(options.day||5)-1,weight:options.weight??3100,sick:options.sick||false});gameState.coins=options.coins??50;gameState.economy={spent:0,adClaims:0,ledger:[]};gameState.realClock={version:1,processedAt:Date.now(),dayTicks:0};gameState.campaign={...gameState.campaign,phase:'room',requiredVisit:null,medicalStage:null};gameState.ui={...gameState.ui,modal:null};dispatch({type:'CLEAR_MESSAGE'});},options);
+ const visit=async()=>{await p.locator('[data-action="open-outing"]').tap();await p.locator('[data-action="open-required-visit"]').tap();};
+ await setup();await visit();
+ for(const [width,height] of [[320,568],[375,812],[430,932]]){await p.setViewportSize({width,height});assert.equal(await p.locator('[data-action="start-surgery"]').isVisible(),true);const bounds=await p.locator('[data-action="start-surgery"]').boundingBox();assert(bounds.y+bounds.height<=height);assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await p.screenshot({path:`tests/screenshots/v029-clinic-${width}.png`});}
+ await p.setViewportSize({width:375,height:812});await p.locator('[data-action="start-surgery"]').tap();
+ assert.equal(await p.evaluate(()=>gameState.coins),38);assert.equal(await p.evaluate(()=>getCat(gameState).surgery.status),'in_progress');
+ await p.evaluate(()=>dispatch({type:'START_SURGERY'}));assert.equal(await p.evaluate(()=>gameState.coins),38);
+ await p.reload();await p.locator('[data-action="start-game"]').tap();await p.locator('.surgery-done').waitFor();
+ assert.equal(await p.evaluate(()=>getCat(gameState).surgery.status),'done');assert.equal(await p.evaluate(()=>gameState.coins),38);assert.equal(await p.evaluate(()=>getCat(gameState).lifeLog.filter(e=>e.kind==='surgery').length),1);
+ await p.screenshot({path:'tests/screenshots/v029-receipt.png'});
+ await p.reload();await p.locator('[data-action="start-game"]').tap();assert.equal(await p.evaluate(()=>gameState.coins),38);await p.locator('[data-action="leave-surgery-clinic"]').tap();
+ await p.locator('[data-action="open-notebook"]').tap();assert.equal(await p.locator('.medical-notebook-chip').textContent(),'手術済み ✓');await p.evaluate(()=>dispatch({type:'CLOSE_MODAL'}));
+ await p.locator('[data-action="open-schedule"]').tap();assert(await p.locator('.schedule-panel').innerText().then(t=>t.includes('手術を終えた')));await p.evaluate(()=>dispatch({type:'CLOSE_MODAL'}));
+ // Once completed, graduation charges the remaining six coins, never the old 18.
+ await p.evaluate(()=>{dispatch({type:'NEXT_DAY'});dispatch({type:'NEXT_DAY'});});await visit();assert.equal(await p.evaluate(()=>gameState.campaign.phase),'graduation');await p.locator('[data-action="send-event"]').tap();assert.equal(await p.evaluate(()=>gameState.coins),32);assert.equal(await p.evaluate(()=>gameState.campaign.phase),'result');
+ await p.locator('[data-action="next-rescue"]').tap();assert.equal(await p.evaluate(()=>getCat(gameState).surgery),null);assert.equal(await p.evaluate(()=>getCat(gameState).lifeLog.length),0);
+ // Not enough weight: no charge, no completion, can leave and retry at the clinic same day.
+ await setup({age:'kitten',weight:690});await visit();assert.equal(await p.locator('[data-action="start-surgery"]').count(),0);assert(await p.locator('.surgery-copy').innerText().then(t=>t.includes('あと10g')));await p.locator('[data-action="leave-surgery-clinic"]').tap();assert.equal(await p.evaluate(()=>gameState.campaign.requiredVisit),null);assert.equal(await p.evaluate(()=>gameState.coins),50);
+ await p.evaluate(()=>{getCat(gameState).body.weight=705;dispatch({type:'OPEN_OUTING'});});await p.locator('[data-action="open-map-shop"][data-shop="clinic"]').tap();assert.equal(await p.locator('[data-action="start-surgery"]').count(),1);
+ // No money: optional reward flow stays usable inside the mandatory clinic visit.
+ await setup({coins:0});await visit();await p.locator('.campaign-actions [data-action="open-wallet"]').tap();await p.locator('[data-action="reward-ad"]').tap();await p.getByText('50コイン受け取りました',{exact:true}).waitFor();await p.locator('[data-action="close-wallet"]').tap();await p.locator('[data-action="start-surgery"]').tap();await p.locator('.surgery-done').waitFor();assert.equal(await p.evaluate(()=>gameState.coins),38);
+ // Old "visited" saves are not misclassified as already operated on.
+ await setup({day:7});await p.evaluate(()=>{getCat(gameState).surgeryVisitDay=5;dispatch({type:'CLEAR_MESSAGE'});});assert.equal(await p.evaluate(()=>gameState.campaign.requiredVisit.kind),'clinic');assert.equal(await p.evaluate(()=>isGraduationReady(gameState)),false);
+ await setup({sick:true});await visit();assert.equal(await p.locator('[data-action="start-surgery"]').count(),0);await p.locator('[data-action="leave-surgery-clinic"]').tap();assert.equal(await p.evaluate(()=>gameState.campaign.phase),'room');
+ assert.deepEqual(errors,[]);console.log('PASS v029: mobile clinic, eligibility, persistent single payment, reload, records, graduation 6, next cat reset, defer/retry, reward fallback, old save safety');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

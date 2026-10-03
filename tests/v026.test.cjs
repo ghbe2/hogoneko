@@ -1,15 +1,15 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),{pathToFileURL}=require('node:url'),path=require('node:path');
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
  const p=await browser.newPage({viewport:{width:375,height:812},isMobile:true,hasTouch:true}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(pathToFileURL(path.resolve('index.html')).href);
- const setup=async(day,visited=null)=>p.evaluate(({day,visited})=>{titleScreenOpen=false;gameState.onboarding.status='done';gameState.cats[0].status='raising';gameState.cats[0].body.days=day-1;gameState.cats[0].body.weight=2400;gameState.cats[0].surgeryVisitDay=visited;gameState.cats[0].eventVisitDay=null;gameState.campaign.phase='room';gameState.campaign.requiredVisit=null;gameState.ui.modal=null;dispatch({type:'CLEAR_MESSAGE'});},{day,visited});
+ const setup=async(day,visited=null)=>p.evaluate(({day,visited})=>{titleScreenOpen=false;gameState.onboarding.status='done';gameState.cats[0].status='raising';gameState.cats[0].body.days=day-1;gameState.cats[0].body.weight=2400;gameState.cats[0].surgeryVisitDay=visited;gameState.cats[0].surgery=visited?{status:'done',completedDay:visited,paid:12}:null;gameState.cats[0].eventVisitDay=null;gameState.campaign.phase='room';gameState.campaign.requiredVisit=null;gameState.campaign.medicalStage=null;gameState.ui.modal=null;dispatch({type:'CLEAR_MESSAGE'});},{day,visited});
  await setup(5);
  assert.deepEqual(await p.locator('button:enabled').evaluateAll(nodes=>nodes.map(n=>n.dataset.action)),['open-outing']);
  await p.screenshot({path:'tests/screenshots/v026-outing.png'});
  await p.locator('[data-action="open-outing"]').tap();
  assert.deepEqual(await p.locator('button:enabled').evaluateAll(nodes=>nodes.map(n=>n.dataset.action)),['open-required-visit']);
  await p.locator('[data-action="open-required-visit"]').tap();
- assert.equal(await p.getByText('手術予定の確認',{exact:true}).count(),1);
- await p.locator('[data-action="confirm-clinic-visit"]').tap();
+ assert.equal(await p.getByText('卒業への、ひとつの準備',{exact:true}).count(),1);
+ await p.locator('[data-action="leave-surgery-clinic"]').tap();
  assert.equal(await p.evaluate(()=>getCat(gameState).surgeryVisitDay),5);
  assert.equal(await p.locator('.visit-shade').count(),0);
  await setup(7,5);await p.locator('[data-action="open-outing"]').tap();

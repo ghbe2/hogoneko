@@ -3,9 +3,10 @@
 function pendingVisit(state){
  const cat=getCat(state),day=cat.body.days+1;
  if(cat.status!=='raising')return null;
- if(day>=5&&!cat.surgeryVisitDay)return 'clinic';
- if(day>=CONFIG.stage1.adoptionEventDay&&cat.eventVisitDay!==day)return 'event';
- return null;
+ // Consultations from old saves are not surgery completion. Preserve a receipt on boot.
+ if(state.campaign.phase==='shop'&&state.campaign.shopId==='clinic'&&state.campaign.medicalStage)return state.campaign.requiredVisit?.kind||null;
+ if(cat.surgery?.status!=='done')return day>=5&&cat.surgery?.checkedDay!==day?'clinic':null;
+ return day>=CONFIG.stage1.adoptionEventDay&&cat.eventVisitDay!==day?'event':null;
 }
 function reconcileVisit(state){
  const kind=pendingVisit(state),current=state.campaign.requiredVisit;
@@ -25,7 +26,8 @@ reduceGameState=function(state,action){
    return {...state,campaign:{...state.campaign,phase:'shop',shopId:'clinic',requiredVisit:{...visit,step:'clinic'}},ui};
   }
   if(action.type==='CONFIRM_CLINIC_VISIT'&&visit.step==='clinic')return reconcileVisit({...state,cats:state.cats.map(c=>c.id===getCat(state).id?{...c,surgeryVisitDay:c.body.days+1}:c),campaign:{...state.campaign,phase:'room',requiredVisit:null},ui});
-  // No background time/neglect or other navigation while the required trip is shown.
+  if(visit.step==='clinic'&&['OPEN_WALLET','CLOSE_WALLET','START_REWARD_AD','COMPLETE_REWARD_AD','CANCEL_REWARD_AD'].includes(action.type))return beforeVisitReducer(state,action);
+  // The real-time wrapper still advances life; unrelated navigation remains locked.
   if(action.type!=='START_GAME')return state;
  }
  let next=beforeVisitReducer(state,action);
@@ -53,6 +55,7 @@ render=function(state){
  if(titleScreenOpen)return;
  const visit=state.campaign.requiredVisit;
  if(!visit)return;
+ if(visit.step==='clinic')return; // Clinic has its own eligibility, payment and exit controls.
  const frame=app.querySelector('.game-frame')||app.firstElementChild;
  if(!frame)return;
  frame.classList.add('required-visit');

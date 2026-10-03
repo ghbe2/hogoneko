@@ -126,8 +126,8 @@ reduceGameState=function(state,action){
   if(['TOGGLE_PLACED_ITEM','DROP_LAYOUT_ITEM'].includes(action.type)&&!owned(state,action.itemId))return state;
   if(action.type==='SEND_EVENT'){
     if(state.campaign.phase!=='graduation'||!isGraduationReady(state))return state;
-    if(state.coins<18)return {...state,ui:{...state.ui,modal:'wallet'}};
-    let next=reduceBeforeV017(spendCoins(state,18,'手術・卒業ケア'),action);
+    if(state.coins<RELEASE_ECONOMY.graduation)return {...state,ui:{...state.ui,modal:'wallet'}};
+    let next=reduceBeforeV017(spendCoins(state,RELEASE_ECONOMY.graduation,'卒業ケア'),action);
     const cat=getCat(next),phenotype=phenotypeFor(cat);
     return {...next,cats:[{...cat,phenotype}],album:next.album.map((entry,i)=>i===next.album.length-1?{...entry,phenotype,age:cat.age,sex:cat.sex,coatLabel:cat.coatLabel}:entry)};
   }
@@ -212,7 +212,7 @@ renderPlacedItem=function(placed,state,clue){
 const clinicBeforeV017=renderClinic;
 renderClinic=(state,cat)=>clinicBeforeV017(state,cat).replace('<strong>400</strong>','<strong>7</strong>').replace('<strong>300</strong>','<strong>5</strong>').replace('<strong>700</strong>','<strong>12 コイン</strong>');
 const graduationBeforeV017=renderGraduation;
-renderGraduation=(state,cat)=>graduationBeforeV017(state,cat).replace('譲渡会へ送り出す</button>','手術・卒業ケア 18コインで送り出す</button>');
+renderGraduation=(state,cat)=>graduationBeforeV017(state,cat).replace('譲渡会へ送り出す</button>',`卒業ケア ${RELEASE_ECONOMY.graduation}コインで送り出す</button>`);
 isGraduationReady=function(state){const cat=getCat(state);return cat.body.weight>=(cat.age==='kitten'?CONFIG.cat.weightGoal.kitten:CONFIG.stage1.campaign.bodyGoal)&&!cat.body.sick&&(cat.age!=='kitten'||cat.body.days>=5);};
 const guideBeforeV017=getScreenGuide;
 getScreenGuide=function(state){
@@ -228,7 +228,8 @@ function mountGameCats(){
   app.querySelectorAll('.game-cat-svg').forEach(svg=>{
     if(svgRigs.has(svg))return;
     const dna=JSON.parse(decodeURIComponent(svg.dataset.dna));
-    const rig=CatSVG.buildCat(svg,'game',dna,375,1);svg.querySelector('.floor')?.remove();
+    // Scale about the SVG's ground anchor, so feet stay on the same surface.
+    const rig=CatSVG.buildCat(svg,'game',dna,375,dna.age==='adult'?1.25:1);svg.querySelector('.floor')?.remove();
     CatSVG.applyPose(rig,CatSVG.poseModel('sit',0),0,'sit');
     svgRigs.set(svg,{rig,pose:'sit',since:performance.now(),previous:null,changed:0});
   });
