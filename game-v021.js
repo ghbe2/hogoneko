@@ -4,10 +4,10 @@ const starterIDs=['starter_toy','starter_food','starter_clean','water_refill'];
 CONFIG.items.push({id:'starter_toy',label:'布きれじゃらし',kind:'hand',affinityType:'chase',durability:1,playEfficiency:.5,body:{},unlimited:true});
 CONFIG.stage1.handItems.unshift('starter_toy');
 CONFIG.stage1.foods.unshift({id:'starter_food',label:'おすそわけカリカリ',emoji:'◉',affinityType:'food',unlimited:true});
-CONFIG.stage1.cleaners.unshift({id:'starter_clean',label:'小さなぞうきん',emoji:'▱',power:.5,uses:1,unlimited:true});
+CONFIG.stage1.cleaners.unshift({id:'starter_clean',label:'コロコロ',emoji:'▱',power:.5,hairPickup:6,uses:1,unlimited:true});
 Object.assign(getFood('water_refill'),{label:'小さな水くみ',unlimited:true});
 bookIcons.starter_toy=bookSVG('<path d="M55 185Q95 118 144 42" fill="none" stroke="#927653" stroke-width="9" stroke-linecap="round"/><path d="M142 40Q178 66 170 110L208 138 161 149 150 105Q157 71 142 40" fill="#b98981"/>');
-bookIcons.starter_clean=bookSVG('<path d="M49 70L181 58 211 158 76 179 38 150Z" fill="#aaa98d"/><path d="M58 86L173 76M81 155L190 141" fill="none" stroke="#ded5b9" stroke-width="5"/>');
+bookIcons.starter_clean=bookSVG('<path d="M172 76h24v55h-66v40" fill="none" stroke="#8c9692" stroke-width="11" stroke-linejoin="round"/><rect x="114" y="158" width="32" height="65" rx="14" fill="#b98880"/><rect x="30" y="36" width="153" height="77" rx="20" fill="#faf3df" stroke="#b8ad96" stroke-width="5"/><path d="M58 42v65M151 42v65" stroke="#ded4bb" stroke-width="3"/><path d="M76 74q10-12 20 0m13 13q10-12 20 0" fill="none" stroke="#a5947c" stroke-width="3"/>');
 bookIcons.starter_food=bowlSVG(false,true);bookIcons.water_refill=bowlSVG(true,true);
 getFood('starter_food').emoji=bookImage(bookIcons.starter_food);
 getFood('water_refill').emoji=bookImage(bookIcons.water_refill);
@@ -29,6 +29,13 @@ const starterReduce=reduceGameState;
 reduceGameState=function(state,action){
  const care=state.ui.careAnimation;
  let next=starterReduce(ensureStarterSupplies(state),action);
+ // The lint roller collects nearby fur efficiently, but keeps low power for other dirt.
+ if(action.type==='FINISH_CARE'&&care?.id===action.id&&care.operation==='hair'&&care.cleanerId==='starter_clean'&&!next.ui.careAnimation){
+  const hair=getCat(state).body.hair,target=hair.find(h=>h.id===care.hairId)||hair[0];
+  const nearest=[...hair].sort((a,b)=>target?Math.hypot(a.x-target.x,a.y-target.y)-Math.hypot(b.x-target.x,b.y-target.y):0);
+  const removed=new Set(nearest.slice(0,getCleaner('starter_clean').hairPickup).map(h=>h.id));
+  next={...next,cats:next.cats.map((cat,i)=>i?cat:{...cat,body:{...cat.body,hair:hair.filter(h=>!removed.has(h.id))}})};
+ }
  // All bowls use the same half-fill gesture, including free starter supplies.
  if(action.type==='FINISH_CARE'&&care?.id===action.id&&!next.ui.careAnimation&&
    (care.operation==='water'||care.operation==='food'&&care.foodId==='starter_food')){
@@ -70,7 +77,7 @@ render=function(state){starterRender(state);
   const id=cell.dataset.item||cell.dataset.food||cell.dataset.cleaner;if(!starterIDs.includes(id))return;
   const count=cell.querySelector('.stock,.cell-count');if(count)count.textContent='∞';
   const durability=cell.querySelector('.durability');if(durability)durability.remove();
-  const small=cell.querySelector('small');if(small)small.textContent=id==='starter_toy'?'∞・ゆっくり育つ':id==='starter_clean'?'∞・強さ 0.5':'∞・少量ずつ補充';
+  const small=cell.querySelector('small');if(small)small.textContent=id==='starter_toy'?'∞・ゆっくり育つ':id==='starter_clean'?'∞・毛に強い／汚れに弱い':'∞・半分ずつ補充';
  });
 };
 let charging=null;
