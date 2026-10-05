@@ -5,7 +5,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const root = path.resolve(__dirname, '..');
 // Optional release snapshot: do not publish unrelated work-in-progress assets.
-function readSource(file){return process.env.PREVIEW_COMMITTED==='1'
+function readSource(file){return process.env.PREVIEW_COMMITTED==='1'&&path.relative(root,file).replace(/\\/g,'/')!=='TYPE_MATCHUP_v0.1.html'
  ?require('node:child_process').execFileSync('git',['-c','safe.directory='+root.replace(/\\/g,'/'),'show','HEAD:'+path.relative(root,file).replace(/\\/g,'/')],{cwd:root,encoding:'utf8',maxBuffer:32*1024*1024})
  :fs.readFileSync(file,'utf8');}
 const password = process.env.MOCK_VIEW_PASSWORD;
