@@ -50,26 +50,26 @@ const progressionStyle=document.createElement('style');progressionStyle.textCont
 function discoveryDay(now=new Date()){return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;}
 function discoveryAvailable(state){return getCat(state).status==='raising'&&(!state.dailyDiscovery?.lastDay||state.dailyDiscovery.lastDay<discoveryDay());}
 const discoveryReduce=reduceGameState;
+function discoveryScene(state){return state.campaign.phase==='room'&&!state.ui.modal&&!state.ui.layoutMode&&!state.ui.holdingCat&&!state.ui.careAnimation&&!state.campaign.requiredVisit&&discoveryAvailable(state);}
 reduceGameState=function(state,action){
+ if(action.type==='ROAM_CAT'&&discoveryScene(state))return state;
  const next=discoveryReduce(state,action);
- if(state.campaign.phase!=='room'||next.campaign.phase!=='room'||state.ui.modal||state.ui.layoutMode||!discoveryAvailable(state))return next;
- const a=state.ui.careAnimation;
- const care=action.type==='FINISH_CARE'&&a&&a.id===action.id&&!next.ui.careAnimation;
- const call=action.type==='EXECUTE_CONTACT'&&action.contact==='call'&&next.ui.feel?.id!==state.ui.feel?.id;
- const pet=action.type==='TAP_CAT'&&!next.ui.careAnimation&&next.ui.feel?.id!==state.ui.feel?.id;
- const toy=action.type==='FINISH_PLAY'&&owned(state,action.itemId||state.ui.equippedHand)&&getDurability(state,action.itemId||state.ui.equippedHand)>0;
- if(!care&&!call&&!pet&&!toy)return next;
+ if(action.type!=='PICK_DISCOVERY_COIN'||!discoveryScene(state)||!discoveryScene(next))return next;
  return {...next,coins:next.coins+5,dailyDiscovery:{lastDay:discoveryDay(),visits:(state.dailyDiscovery?.visits||0)+1},ui:{...next.ui,coinDiscovery:{id:Date.now()+Math.random(),until:Date.now()+2200}}};
 };
 const discoveryPose=scenePose;
-scenePose=function(svg){const pose=discoveryPose(svg);if(svg.closest('.cat-object')&&gameState.campaign.phase==='room'&&!gameState.ui.layoutMode&&!gameState.ui.modal&&!gameState.ui.careAnimation&&!gameState.ui.playMode&&discoveryAvailable(gameState)&&pose[0]==='sit'&&Date.now()%9000<2200)return ['punch','neutral'];return pose;};
+scenePose=function(svg){const pose=discoveryPose(svg);if(svg.closest('.cat-object')&&discoveryScene(gameState)&&!gameState.ui.playMode&&!['walk','jump'].includes(pose[0]))return [Date.now()%4500<2900?'punch':'sit','neutral'];return pose;};
 const discoveryRender=render;let lastDiscovery=null;
 render=function(state){
  discoveryRender(state);const cat=app.querySelector('.cat-object'),stage=app.querySelector('.stage');if(!cat||!stage||state.ui.modal||state.ui.layoutMode)return;
  const c=cat.getBoundingClientRect(),s=stage.getBoundingClientRect();
- if(discoveryAvailable(state)){const clue=document.createElement('span');clue.className='discovery-glint';clue.textContent='✧';clue.style.left=Math.max(12,Math.min(s.width-12,c.left-s.left+c.width*.6))+'px';clue.style.top=Math.min(s.height-15,c.bottom-s.top-5)+'px';clue.setAttribute('aria-hidden','true');stage.appendChild(clue);}
+ if(discoveryScene(state)){const clue=document.createElement('button');clue.type='button';clue.className='discovery-pickup';clue.dataset.action='pick-discovery-coin';clue.innerHTML='<span>●</span>';clue.setAttribute('aria-label','ネコが遊んでいるコインを拾う');stage.appendChild(clue);positionDiscoveryCoin();}
  const found=state.ui.coinDiscovery;if(!found||found.id===lastDiscovery||found.until<Date.now())return;lastDiscovery=found.id;
  const coin=document.createElement('span');coin.className='discovery-coin';coin.textContent='● +5';coin.setAttribute('role','status');coin.setAttribute('aria-label','5コインを見つけた');const x=Math.max(30,Math.min(s.width-50,c.left-s.left+c.width/2)),y=Math.max(35,c.top-s.top+c.height*.5);coin.style.left=x+'px';coin.style.top=y+'px';stage.appendChild(coin);
  coin.animate([{translate:'0 0',opacity:0,scale:.5},{offset:.2,translate:'0 -25px',opacity:1,scale:1.15},{offset:.6,translate:'0 -25px',opacity:1,scale:1},{translate:`${s.width-42-x}px ${-y}px`,opacity:0,scale:.45}],{duration:2100,fill:'forwards'});setTimeout(()=>coin.remove(),2200);
 };
 const discoveryStyle=document.createElement('style');discoveryStyle.textContent='.discovery-glint{position:absolute;pointer-events:none;color:#d6ac54;font-size:20px;animation:discovery-glint 3s ease-in-out infinite}.discovery-coin{position:absolute;z-index:90;pointer-events:none;color:#ba872d;font:bold 23px system-ui;text-shadow:0 2px #fff8}@keyframes discovery-glint{50%{opacity:.2;scale:.7}}@media(prefers-reduced-motion:reduce){.discovery-glint{animation:none}}';document.head.appendChild(discoveryStyle);render(gameState);
+function positionDiscoveryCoin(){const coin=app.querySelector('.discovery-pickup'),cat=app.querySelector('.cat-object'),stage=app.querySelector('.stage');if(!coin||!cat||!stage)return;const c=cat.getBoundingClientRect(),s=stage.getBoundingClientRect();coin.style.left=Math.max(24,Math.min(s.width-24,c.left-s.left+c.width*.67))+'px';coin.style.top=Math.max(24,Math.min(s.height-24,c.bottom-s.top-12))+'px';}
+app.addEventListener('click',event=>{if(event.target.closest('[data-action="pick-discovery-coin"]'))dispatch({type:'PICK_DISCOVERY_COIN'});});
+discoveryStyle.textContent+='.discovery-pickup{position:absolute;z-index:76;width:48px;height:48px;padding:0;border:0;background:none;transform:translate(-50%,-50%);touch-action:manipulation}.discovery-pickup span{display:block;color:#dca735;font-size:30px;text-shadow:0 2px #8d631f,0 0 2px #fff;animation:coin-roll 4.5s ease-in-out infinite}@keyframes coin-roll{0%,65%,100%{translate:-7px 0;rotate:-20deg}32%{translate:7px -3px;rotate:30deg}}@media(prefers-reduced-motion:reduce){.discovery-pickup span{animation:none}}';
+setInterval(positionDiscoveryCoin,100);
