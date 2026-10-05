@@ -4,6 +4,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const root = path.resolve(__dirname, '..');
+// Optional release snapshot: do not publish unrelated work-in-progress assets.
+function readSource(file){return process.env.PREVIEW_COMMITTED==='1'
+ ?require('node:child_process').execFileSync('git',['-c','safe.directory='+root.replace(/\\/g,'/'),'show','HEAD:'+path.relative(root,file).replace(/\\/g,'/')],{cwd:root,encoding:'utf8',maxBuffer:32*1024*1024})
+ :fs.readFileSync(file,'utf8');}
 const password = process.env.MOCK_VIEW_PASSWORD;
 if (!password) throw new Error('MOCK_VIEW_PASSWORD is required. No unprotected build is produced.');
 const salt = crypto.randomBytes(16), iv = crypto.randomBytes(12);
@@ -13,14 +17,14 @@ const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
 // Inline local game modules before encryption; deployed preview remains self-contained.
 function inlinePage(relativePage){
 const base=path.dirname(path.join(root,relativePage));
-let source = fs.readFileSync(path.join(root, relativePage), 'utf8').replace(/<script src="([^"]+)"><\/script>/g, (_, relative) => {
+let source = readSource(path.join(root, relativePage)).replace(/<script src="([^"]+)"><\/script>/g, (_, relative) => {
   const file = path.resolve(base, relative);
   if (!file.startsWith(root + path.sep)) throw new Error('External script not allowed: ' + relative);
-  return '<script>\n' + fs.readFileSync(file, 'utf8').replace(/<\/script/gi, '<\\/script') + '\n</script>';
+  return '<script>\n' + readSource(file).replace(/<\/script/gi, '<\\/script') + '\n</script>';
 });
 source=source.replace(/<link rel="stylesheet" href="([^"]+)">/g,(_,relative)=>{
  const file=path.resolve(base,relative);if(!file.startsWith(root+path.sep))throw new Error('Invalid stylesheet');
- return '<style>'+fs.readFileSync(file,'utf8')+'</style>';
+ return '<style>'+readSource(file)+'</style>';
 });
 if(relativePage!=='index.html'&&relativePage!=='check.html'&&relativePage!=='check-view.html'&&relativePage!=='heart-study.html'&&relativePage!=='heart-fall.html'){
  const back=relativePage.startsWith('art/')?'../../check.html':'check.html';

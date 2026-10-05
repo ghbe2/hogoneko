@@ -45,3 +45,31 @@ renderLoopSheet=function(state){
 const progressionStyle=document.createElement('style');progressionStyle.textContent=`
 .shop-product .product-benefit{color:#75634e;font-size:11px;line-height:1.5;white-space:normal}.shop-product.progression-locked{opacity:.65}.progression-news{font-size:12px;line-height:1.5;padding:8px;background:#e7ebdc;border-radius:10px}.loop-prep .loop-keeps{padding:10px;font-size:12px}.loop-prep header h2{font-size:18px}.loop-prep{gap:6px}.loop-prep header h2{margin:6px 0}.loop-prep .loop-balance{font-size:25px}
 `;document.head.appendChild(progressionStyle);render(gameState);
+
+// Daily discovery: local calendar day, once per save, not per cat or simulated day.
+function discoveryDay(now=new Date()){return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;}
+function discoveryAvailable(state){return getCat(state).status==='raising'&&(!state.dailyDiscovery?.lastDay||state.dailyDiscovery.lastDay<discoveryDay());}
+const discoveryReduce=reduceGameState;
+reduceGameState=function(state,action){
+ const next=discoveryReduce(state,action);
+ if(state.campaign.phase!=='room'||next.campaign.phase!=='room'||state.ui.modal||state.ui.layoutMode||!discoveryAvailable(state))return next;
+ const a=state.ui.careAnimation;
+ const care=action.type==='FINISH_CARE'&&a&&a.id===action.id&&!next.ui.careAnimation;
+ const call=action.type==='EXECUTE_CONTACT'&&action.contact==='call'&&next.ui.feel?.id!==state.ui.feel?.id;
+ const pet=action.type==='TAP_CAT'&&!next.ui.careAnimation&&next.ui.feel?.id!==state.ui.feel?.id;
+ const toy=action.type==='FINISH_PLAY'&&owned(state,action.itemId||state.ui.equippedHand)&&getDurability(state,action.itemId||state.ui.equippedHand)>0;
+ if(!care&&!call&&!pet&&!toy)return next;
+ return {...next,coins:next.coins+5,dailyDiscovery:{lastDay:discoveryDay(),visits:(state.dailyDiscovery?.visits||0)+1},ui:{...next.ui,coinDiscovery:{id:Date.now()+Math.random(),until:Date.now()+2200}}};
+};
+const discoveryPose=scenePose;
+scenePose=function(svg){const pose=discoveryPose(svg);if(svg.closest('.cat-object')&&gameState.campaign.phase==='room'&&!gameState.ui.layoutMode&&!gameState.ui.modal&&!gameState.ui.careAnimation&&!gameState.ui.playMode&&discoveryAvailable(gameState)&&pose[0]==='sit'&&Date.now()%9000<2200)return ['punch','neutral'];return pose;};
+const discoveryRender=render;let lastDiscovery=null;
+render=function(state){
+ discoveryRender(state);const cat=app.querySelector('.cat-object'),stage=app.querySelector('.stage');if(!cat||!stage||state.ui.modal||state.ui.layoutMode)return;
+ const c=cat.getBoundingClientRect(),s=stage.getBoundingClientRect();
+ if(discoveryAvailable(state)){const clue=document.createElement('span');clue.className='discovery-glint';clue.textContent='✧';clue.style.left=Math.max(12,Math.min(s.width-12,c.left-s.left+c.width*.6))+'px';clue.style.top=Math.min(s.height-15,c.bottom-s.top-5)+'px';clue.setAttribute('aria-hidden','true');stage.appendChild(clue);}
+ const found=state.ui.coinDiscovery;if(!found||found.id===lastDiscovery||found.until<Date.now())return;lastDiscovery=found.id;
+ const coin=document.createElement('span');coin.className='discovery-coin';coin.textContent='● +5';coin.setAttribute('role','status');coin.setAttribute('aria-label','5コインを見つけた');const x=Math.max(30,Math.min(s.width-50,c.left-s.left+c.width/2)),y=Math.max(35,c.top-s.top+c.height*.5);coin.style.left=x+'px';coin.style.top=y+'px';stage.appendChild(coin);
+ coin.animate([{translate:'0 0',opacity:0,scale:.5},{offset:.2,translate:'0 -25px',opacity:1,scale:1.15},{offset:.6,translate:'0 -25px',opacity:1,scale:1},{translate:`${s.width-42-x}px ${-y}px`,opacity:0,scale:.45}],{duration:2100,fill:'forwards'});setTimeout(()=>coin.remove(),2200);
+};
+const discoveryStyle=document.createElement('style');discoveryStyle.textContent='.discovery-glint{position:absolute;pointer-events:none;color:#d6ac54;font-size:20px;animation:discovery-glint 3s ease-in-out infinite}.discovery-coin{position:absolute;z-index:90;pointer-events:none;color:#ba872d;font:bold 23px system-ui;text-shadow:0 2px #fff8}@keyframes discovery-glint{50%{opacity:.2;scale:.7}}@media(prefers-reduced-motion:reduce){.discovery-glint{animation:none}}';document.head.appendChild(discoveryStyle);render(gameState);
