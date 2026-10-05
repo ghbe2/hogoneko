@@ -17,6 +17,17 @@ render=function(state){quietTitleRender(state);const title=app.querySelector('.t
  }
 };
 const openingStyle=document.createElement('style');openingStyle.textContent=`
+#app .campaign-button{border:1px solid #f0e5d4;border-radius:32px;background:#fff8e9;color:#715746;box-shadow:0 3px 12px #70553414;font-weight:500;transition:transform .15s,background .15s}
+#app .campaign-button.secondary{background:#ffffff75;border-color:#d9c8ae;box-shadow:none;color:#806b58}
+#app .campaign-button:disabled{background:#e8e1d7;border-color:transparent;box-shadow:none;color:#9d9488;cursor:default}
+#app .campaign-button:not(:disabled):active{transform:scale(.98);background:#fffdf4}
+#app .campaign-button:focus-visible{outline:3px solid #876f4c;outline-offset:3px}
+#app .story-screen .title-actions{display:grid;grid-template-rows:16px 56px 44px;row-gap:6px;flex:0 0 128px;height:128px;padding:0;margin-top:auto;width:100%;justify-items:center}
+#app .story-screen .story-pages{grid-row:1;margin:0;align-self:center}
+#app .story-screen [data-action="next-story"]{grid-row:2;min-height:56px;width:min(100%,260px);font-size:15px;letter-spacing:.08em}
+#app .story-screen .story-back{grid-row:3;min-height:44px;font-size:12px;padding:10px 16px;margin:0}
+#app .story-screen{padding-bottom:18px}
+#app .story-screen .intro-illustration{flex:1 1 220px;min-height:85px;max-height:220px}
 .storybook .title-screen{padding:clamp(28px,8vh,64px) 24px 32px}
 .storybook .title-screen h1{font-size:46px;letter-spacing:.18em;margin:0;text-indent:.18em}
 .storybook .title-screen .title-actions{width:auto;padding:0;margin-bottom:10px}
