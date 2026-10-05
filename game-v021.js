@@ -29,11 +29,11 @@ const starterReduce=reduceGameState;
 reduceGameState=function(state,action){
  const care=state.ui.careAnimation;
  let next=starterReduce(ensureStarterSupplies(state),action);
- // Small starter portions: 25 instead of 50 (50 instead of 100 when queued).
+ // All bowls use the same half-fill gesture, including free starter supplies.
  if(action.type==='FINISH_CARE'&&care?.id===action.id&&!next.ui.careAnimation&&
    (care.operation==='water'||care.operation==='food'&&care.foodId==='starter_food')){
   const key=care.operation==='water'?'waterLevel':'foodLevel';
-  next={...next,cats:next.cats.map((cat,i)=>i?cat:{...cat,body:{...cat.body,[key]:Math.min(100,(getCat(state).body[key]||0)+(care.queuedFill?50:25))}})};
+  next={...next,cats:next.cats.map((cat,i)=>i?cat:{...cat,body:{...cat.body,[key]:Math.min(100,(getCat(state).body[key]||0)+(care.queuedFill?100:50))}})};
  }
  if(care?.cleanerId==='starter_clean'&&action.type==='FINISH_CARE')next={...next,ui:{...next.ui,equippedCleaner:'starter_clean'}};
  return ensureStarterSupplies(next);

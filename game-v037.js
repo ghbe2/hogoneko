@@ -10,7 +10,7 @@ function productBenefit(id){
  if(id==='groom_comb')return '抜け毛を予防。掃除の手間を減らす。';
  if(id==='groom_wipe')return '体を拭いてお手入れ。';
  if(cleaner)return `掃除の強さ ${cleaner.power}。まとめて片づける。`;
- if(getFood(id))return '基本ごはんの2倍の量を、一度で補充。';
+ if(getFood(id))return 'お皿半分ずつ補充。好みに合うごはんを。';
  return '';
 }
 const progressionReduce=reduceGameState;
