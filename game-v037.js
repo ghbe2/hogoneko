@@ -1,4 +1,29 @@
 'use strict';
+// Keep the opening quiet: the illustration, title and one clear start action.
+const quietTitle=renderTitle;
+renderTitle=function(state){
+ const t=document.createElement('template');t.innerHTML=quietTitle(state);
+ t.content.querySelectorAll('.title-kicker,.title-screen>p,.title-actions small').forEach(n=>n.remove());
+ const button=t.content.querySelector('[data-action="start-game"]');
+ button.className='opening-start';button.innerHTML=`<span>${state.onboarding.status==='new'?'はじめる':'つづきから'}</span><span aria-hidden="true">→</span>`;
+ return t.innerHTML;
+};
+const quietTitleRender=render;
+render=function(state){quietTitleRender(state);const title=app.querySelector('.title-screen');if(!title)return;
+ const restart=title.querySelector('.new-release-game');if(restart){
+  if(state.onboarding.status==='new'){restart.remove();return;}
+  const options=document.createElement('details');options.className='opening-options';
+  options.innerHTML='<summary aria-label="タイトルの設定">⋯</summary>';restart.textContent='はじめから遊び直す';options.appendChild(restart);title.appendChild(options);
+ }
+};
+const openingStyle=document.createElement('style');openingStyle.textContent=`
+.storybook .title-screen{padding:clamp(28px,8vh,64px) 24px 32px}
+.storybook .title-screen h1{font-size:46px;letter-spacing:.18em;margin:0;text-indent:.18em}
+.storybook .title-screen .title-actions{width:auto;padding:0;margin-bottom:10px}
+.title-screen .opening-start{min-width:208px;min-height:56px;padding:14px 24px;border:1px solid #fff9e9;border-radius:40px;background:#fff8e9ed;color:#715746;font:inherit;font-size:17px;letter-spacing:.12em;display:flex;align-items:center;justify-content:center;gap:25px;box-shadow:0 4px 18px #70553420;cursor:pointer;transition:transform .15s,background .15s}
+.title-screen .opening-start:active{transform:scale(.96);background:#fffdf4}.title-screen .opening-start:focus-visible{outline:3px solid #876f4c;outline-offset:5px}
+.opening-options{position:absolute;right:14px;top:12px;z-index:5;text-align:right}.opening-options summary{list-style:none;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;font-size:24px;color:#806b58;border-radius:50%;background:#fff8e970}.opening-options summary::-webkit-details-marker{display:none}.opening-options .new-release-game{background:#fff8ec;border:1px solid #d9c8ae;border-radius:12px;padding:14px;min-height:48px;color:#755b49;font-size:13px;box-shadow:0 5px 18px #70553422}
+`;document.head.appendChild(openingStyle);
 // Provisional progression: never gate necessities or remove already-owned items.
 const SHOP_UNLOCKS={ribbon:1,bug:1,hammock:1,peek_toy:3};
 function graduatedCount(state){return new Set(state.album.filter(e=>['adopted','tnr'].includes(e.outcome)).map(e=>e.catId)).size;}
