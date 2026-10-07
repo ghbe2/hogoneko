@@ -1,0 +1,10 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const src='//'+fs.readFileSync('game-v037.js','utf8').split('// Short-lived presentation cues:')[1];
+const state={campaign:{phase:'room'},ui:{},cats:[{id:'cat',heart:80,body:{foodLevel:100,litter:0,vomit:0}}]};let cancelled=0,facing=0;
+const holder={classList:{contains:()=>false,remove(){}},style:{setProperty(k,v){facing=v;}},getBoundingClientRect:()=>({left:100,width:40}),_travelAnimation:{cancel(){cancelled++;}}};
+const ctx={Date,gameState:state,commandDraft:null,playDraft:null,discoveryScene:()=>false,getCat:s=>s.cats[0],getCatPoint:()=>({x:30,y:60}),getRoom:()=>({}),getPlaced:()=>[],animateFelineTravel:()=>1,scenePose:()=>['walk','neutral'],reduceGameState:(s,a)=>a.next||s};vm.createContext(ctx);vm.runInContext(src,ctx);
+const next=structuredClone(state);next.cats[0].body={foodLevel:50,litter:1,vomit:1};ctx.reduceGameState(state,{next});assert.equal(ctx.currentLifeCue().pose,'eat');
+ctx.commandDraft={command:'play',ghost:{getBoundingClientRect:()=>({left:200,width:20})}};assert.equal(ctx.scenePose({closest:()=>holder})[0],'punch');assert.equal(facing,-1);
+ctx.commandDraft=null;vm.runInContext('catLifeCues=[]',ctx);ctx.discoveryScene=()=>true;assert.equal(ctx.animateFelineTravel(holder),null);assert(cancelled);assert.equal(ctx.reduceGameState(state,{type:'ROAM_CAT'}),state);assert.notEqual(ctx.scenePose({closest:()=>holder})[0],'walk');
+const clean=fs.readFileSync('game-v022.js','utf8');let removed=false;const end=clean.slice(clean.indexOf('function finishEmptyCleaner'),clean.indexOf('startCommandDrag=function'));const draft={ghost:{},valid:true,pointerId:1};const cc={Date,clearCommandDrag(){removed=true;},document:{querySelectorAll:()=>[]},commandDraft:draft,app:{hasPointerCapture:()=>false},suppressClickUntil:0};vm.createContext(cc);vm.runInContext(end,cc);cc.finishEmptyCleaner(draft);assert(removed);assert.equal(cc.commandDraft,null);assert.equal(draft.ghost,null);
+console.log('PASS empty tool ends drag; life cue scheduling; toy punch/facing; discovery prevents movement');

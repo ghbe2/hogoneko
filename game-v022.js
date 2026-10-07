@@ -44,6 +44,13 @@ reduceGameState=function(state,action){
  return rubReducer(state,action);
 };
 const rubStart=startCommandDrag,rubMove=moveCommandDrag,rubEnd=completeCommandDrag;
+function finishEmptyCleaner(draft){
+ clearCommandDrag(draft,true);draft.ghost=null;draft.valid=false;
+ document.querySelectorAll('.drop-hover,.drop-ready').forEach(n=>n.classList.remove('drop-hover','drop-ready'));
+ if(commandDraft===draft)commandDraft=null;
+ if(app.hasPointerCapture?.(draft.pointerId))app.releasePointerCapture(draft.pointerId);
+ suppressClickUntil=Date.now()+400;
+}
 startCommandDrag=function(draft,x,y){if(['clean','food'].includes(draft.command)){endCatRub();catStroke=null;}rubStart(draft,x,y);if(draft.command==='clean'){draft.rub={x,y,distance:0,lastAt:0};draft.ghost.classList.add('rub-tool');}};
 moveCommandDrag=function(draft,x,y){
  if(draft.command!=='clean')return rubMove(draft,x,y);
@@ -65,13 +72,14 @@ moveCommandDrag=function(draft,x,y){
  draft.ghost.style.setProperty('--scrub-size',(radius*2)+'px');
  // Briefly moving off the stain must not erase the rubbing already performed.
  if(!draft.valid)return;
- if(!gameState.inventory[tool.id])return;
+ if(!gameState.inventory[tool.id]){finishEmptyCleaner(draft);return;}
  r.distance+=Math.min(distance,24);
  const hairTargets=targets.filter(t=>t.problem==='hair');
  const threshold=tool.id==='starter_clean'?(hairTargets.length?8:32):24/Math.sqrt(Math.max(.5,tool.power));
  draft.ghost.style.setProperty('--scrub-turn',(r.distance/threshold*25)+'deg');
  if(r.distance>=threshold&&performance.now()-r.lastAt>160){
   r.distance=0;r.lastAt=performance.now();dispatch({type:'RUB_CLEAN',cleanerId:tool.id,targets:tool.id==='starter_clean'?(hairTargets.length?hairTargets:targets.slice(0,1)):targets});
+  if(!gameState.inventory[tool.id]){finishEmptyCleaner(draft);return;}
   draft.ghost.classList.remove('rub-flash');void draft.ghost.offsetWidth;draft.ghost.classList.add('rub-flash');
  }
 };

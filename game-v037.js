@@ -350,3 +350,42 @@ function positionDiscoveryCoin(){const coin=app.querySelector('.discovery-pickup
 app.addEventListener('click',event=>{if(event.target.closest('[data-action="pick-discovery-coin"]'))dispatch({type:'PICK_DISCOVERY_COIN'});});
 discoveryStyle.textContent+='.discovery-pickup{position:absolute;z-index:76;width:48px;height:48px;padding:0;border:0;background:none;transform:translate(-50%,-50%);touch-action:manipulation}.discovery-pickup span{display:block;color:#dca735;font-size:30px;text-shadow:0 2px #8d631f,0 0 2px #fff;animation:coin-roll 4.5s ease-in-out infinite}@keyframes coin-roll{0%,65%,100%{translate:-7px 0;rotate:-20deg}32%{translate:7px -3px;rotate:30deg}}@media(prefers-reduced-motion:reduce){.discovery-pickup span{animation:none}}';
 setInterval(positionDiscoveryCoin,100);
+
+// Short-lived presentation cues: never save a backlog of offline animations.
+let catLifeCues=[],coinRestPoint=null;
+function currentLifeCue(){while(catLifeCues.length&&catLifeCues[0].until<=Date.now())catLifeCues.shift();return catLifeCues[0];}
+const expressiveReducer=reduceGameState;
+reduceGameState=function(state,action){
+ if(action.type==='ROAM_CAT'&&(currentLifeCue()||discoveryScene(state)))return state;
+ const next=expressiveReducer(state,action),before=getCat(state),after=getCat(next);
+ if(state.campaign.phase==='room'&&next.campaign.phase==='room'&&before.id===after.id){
+  const poses=[];
+  if(after.body.foodLevel<before.body.foodLevel)poses.push('eat');
+  if(after.body.litter>before.body.litter)poses.push('poop');
+  if(after.body.vomit>before.body.vomit)poses.push('vomit');
+  if(poses.length){const now=Date.now();catLifeCues=poses.map((pose,i)=>({pose,until:now+(i+1)*3000}));}
+ }else catLifeCues=[];
+ return next;
+};
+const expressivePoint=getCatPoint;
+getCatPoint=function(state){const point=expressivePoint(state);if(discoveryScene(state)&&!state.ui.playMode){if(!coinRestPoint||coinRestPoint.catId!==getCat(state).id)coinRestPoint={...point,catId:getCat(state).id};return {...coinRestPoint};}coinRestPoint=null;return point;};
+const expressiveTravel=animateFelineTravel;
+animateFelineTravel=function(element,...args){if(discoveryScene(gameState)&&!commandDraft&&!playDraft){element._travelAnimation?.cancel();element.classList.remove('walking','jumping');return null;}return expressiveTravel(element,...args);};
+const expressivePose=scenePose;
+scenePose=function(svg){
+ const holder=svg.closest('.cat-object');if(!holder)return expressivePose(svg);
+ const playing=commandDraft?.command==='play'?commandDraft:playDraft;
+ if(playing){
+  const toy=playing.ghost||playing.toy,rect=toy?.getBoundingClientRect(),cat=holder.getBoundingClientRect();
+  if(rect)holder.style.setProperty('--cat-facing',rect.left+rect.width/2>=cat.left+cat.width/2?-1:1);
+  if(holder.classList.contains('toy-reject')||holder.classList.contains('toy-avoid'))return expressivePose(svg);
+  return ['punch','happy'];
+ }
+ const cue=currentLifeCue();if(cue)return [cue.pose,cue.pose==='vomit'?'wary':'neutral'];
+ if(discoveryScene(gameState)){holder._travelAnimation?.cancel();holder.classList.remove('walking','jumping');return [Date.now()%4500<2900?'punch':'sit','neutral'];}
+ const pose=expressivePose(svg);if(pose[0]!=='sit'||gameState.ui.modal||gameState.ui.layoutMode)return pose;
+ const cycle=Math.floor(Date.now()/5000)%6;
+ if(cycle===1&&getPlaced(getRoom(gameState)).some(p=>p.itemId==='scratch'))return ['scratch','neutral'];
+ if(cycle===3&&getCat(gameState).heart>=60)return ['knead','happy'];
+ return pose;
+};
