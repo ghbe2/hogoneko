@@ -6,7 +6,7 @@ const checkScenario = new URLSearchParams(location.search).get('scenario');
 if(checkMode && checkScenario){
   const cat=getCat(gameState),c=gameState.campaign;
   gameState.onboarding.status='done';titleScreenOpen=false;
-  gameState.realClock={version:1,processedAt:Date.now(),dayTicks:0};
+  gameState.realClock={version:1,processedAt:gameNow(),dayTicks:0};
   Object.assign(c,{requiredVisit:null,medicalStage:null,phase:'room'});
   Object.assign(cat,{name:'チェックねこ',status:'raising',heart:50,heartCap:60,surgery:null,eventVisitDay:null,surgeryVisitDay:null});
   cat.types=drawShuffledTypes({...cat,types:[]});
@@ -44,7 +44,7 @@ const checkStyle=document.createElement('style');checkStyle.textContent='.check-
 function mountCheckLink(){
  document.querySelectorAll('.check-hub-link').forEach(node=>node.remove());
  const link=document.createElement('a');link.className='check-hub-link';link.href='check.html';link.target='_top';link.textContent=checkMode?'試用中・一覧へ':'チェック室';
- const host=document.querySelector('.hud-main,.campaign-place');
- if(host)host.append(link);else{link.classList.add('floating');document.body.append(link);}
+ const clockBar=document.querySelector('.clock-debug-bar'),host=document.querySelector('.hud-main,.campaign-place');
+ if(clockBar)clockBar.prepend(link);else if(host)host.append(link);else{link.classList.add('floating');document.body.append(link);}
 }
 const beforeCheckRender=render;render=function(state){beforeCheckRender(state);mountCheckLink();};

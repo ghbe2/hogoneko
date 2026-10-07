@@ -8,7 +8,7 @@ function careSlotsBetween(from,to){
  return count;
 }
 const REAL_TIME_TUNING={graceTicks:8,heartLossPerNeed:.1,adultWeightLoss:5,kittenWeightLoss:1};
-function ensureRealClock(state,now=Date.now()){
+function ensureRealClock(state,now=gameNow()){
  const clock=state.realClock;
  if(clock?.version===1&&Number.isFinite(clock.processedAt)&&Number.isInteger(clock.dayTicks)&&clock.dayTicks>=0&&clock.dayTicks<8)return state;
  return {...state,realClock:{version:1,processedAt:now,dayTicks:0}};
@@ -48,7 +48,7 @@ function advanceRealTicks(state,ticks,realtime=false){
  }
  return {...next,realClock:{...next.realClock,careSimulatedAt:(state.realClock.careSimulatedAt??state.realClock.processedAt)+ticks*REAL_TICK_MS}};
 }
-function syncRealTime(state,now=Date.now()){
+function syncRealTime(state,now=gameNow()){
  if(!Number.isFinite(now))return state;
  state=ensureRealClock(state,now);
  if(now<state.realClock.processedAt)return state; // Clock rollback never replays time.
@@ -62,7 +62,7 @@ function syncRealTime(state,now=Date.now()){
 }
 const beforeRealTimeReducer=reduceGameState;
 reduceGameState=function(state,action){
- const now=action.type==='SYNC_REAL_TIME'&&Number.isFinite(action.at)?action.at:Date.now();
+ const now=action.type==='SYNC_REAL_TIME'&&Number.isFinite(action.at)?action.at:gameNow();
  state=syncRealTime(state,now);
  if(['SYNC_REAL_TIME','LEAVE_ROOM','RETURN_FROM_AWAY','LIFE_TICK'].includes(action.type))return state;
  if(['ADVANCE_THREE_HOURS','NEXT_DAY'].includes(action.type)&&getCat(state).status==='raising'){
@@ -82,7 +82,7 @@ const beforeRealGraduation=renderGraduation;
 renderGraduation=(state,cat)=>beforeRealGraduation(state,cat).replace('もう1日いっしょに過ごす','今日は見送って、おうちへ');
 const beforeRealGuide=getScreenGuide;
 getScreenGuide=function(...args){const guide=beforeRealGuide(...args);return guide?JSON.parse(JSON.stringify(guide).replaceAll('今日はここまで、で翌日へ進みます。','現実の時間に合わせて日数が進みます。')):guide;};
-window.addEventListener('pagehide',()=>dispatch({type:'SYNC_REAL_TIME',at:Date.now()}));
+window.addEventListener('pagehide',()=>dispatch({type:'SYNC_REAL_TIME',at:gameNow()}));
 // Preserve the original loaded timestamp; older modules autosave while booting.
-gameState=ensureRealClock(gameState,loadedSaveTimestamp??Date.now());
+gameState=ensureRealClock(gameState,loadedSaveTimestamp??gameNow());
 gameState=syncRealTime(gameState);saveGameState(gameState);

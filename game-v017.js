@@ -1,4 +1,16 @@
 'use strict';
+const DEBUG_CLOCK_ENABLED=location.protocol==='file:'||new URLSearchParams(location.search).get('check')==='1';
+const DEBUG_CLOCK_KEY=SAVE_KEY+'_debug_clock';
+let debugClockOffset=0;
+try{if(DEBUG_CLOCK_ENABLED&&localStorage.getItem(SAVE_KEY))debugClockOffset=Math.max(0,Number(localStorage.getItem(DEBUG_CLOCK_KEY))||0);}catch{}
+function gameNow(){return Date.now()+debugClockOffset;}
+if(DEBUG_CLOCK_ENABLED){
+ const style=document.createElement('style');style.textContent='body:has(.clock-debug-bar){display:flex;flex-direction:column}body:has(.clock-debug-bar) #app{height:calc(100svh - 48px);flex:none}.clock-debug-bar{height:48px;flex:none;width:100%;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:#514940;color:#fff;font:12px system-ui}.clock-debug-bar button{min-height:40px;padding:0 16px;border:0;border-radius:8px;background:#fff5df;color:#514940;font-weight:700}';document.head.appendChild(style);
+ const bar=document.createElement('nav');bar.className='clock-debug-bar';bar.setAttribute('aria-label','デバッグ時刻');bar.innerHTML='<span></span><button type="button">＋6時間</button>';document.body.prepend(bar);
+ function updateDebugClock(){bar.querySelector('span').textContent=new Date(gameNow()).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});}
+ bar.querySelector('button').addEventListener('click',()=>{debugClockOffset+=6*60*60*1000;try{localStorage.setItem(DEBUG_CLOCK_KEY,String(debugClockOffset));}catch{}dispatch({type:'SYNC_REAL_TIME',at:gameNow()});updateDebugClock();});
+ updateDebugClock();setInterval(updateDebugClock,30000);
+}
 // Release-oriented prototype: persistent SVG phenotype and one authoritative shop catalogue.
 const SHOP_CATALOG = [
   {id:'food_dry',shop:'super',category:'food',label:'いつものカリカリ',emoji:'◉',price:4,quantity:6,unit:'皿分'},
@@ -345,4 +357,4 @@ button,[role="button"]{touch-action:manipulation}
 document.head.append(releaseStyle);
 saveGameState(gameState);scheduleRoam();
 requestAnimationFrame(animateGameCats);
-window.setInterval(()=>dispatch({type:'SYNC_REAL_TIME',at:Date.now()}),30000);
+window.setInterval(()=>dispatch({type:'SYNC_REAL_TIME',at:gameNow()}),30000);

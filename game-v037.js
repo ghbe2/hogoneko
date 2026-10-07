@@ -23,12 +23,12 @@ moveLayoutDrag=function(draft,x,y){dragBeforeControlZone(draft,x,y);if(draft.mov
  draft.y=constrainFurnitureY(draft.itemId,raw/r.height*100,r.height,draft.height);draft.ghost.style.top=draft.y+'%';
  draft.valid=x>=r.left&&x<=r.right&&y>=r.top+b.wallTop&&y<=r.top+b.floorBottom&&(wall?bottom<=b.wallBottom:bottom>=b.floorTop);
  draft.ghost.classList.toggle('invalid',!draft.valid);draft.hint.textContent=draft.valid?'離してここに置く':wall?'壁の枠内に置く':'家具の足元を床の枠内に置く';}};
-function daylightAt(date=new Date()){
+function daylightAt(date=new Date(gameNow())){
  const hour=date.getHours()+date.getMinutes()/60;
  if(hour<6||hour>=19)return null;
  const t=(hour-6)/13,x=73-46*t;
  const window=roomWindowGeometry(),edge=(window.y+310*window.scale)/760*100;
- return {x,y:72,polygon:`37% ${edge}%, 65% ${edge}%, ${Math.min(96,x+23)}% 89%, ${Math.max(4,x-23)}% 89%`,period:hour<11?'morning':hour<15?'noon':'evening'};
+ return {x,y:72,polygon:`20% ${edge}%, 48% ${edge}%, ${Math.min(96,x+23)}% 89%, ${Math.max(4,x-23)}% 89%`,period:hour<11?'morning':hour<15?'noon':'evening'};
 }
 const roamingBeforeSun=getAvailableRoamPoints;
 getAvailableRoamPoints=function(state){const points=roamingBeforeSun(state),sun=daylightAt();if(sun)points.push({id:'sunlight',index:990,x:sun.x-7,y:62,scale:.75,distance:'near',surface:'floor'});return points;};
@@ -213,7 +213,7 @@ const saveBeforeResetGuard=saveGameState;
 saveGameState=function(state){return resettingSave?false:saveBeforeResetGuard(state);};
 resetGameSave=function(){
  resettingSave=true;
- try{localStorage.removeItem(SAVE_KEY);}catch(error){resettingSave=false;window.alert('記録を消せませんでした。ブラウザの保存設定を確認してください。');return;}
+ try{localStorage.removeItem(SAVE_KEY);localStorage.removeItem(DEBUG_CLOCK_KEY);}catch(error){resettingSave=false;window.alert('記録を消せませんでした。ブラウザの保存設定を確認してください。');return;}
  location.reload();
 };
 // Keep the opening quiet: the illustration, title and one clear start action.
@@ -324,7 +324,7 @@ const progressionStyle=document.createElement('style');progressionStyle.textCont
 `;document.head.appendChild(progressionStyle);
 
 // Daily discovery: local calendar day, once per save, not per cat or simulated day.
-function discoveryDay(now=new Date()){return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;}
+function discoveryDay(now=new Date(gameNow())){return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;}
 function discoveryAvailable(state){return getCat(state).status==='raising'&&(!state.dailyDiscovery?.lastDay||state.dailyDiscovery.lastDay<discoveryDay());}
 const discoveryReduce=reduceGameState;
 function discoveryScene(state){return state.campaign.phase==='room'&&!state.ui.modal&&!state.ui.layoutMode&&!state.ui.holdingCat&&!state.ui.careAnimation&&!state.campaign.requiredVisit&&discoveryAvailable(state);}

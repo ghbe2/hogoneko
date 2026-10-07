@@ -10,7 +10,7 @@ function surgeryEligibility(state){
 }
 const beforeSurgeryReady=isGraduationReady;
 isGraduationReady=state=>getCat(state).surgery?.status==='done'&&beforeSurgeryReady(state);
-function finishSurgery(state,now=Date.now()){
+function finishSurgery(state,now=gameNow()){
  const cat=getCat(state),surgery=cat.surgery;
  if(surgery?.status!=='in_progress'||now-surgery.startedAt<SURGERY_MS)return state;
  const day=cat.body.days+1;
@@ -26,7 +26,7 @@ reduceGameState=function(state,action){
   if(!atClinic||cat.status!=='raising'||cat.surgery?.status==='done'||!surgeryEligibility(state).ready)return state;
   if(state.coins<RELEASE_ECONOMY.surgery)return {...state,ui:{...state.ui,modal:'wallet',walletReturn:null}};
   const charged=spendCoins(state,RELEASE_ECONOMY.surgery,'手術');
-  return {...charged,cats:charged.cats.map(c=>c.id!==cat.id?c:{...c,surgery:{status:'in_progress',startedAt:Date.now(),startedDay:c.body.days+1,paid:RELEASE_ECONOMY.surgery}}),campaign:{...state.campaign,medicalStage:'procedure'},ui:{...state.ui,modal:null}};
+  return {...charged,cats:charged.cats.map(c=>c.id!==cat.id?c:{...c,surgery:{status:'in_progress',startedAt:gameNow(),startedDay:c.body.days+1,paid:RELEASE_ECONOMY.surgery}}),campaign:{...state.campaign,medicalStage:'procedure'},ui:{...state.ui,modal:null}};
  }
  if(['LEAVE_SURGERY_CLINIC','CONFIRM_CLINIC_VISIT'].includes(action.type)){
   if(!atClinic||cat.status!=='raising')return state;
@@ -81,7 +81,7 @@ render=function(state){
  beforeSurgeryRender(state);
  const medical=getCat(state).surgery;
  const key=medical?.status==='in_progress'?`${getCat(state).id}:${medical.startedAt}`:null;
- if(key!==surgeryTimerKey){clearTimeout(surgeryTimer);surgeryTimerKey=key;if(key)surgeryTimer=setTimeout(()=>dispatch({type:'FINISH_SURGERY'}),Math.max(0,SURGERY_MS-(Date.now()-medical.startedAt))+50);}
+ if(key!==surgeryTimerKey){clearTimeout(surgeryTimer);surgeryTimerKey=key;if(key)surgeryTimer=setTimeout(()=>dispatch({type:'FINISH_SURGERY'}),Math.max(0,SURGERY_MS-(gameNow()-medical.startedAt))+50);}
  const room=app.querySelector('.surgery-room');if(room)bookBackground(room,bookCrop(bookScene('clinic',state),'0 100 450 410'));
  if(medical?.status==='in_progress'&&room){const frame=room.closest('.campaign-frame');frame.querySelectorAll('button').forEach(button=>button.disabled=true);}
 };
