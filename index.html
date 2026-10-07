@@ -56,14 +56,12 @@
     img { -webkit-user-drag: none; user-drag: none; pointer-events: none; }
 
     #app {
-      width: min(100vw, 375px);
+      width: 100%;
       height: 100svh;
-      max-height: 812px;
       min-width: 0;
       min-height: 0;
       overflow: hidden;
       background: var(--paper);
-      box-shadow: 0 20px 70px rgba(75, 57, 54, .24);
       position: relative;
     }
 
@@ -1594,11 +1592,6 @@
 
     @supports (height: 100dvh) {
       body, #app { height: 100dvh; }
-    }
-
-    @media (min-width: 376px) {
-      #app { height: min(100svh, 812px); border-radius: 28px; }
-      @supports (height: 100dvh) { #app { height: min(100dvh, 812px); } }
     }
 
     @media (prefers-reduced-motion: reduce) {
