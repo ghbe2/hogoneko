@@ -1,6 +1,14 @@
 'use strict';
 // Long presses here belong to the game, not the browser's text/context menu.
-window.addEventListener('contextmenu',event=>{if(event.target.closest('[data-action="touch-now"],[data-action="call-cat"],.command-dock'))event.preventDefault();},true);
+window.addEventListener('contextmenu',event=>{
+ const quick=event.target.closest('[data-action="touch-now"],[data-action="call-cat"]');
+ if(!quick&&!event.target.closest('.command-dock'))return;
+ event.preventDefault();event.stopImmediatePropagation();
+ if(quick&&!quick.disabled&&!gameState.ui.modal){
+  if(callHold){clearTimeout(callHold.timer);callHold.long=true;}
+  dispatch(quick.dataset.action==='touch-now'?{type:'OPEN_SLOT_MENU',tab:'touch'}:{type:'OPEN_NICKNAME'});
+ }
+},true);
 let quickHoldRelease=null,quickPressStarted=null;
 window.addEventListener('pointerdown',event=>{quickPressStarted=event.target.closest('[data-action="touch-now"],[data-action="call-cat"]')?{id:event.pointerId,at:Date.now()}:null;},true);
 window.addEventListener('pointerup',event=>{if(quickPressStarted?.id===event.pointerId&&Date.now()-quickPressStarted.at>=550)quickHoldRelease={x:event.clientX,y:event.clientY,until:Date.now()+700};quickPressStarted=null;},true);

@@ -66,6 +66,8 @@ renderSchedule=function(state,cat){
 const beforeSurgeryNotebook=renderNotebook;
 renderNotebook=function(state,cat){
  const template=document.createElement('template');template.innerHTML=beforeSurgeryNotebook(state,cat);
+ const header=template.content.querySelector('.notebook-head');
+ if(header){header.style.cssText='display:flex;align-items:center;justify-content:space-between;flex:none;min-height:52px;padding:4px 12px 4px 38px';header.insertAdjacentHTML('beforeend','<button class="notebook-close" data-action="close-modal" style="min-height:44px;min-width:64px;border:0;border-radius:22px;background:#637d59;color:white">閉じる</button>');}
  const identity=template.content.querySelector('.identity-chips');
  if(identity){const chip=document.createElement('span');chip.className='medical-notebook-chip';chip.textContent=cat.surgery?.status==='done'?'手術済み ✓':'手術はこれから';identity.append(chip);}
  return template.innerHTML;
