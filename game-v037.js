@@ -96,7 +96,7 @@ render=function(state){
 const closeEncounter=renderTrapInspect;
 const closeMount=mountGameCats;
 mountGameCats=function(){closeMount();app.querySelectorAll('.capture-cat .game-cat-svg').forEach(svg=>{if(svg.dataset.framed)return;svg.dataset.framed='1';{if(!svg.isConnected)return;let points=[];const inverse=svg.getScreenCTM()?.inverse();if(!inverse)return;svg.querySelectorAll('path,ellipse,circle,polygon').forEach(el=>{if(el.closest('defs,clipPath,mask'))return;for(let n=el;n&&n!==svg;n=n.parentElement){const s=getComputedStyle(n);if(s.display==='none'||s.visibility==='hidden'||Number(s.opacity)===0)return;}const r=el.getBoundingClientRect();if(!r.width&&!r.height)return;points.push(new DOMPoint(r.left,r.top).matrixTransform(inverse),new DOMPoint(r.right,r.bottom).matrixTransform(inverse));});if(!points.length)return;const x=Math.min(...points.map(p=>p.x)),y=Math.min(...points.map(p=>p.y)),w=Math.max(...points.map(p=>p.x))-x,h=Math.max(...points.map(p=>p.y))-y;svg.setAttribute('viewBox',[x-w*.08,y-h*.1,w*1.16,h*1.2].map(n=>n.toFixed(2)).join(' '));svg.setAttribute('preserveAspectRatio','xMidYMid meet');}});};
-renderTrapInspect=function(state,cat){const t=document.createElement('template');t.innerHTML=closeEncounter(state,cat);const frame=t.content.querySelector('.capture-footprint'),cage=frame?.querySelector('.capture-cage');if(cage)frame.replaceWith(cage);const food=t.content.querySelector('.capture-food');if(food)food.innerHTML=bookImage(bookIcons.starter_food);return t.innerHTML;};
+renderTrapInspect=function(state,cat){const t=document.createElement('template');t.innerHTML=closeEncounter(state,cat);const frame=t.content.querySelector('.capture-footprint'),cage=frame?.querySelector('.capture-cage');if(cage)frame.replaceWith(cage);const food=t.content.querySelector('.capture-food');if(food)food.innerHTML=bookImage(bowlSVG(false,100));return t.innerHTML;};
 const encounterCloseStyle=document.createElement('style');encounterCloseStyle.textContent=`
 #app .capture-inspect{position:absolute;inset:0;background-image:none!important;padding:0;display:block}
 #app .capture-inspect .capture-cage{position:absolute;inset:0;width:100%;height:100%;min-height:0;border:0;border-radius:0;box-shadow:none}
@@ -211,6 +211,13 @@ const openingStyle=document.createElement('style');openingStyle.textContent=`
 #app .intake-layout .layout-tray-toggle{bottom:80px}
 #app .intake-layout .layout-edge-palette{bottom:80px}
 #app .game-frame .command-dock{bottom:20px}
+#app .command-dock.tiered-dock{width:calc(100% - 24px);max-width:none;display:block;--slot:clamp(54px,17vw,68px);height:88px}
+#app .main-command-row{position:relative;display:block;height:88px;width:100%}
+#app .main-command-row .main-command{position:absolute;top:50%;transform:translateY(-50%)}
+#app .main-command-row .main-command:nth-child(1){left:0}
+#app .main-command-row .main-command:nth-child(2){left:calc(25% - 5px)}
+#app .main-command-row .main-command:nth-child(3){left:calc(50% - 10px)}
+#app .sub-command-row{position:absolute;right:0;top:0}
 #app .campaign-button{border:1px solid #f0e5d4;border-radius:32px;background:#fff8e9;color:#715746;box-shadow:0 3px 12px #70553414;font-weight:500;transition:transform .15s,background .15s}
 #app .campaign-button.secondary{background:#ffffff75;border-color:#d9c8ae;box-shadow:none;color:#806b58}
 #app .campaign-button:disabled{background:#e8e1d7;border-color:transparent;box-shadow:none;color:#9d9488;cursor:default}

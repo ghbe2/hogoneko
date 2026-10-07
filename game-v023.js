@@ -1,8 +1,8 @@
 'use strict';
 for(const [id,svg] of Object.entries(LifeArt.icons))TOOL_META[id].emoji=bookImage(svg,'paper-menu-icon');
-for(const id of ['starter_food','food_dry','water_refill']){
- const svg=LifeArt.bowl(id==='water_refill',100);bookIcons[id]=svg;getFood(id).emoji=bookImage(svg);
-}
+const foodBagArt=bookSVG('<path d="M66 30L184 30 178 66 197 187Q125 211 53 187L72 66Z" fill="#c49c65"/><path d="M66 30h118v15H66Z" fill="#8d7250"/><path d="M72 91Q125 81 180 91L185 164Q125 181 65 164Z" fill="#f4e8c9"/><path d="M92 124q24-24 44 0l25-15v31l-25-16q-20 23-44 0" fill="#8b9a74"/><path d="M81 181l19 4m12 0 18 3m12-3 20-4" stroke="#876445" stroke-width="6" stroke-linecap="round"/>');
+const waterJugArt=bookSVG('<path d="M88 61Q35 46 36 107Q37 153 88 136" fill="none" stroke="#719ba4" stroke-width="15"/><path d="M76 38H181L163 178Q121 199 81 176Z" fill="#91b5b9"/><path d="M76 38H198L181 66H79Z" fill="#d8e7df"/><path d="M91 103H166L157 169Q124 184 93 169Z" fill="#6f9fad"/><path d="M100 117l48-1" stroke="#e1f0e8" stroke-width="7" stroke-linecap="round"/>');
+for(const id of ['starter_food','food_dry','water_refill']){const svg=id==='water_refill'?waterJugArt:foodBagArt;bookIcons[id]=svg;getFood(id).emoji=bookImage(svg);}
 bookIcons.bowl=LifeArt.bowl(false,100);bookIcons.water=LifeArt.bowl(true,100);
 const paperPlaced=renderPlacedItem;
 renderPlacedItem=function(placed,state,...args){
