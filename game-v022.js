@@ -1,13 +1,10 @@
 'use strict';
-// Long presses here belong to the game, not the browser's text/context menu.
+// A long press can replace its original button with a modal before release.
+// Suppress the browser menu across the game surface, not only on the old button.
+// Keep native editing menus available in text fields.
 window.addEventListener('contextmenu',event=>{
- const quick=event.target.closest('[data-action="touch-now"],[data-action="call-cat"]');
- if(!quick&&!event.target.closest('.command-dock'))return;
+ if(!(event.target instanceof Element)||!event.target.closest('#app')||event.target.closest('input,textarea,[contenteditable="true"]'))return;
  event.preventDefault();event.stopImmediatePropagation();
- if(quick&&!quick.disabled&&!gameState.ui.modal){
-  if(callHold){clearTimeout(callHold.timer);callHold.long=true;}
-  dispatch(quick.dataset.action==='touch-now'?{type:'OPEN_SLOT_MENU',tab:'touch'}:{type:'OPEN_NICKNAME'});
- }
 },true);
 let quickHoldRelease=null,quickPressStarted=null;
 window.addEventListener('pointerdown',event=>{quickPressStarted=event.target.closest('[data-action="touch-now"],[data-action="call-cat"]')?{id:event.pointerId,at:Date.now()}:null;},true);
