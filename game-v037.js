@@ -123,11 +123,11 @@ const openingStyle=document.createElement('style');openingStyle.textContent=`
 #app .story-screen .story-pages{grid-row:1;margin:0;align-self:center}
 #app .story-screen [data-action="next-story"]{grid-row:2;min-height:56px;width:min(100%,260px);font-size:15px;letter-spacing:.08em}
 #app .story-screen .story-back{grid-row:3;min-height:44px;font-size:12px;padding:10px 16px;margin:0}
-#app .story-screen{padding:24px 20px 12px;gap:0;background:linear-gradient(#d5e1d5 0%,#d5e1d5 48%,#e9d8bb 48%,#f1e6d4 100%)}
+#app .story-screen{display:grid;grid-template-rows:16px minmax(0,1fr) 60px 108px 128px;padding:24px 20px 12px;gap:0;background:linear-gradient(#d5e1d5 0%,#d5e1d5 48%,#e9d8bb 48%,#f1e6d4 100%)}
 #app .story-screen .story-eyebrow{flex:none;position:relative;z-index:1;color:#6f7866}
-#app .story-screen .intro-illustration{flex:1 1 auto;min-height:110px;max-height:none;width:100%;margin:8px 0 0;border-radius:0;background:none;box-shadow:none;overflow:visible}
-#app .story-screen h1{flex:none;margin:12px 0 8px;font-size:clamp(20px,5.8vw,26px);position:relative}
-#app .story-screen>p{flex:none;margin:0 0 16px;font-size:12px;line-height:1.9;position:relative}
+#app .story-screen .intro-illustration{min-height:0;max-height:none;height:100%;width:100%;margin:0;border-radius:0;background:none;box-shadow:none;overflow:visible}
+#app .story-screen h1{height:60px;margin:0;font-size:clamp(20px,5.8vw,26px);line-height:1.3;position:relative;display:grid;place-items:center}
+#app .story-screen>p{height:108px;margin:0;padding:0 0 16px;font-size:12px;line-height:1.9;position:relative;align-self:start}
 #app .story-screen .title-actions{margin-top:0}
 #app .story-screen .intro-illustration::before{left:0;top:12%;width:54px;height:74px;opacity:.8}
 .storybook .title-screen{padding:clamp(28px,8vh,64px) 24px 32px}
