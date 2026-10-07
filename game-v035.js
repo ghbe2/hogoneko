@@ -69,4 +69,4 @@ const feelStyle=document.createElement('style');feelStyle.textContent=`
 @keyframes feel-grow{40%{filter:drop-shadow(0 0 5px #f28ba5);transform:scale(1.12)}}
 @keyframes feel-fall{40%{opacity:.35;transform:translateY(3px)}}
 @media(prefers-reduced-motion:reduce){.feel-cue,.heart-growing .heart-row,.heart-falling .heart-row{animation:none}}
-`;document.head.appendChild(feelStyle);render(gameState);
+`;document.head.appendChild(feelStyle);

@@ -16,4 +16,4 @@ bookBackground=function(node,svg){
  if(node&&svg&&node.matches('.book-room,.field-scene,.capture-inspect,.title-screen,.book-shop-scene'))svg=texturedStorySVG(svg,node.matches('.book-room'));
  return textureBackground(node,svg);
 };
-render(gameState);
+

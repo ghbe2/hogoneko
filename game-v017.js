@@ -343,6 +343,6 @@ button,[role="button"]{touch-action:manipulation}
 @media(max-height:680px){.release-sheet{padding:13px;gap:7px}.wallet-sheet .ad-preview{padding:12px}.coin-balance strong{font-size:36px}}
 `;
 document.head.append(releaseStyle);
-saveGameState(gameState);render(gameState);scheduleRoam();
+saveGameState(gameState);scheduleRoam();
 requestAnimationFrame(animateGameCats);
 window.setInterval(()=>dispatch({type:'SYNC_REAL_TIME',at:Date.now()}),30000);

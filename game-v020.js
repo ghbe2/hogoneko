@@ -97,4 +97,4 @@ const style=document.createElement('style');style.textContent=`
 .book-shop-scene{height:auto;aspect-ratio:450/510;width:100%;flex-shrink:0}.storybook .shop-sheet{padding-top:0}.storybook .shop-products{padding-bottom:12px}.storybook .release-shop-heading{margin-top:8px}.storybook .graduation-stage:before{display:none}.storybook .graduation-cat{left:38%;top:30%;width:28%;height:25%;transform:none}
 .storybook .clinic-sequence{display:block;padding:0;width:100%}.storybook .exam-room{height:auto;aspect-ratio:450/760;max-height:none;width:100%}.storybook .naming-portrait{height:auto;aspect-ratio:450/600;width:100%;background-size:cover!important}.storybook .diagnosis-visual{height:auto;aspect-ratio:450/600;background-size:cover!important}
 `.replace('sixty%','60%');document.head.append(style);
-render(gameState);
+

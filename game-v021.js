@@ -109,4 +109,4 @@ const compactStyle=document.createElement('style');compactStyle.textContent=`
 if(gameState.onboarding.status==='new'&&!gameState.flags.starterSuppliesV021){
  gameState={...gameState,ui:{...gameState.ui,equippedHand:'starter_toy',equippedFood:'starter_food',equippedCleaner:'starter_clean'}};
 }
-gameState={...ensureStarterSupplies(gameState),flags:{...gameState.flags,starterSuppliesV021:true}};saveGameState(gameState);render(gameState);
+gameState={...ensureStarterSupplies(gameState),flags:{...gameState.flags,starterSuppliesV021:true}};saveGameState(gameState);

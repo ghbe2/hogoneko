@@ -83,4 +83,4 @@ app.addEventListener('click',event=>{
 const visitStyle=document.createElement('style');visitStyle.textContent=`
 .required-visit{position:relative}.visit-shade{position:absolute;inset:0;background:#302b254d;z-index:140;touch-action:none}.visit-target{position:relative!important;z-index:142!important;box-shadow:0 0 0 5px #f8df9c,0 0 0 9px #fff9!important;opacity:1!important;pointer-events:auto!important}.book-map-hotspot.visit-target{position:absolute!important}.visit-notice{position:absolute;z-index:143;top:68px;left:18px;right:18px;padding:14px;border-radius:14px;background:#fff9e9;color:#584c38;text-align:center;font-size:14px;pointer-events:none}.book-map-hotspot.event{left:73%;top:70%}.clinic-shade{background:transparent}.required-visit .footer,.required-visit footer,.required-visit .campaign-footer{z-index:auto}
 `;document.head.append(visitStyle);
-gameState=reconcileVisit(gameState);render(gameState);
+gameState=reconcileVisit(gameState);

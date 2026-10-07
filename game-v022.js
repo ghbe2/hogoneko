@@ -115,4 +115,4 @@ render=function(state){rubRender(state);
   const mark=node.matches('.mess-object')?node:node.querySelector('.book-litter-mark');
   if(mark&&level>0){mark.style.opacity=String(Math.min(1,.25+level*.25));if(mark.classList.contains('book-litter-mark'))mark.textContent='● '.repeat(Math.ceil(level));}
  });
-};render(gameState);
+};

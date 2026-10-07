@@ -56,4 +56,4 @@ button,input,select,.label,.touch-switch-hint{font-weight:600}
 .screen-guide,.touch-gesture-guide{background:#f3e6cb;border-color:#c3aa82;color:#796347;border-radius:13px 8px 15px 9px}
 .sheet-head h2,.naming-question h1{font-weight:600;letter-spacing:.1em}
 .stock{color:#8f7250!important}
-`;document.head.appendChild(worldPaper);render(gameState);
+`;document.head.appendChild(worldPaper);

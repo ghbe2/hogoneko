@@ -75,4 +75,4 @@ getScreenGuide=function(...args){const guide=beforeRealGuide(...args);return gui
 window.addEventListener('pagehide',()=>dispatch({type:'SYNC_REAL_TIME',at:Date.now()}));
 // Preserve the original loaded timestamp; older modules autosave while booting.
 gameState=ensureRealClock(gameState,loadedSaveTimestamp??Date.now());
-gameState=syncRealTime(gameState);saveGameState(gameState);render(gameState);
+gameState=syncRealTime(gameState);saveGameState(gameState);

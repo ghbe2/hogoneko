@@ -97,4 +97,4 @@ const surgeryStyle=document.createElement('style');surgeryStyle.textContent=`
 @media(max-height:700px){.surgery-sheet{gap:7px}.surgery-room{height:100px}.surgery-check{padding:6px 0}.campaign-frame:has(.surgery-sheet) .campaign-actions{gap:5px;padding-top:5px}.campaign-frame:has(.surgery-sheet) .campaign-button{padding:10px;min-height:42px;font-size:13px}}
 `;document.head.append(surgeryStyle);
 // Previous visits were only consultations, not completed operations. Do not invent completion.
-gameState=finishSurgery(gameState);gameState=reconcileVisit(gameState);saveGameState(gameState);render(gameState);
+gameState=finishSurgery(gameState);gameState=reconcileVisit(gameState);saveGameState(gameState);

@@ -43,4 +43,4 @@ const paperStyle=document.createElement('style');paperStyle.textContent=`
 .life-vomit{width:100%;height:100%;display:block;pointer-events:none}
 .book-litter-mark{left:35%;top:23%;width:32px;height:26px;line-height:0}
 .life-poop{display:block;width:100%;height:100%;pointer-events:none}
-`;document.head.appendChild(paperStyle);render(gameState);
+`;document.head.appendChild(paperStyle);

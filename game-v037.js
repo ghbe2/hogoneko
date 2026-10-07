@@ -104,14 +104,6 @@ resetGameSave=function(){
  location.reload();
 };
 // Keep the opening quiet: the illustration, title and one clear start action.
-const quietTitle=renderTitle;
-renderTitle=function(state){
- const t=document.createElement('template');t.innerHTML=quietTitle(state);
- t.content.querySelectorAll('.title-kicker,.title-screen>p,.title-actions small').forEach(n=>n.remove());
- const button=t.content.querySelector('[data-action="start-game"]');
- button.className='opening-start';button.innerHTML=`<span>${state.onboarding.status==='new'?'はじめる':'つづきから'}</span><span aria-hidden="true">→</span>`;
- return t.innerHTML;
-};
 const quietTitleRender=render;
 render=function(state){quietTitleRender(state);const title=app.querySelector('.title-screen');if(!title)return;
  const restart=title.querySelector('.new-release-game');if(restart){
@@ -191,7 +183,7 @@ renderLoopSheet=function(state){
 };
 const progressionStyle=document.createElement('style');progressionStyle.textContent=`
 .shop-product .product-benefit{color:#75634e;font-size:11px;line-height:1.5;white-space:normal}.shop-product.progression-locked{opacity:.65}.progression-news{font-size:12px;line-height:1.5;padding:8px;background:#e7ebdc;border-radius:10px}.loop-prep .loop-keeps{padding:10px;font-size:12px}.loop-prep header h2{font-size:18px}.loop-prep{gap:6px}.loop-prep header h2{margin:6px 0}.loop-prep .loop-balance{font-size:25px}
-`;document.head.appendChild(progressionStyle);render(gameState);
+`;document.head.appendChild(progressionStyle);
 
 // Daily discovery: local calendar day, once per save, not per cat or simulated day.
 function discoveryDay(now=new Date()){return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;}
@@ -215,7 +207,7 @@ render=function(state){
  const coin=document.createElement('span');coin.className='discovery-coin';coin.textContent='● +5';coin.setAttribute('role','status');coin.setAttribute('aria-label','5コインを見つけた');const x=Math.max(30,Math.min(s.width-50,c.left-s.left+c.width/2)),y=Math.max(35,c.top-s.top+c.height*.5);coin.style.left=x+'px';coin.style.top=y+'px';stage.appendChild(coin);
  coin.animate([{translate:'0 0',opacity:0,scale:.5},{offset:.2,translate:'0 -25px',opacity:1,scale:1.15},{offset:.6,translate:'0 -25px',opacity:1,scale:1},{translate:`${s.width-42-x}px ${-y}px`,opacity:0,scale:.45}],{duration:2100,fill:'forwards'});setTimeout(()=>coin.remove(),2200);
 };
-const discoveryStyle=document.createElement('style');discoveryStyle.textContent='.discovery-glint{position:absolute;pointer-events:none;color:#d6ac54;font-size:20px;animation:discovery-glint 3s ease-in-out infinite}.discovery-coin{position:absolute;z-index:90;pointer-events:none;color:#ba872d;font:bold 23px system-ui;text-shadow:0 2px #fff8}@keyframes discovery-glint{50%{opacity:.2;scale:.7}}@media(prefers-reduced-motion:reduce){.discovery-glint{animation:none}}';document.head.appendChild(discoveryStyle);render(gameState);
+const discoveryStyle=document.createElement('style');discoveryStyle.textContent='.discovery-glint{position:absolute;pointer-events:none;color:#d6ac54;font-size:20px;animation:discovery-glint 3s ease-in-out infinite}.discovery-coin{position:absolute;z-index:90;pointer-events:none;color:#ba872d;font:bold 23px system-ui;text-shadow:0 2px #fff8}@keyframes discovery-glint{50%{opacity:.2;scale:.7}}@media(prefers-reduced-motion:reduce){.discovery-glint{animation:none}}';document.head.appendChild(discoveryStyle);
 function positionDiscoveryCoin(){const coin=app.querySelector('.discovery-pickup'),cat=app.querySelector('.cat-object'),stage=app.querySelector('.stage');if(!coin||!cat||!stage)return;const c=cat.getBoundingClientRect(),s=stage.getBoundingClientRect();coin.style.left=Math.max(24,Math.min(s.width-24,c.left-s.left+c.width*.67))+'px';coin.style.top=Math.max(24,Math.min(s.height-24,c.bottom-s.top-12))+'px';}
 app.addEventListener('click',event=>{if(event.target.closest('[data-action="pick-discovery-coin"]'))dispatch({type:'PICK_DISCOVERY_COIN'});});
 discoveryStyle.textContent+='.discovery-pickup{position:absolute;z-index:76;width:48px;height:48px;padding:0;border:0;background:none;transform:translate(-50%,-50%);touch-action:manipulation}.discovery-pickup span{display:block;color:#dca735;font-size:30px;text-shadow:0 2px #8d631f,0 0 2px #fff;animation:coin-roll 4.5s ease-in-out infinite}@keyframes coin-roll{0%,65%,100%{translate:-7px 0;rotate:-20deg}32%{translate:7px -3px;rotate:30deg}}@media(prefers-reduced-motion:reduce){.discovery-pickup span{animation:none}}';

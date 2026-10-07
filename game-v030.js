@@ -38,7 +38,7 @@ if(checkMode && checkScenario){
   gameState=reconcileVisit(gameState);
   if(['result','tnr-result'].includes(checkScenario))for(const type of ['OPEN_OUTING','OPEN_REQUIRED_VISIT','SEND_EVENT'])gameState=reduceGameState(gameState,{type});
   history.replaceState(null,'',location.pathname+'?check=1');
-  dispatch({type:'CLEAR_MESSAGE'});
+  gameState=reduceGameState(gameState,{type:'CLEAR_MESSAGE'});
 }
 const checkStyle=document.createElement('style');checkStyle.textContent='.check-hub-link{display:inline-block;flex-shrink:0;background:#514940;color:white;padding:6px 8px;border-radius:20px;font:10px system-ui;text-decoration:none;margin-left:5px}.check-hub-link.floating{position:fixed;left:12px;top:12px;z-index:20000}';document.head.append(checkStyle);
 function mountCheckLink(){
@@ -47,4 +47,4 @@ function mountCheckLink(){
  const host=document.querySelector('.hud-main,.campaign-place');
  if(host)host.append(link);else{link.classList.add('floating');document.body.append(link);}
 }
-const beforeCheckRender=render;render=function(state){beforeCheckRender(state);mountCheckLink();};mountCheckLink();
+const beforeCheckRender=render;render=function(state){beforeCheckRender(state);mountCheckLink();};

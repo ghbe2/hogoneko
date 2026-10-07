@@ -31,4 +31,4 @@ const stableSheetStyle=document.createElement('style');stableSheetStyle.textCont
 .updating-open-sheet .modal-layer .notebook,
 .updating-open-sheet .modal-layer .simple-panel,
 .updating-open-sheet .release-overlay .release-sheet{animation:none!important}
-`;document.head.appendChild(stableSheetStyle);render(gameState);
+`;document.head.appendChild(stableSheetStyle);

@@ -49,4 +49,4 @@ render=function(state){
   const available=scroll.clientHeight-8;timeline.querySelectorAll('.schedule-week').forEach(week=>{week.style.height=available+'px';week.style.gridTemplateRows=[...week.children].map(card=>card.classList.contains('quiet')?'minmax(0,1fr)':'minmax(0,2fr)').join(' ');});
   scroll.scrollTop=previousTop!==undefined&&fitScheduleDay===today?previousTop:scroll.scrollHeight;fitScheduleDay=today;
  }
-};render(gameState);
+};

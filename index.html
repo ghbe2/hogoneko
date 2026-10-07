@@ -66,7 +66,6 @@
     }
 
     .title-screen, .story-screen { height:100%; min-height:0; overflow:hidden; display:flex; flex-direction:column; align-items:center; padding:32px 25px 24px; background:radial-gradient(ellipse at 50% 32%,#fffaf4 0 24%,transparent 66%),#efe1d6; text-align:center; }
-    .title-screen .title-kicker { margin:18px 0 4px; color:#9b746b; letter-spacing:.24em; font-size:10px; }
     .title-screen h1 { margin:8px 0; color:#805c54; font-size:46px; letter-spacing:.14em; }
     .title-screen p { color:#8d7870; font-size:12px; line-height:1.9; }
     .intro-illustration { position:relative; flex:1; width:100%; min-height:125px; max-height:280px; margin:15px 0; border-radius:150px 150px 22px 22px; background:linear-gradient(#bcd1c5 0 60%,#dfc4aa 60%); overflow:hidden; box-shadow:0 12px 25px #8d6c4920; }
@@ -74,7 +73,6 @@
     .intro-illustration .cat-fallback { left:55%; top:64%; transform:translate(-50%,-50%) scale(.9); }
     .intro-illustration .cat-tail { animation:toy-tail 2.2s ease-in-out infinite alternate; }
     .title-actions { flex:0 0 auto; width:100%; margin-top:auto; padding-top:14px; }
-    .title-actions small { display:block; margin-top:15px; color:#96847a; font-size:9px; }
     .story-screen { padding:28px 25px 22px; background:#fbf4ec; }
     .story-eyebrow { color:#ac7b77; font-size:10px; letter-spacing:.16em; }
     .story-screen h1 { margin:16px 0 4px; font-size:24px; color:#75594f; }
@@ -3412,7 +3410,7 @@ function renderCampaignProgress(step) {
 
 function renderTitle(state) {
   const continuing = state.onboarding.status !== "new";
-  return `<section class="title-screen" aria-label="タイトル"><small class="title-kicker">ひとつ屋根の下、少しずつ。</small><h1>ホゴネコ</h1><p>心とからだを育てる、<br>保護猫との小さな暮らし。</p><div class="intro-illustration">${renderCatArt(initialCat)}</div><div class="title-actions"><button class="campaign-button" data-action="start-game">${continuing ? "つづきから" : "はじめる"}</button><small>${continuing ? "前回の記録から再開します" : "はじめての保護活動へ"} · 自動セーブ</small></div></section>`;
+  return `<section class="title-screen" aria-label="タイトル"><h1>ホゴネコ</h1><div class="intro-illustration">${renderCatArt(initialCat)}</div><div class="title-actions"><button class="opening-start" data-action="start-game"><span>${continuing ? "つづきから" : "はじめる"}</span><span aria-hidden="true">→</span></button></div></section>`;
 }
 
 function renderOpeningStory(state) {
@@ -5191,5 +5189,9 @@ triggerAutoEvent=function(){
 <script src="game-v035.js"></script>
 <script src="game-v036.js"></script>
 <script src="game-v037.js"></script>
+<script>
+// Render only after every module has installed its current rules and artwork.
+document.addEventListener('DOMContentLoaded', () => render(gameState), {once:true});
+</script>
 </body>
 </html>
