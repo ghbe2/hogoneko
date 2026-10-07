@@ -13,21 +13,22 @@ const closeMount=mountGameCats;
 mountGameCats=function(){closeMount();app.querySelectorAll('.capture-cat .game-cat-svg').forEach(svg=>{if(svg.dataset.framed)return;svg.dataset.framed='1';{if(!svg.isConnected)return;let points=[];const inverse=svg.getScreenCTM()?.inverse();if(!inverse)return;svg.querySelectorAll('path,ellipse,circle,polygon').forEach(el=>{if(el.closest('defs,clipPath,mask'))return;for(let n=el;n&&n!==svg;n=n.parentElement){const s=getComputedStyle(n);if(s.display==='none'||s.visibility==='hidden'||Number(s.opacity)===0)return;}const r=el.getBoundingClientRect();if(!r.width&&!r.height)return;points.push(new DOMPoint(r.left,r.top).matrixTransform(inverse),new DOMPoint(r.right,r.bottom).matrixTransform(inverse));});if(!points.length)return;const x=Math.min(...points.map(p=>p.x)),y=Math.min(...points.map(p=>p.y)),w=Math.max(...points.map(p=>p.x))-x,h=Math.max(...points.map(p=>p.y))-y;svg.setAttribute('viewBox',[x-w*.08,y-h*.1,w*1.16,h*1.2].map(n=>n.toFixed(2)).join(' '));svg.setAttribute('preserveAspectRatio','xMidYMid meet');}});};
 renderTrapInspect=function(state,cat){const t=document.createElement('template');t.innerHTML=closeEncounter(state,cat);const frame=t.content.querySelector('.capture-footprint'),cage=frame?.querySelector('.capture-cage');if(cage)frame.replaceWith(cage);const food=t.content.querySelector('.capture-food');if(food)food.innerHTML=bookImage(bookIcons.starter_food);return t.innerHTML;};
 const encounterCloseStyle=document.createElement('style');encounterCloseStyle.textContent=`
-#app .capture-inspect{background-image:none!important;background:radial-gradient(ellipse at 50% 42%,#f9ebd0,#dfcfb7);padding:0;gap:10px;display:flex;flex-direction:column}
-#app .capture-inspect .capture-cage{width:100%;height:auto;min-height:240px;flex:1;border:0;border-radius:0;box-shadow:none}
-#app .capture-inspect .capture-cat{width:90%;height:90%;left:5%;right:auto;bottom:3%;transform:none;animation:none}
+#app .capture-inspect{position:absolute;inset:0;background-image:none!important;padding:0;display:block}
+#app .capture-inspect .capture-cage{position:absolute;inset:0;width:100%;height:100%;min-height:0;border:0;border-radius:0;box-shadow:none}
+#app .capture-inspect .capture-cat{width:90%;height:calc(100% - 160px);left:5%;right:auto;top:64px;bottom:auto;transform:none;animation:none}
 #app .capture-inspect .capture-cat .game-cat-svg{width:100%;height:100%;transform:scale(.85);transform-origin:center center}
 #app .capture-food .book-icon{width:100px;height:66px;max-width:none;max-height:none;object-fit:contain}
-#app .capture-food{left:calc(50% - 50px);bottom:12px;width:100px;height:66px}
-#app .capture-inspect .capture-note{order:-1;align-self:center;margin:12px 12px 0;box-shadow:none;background:#fff8eadb}
+#app .capture-food{left:calc(50% - 50px);bottom:86px;width:100px;height:66px}
+#app .capture-inspect .capture-note,#app .capture-inspect .capture-beat{position:absolute;z-index:10;top:14px;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);margin:0;box-shadow:none;background:#fff8eadb;animation:none}
 #app .campaign-frame:has(.capture-inspect) [data-action="go-clinic"]{background:#637d59;color:#fffdf5;border-color:#637d59;font-size:16px;font-weight:700;min-height:56px;box-shadow:0 4px 12px #43593b30}
 #app .capture-inspect.revealing .capture-cat{animation:captured-cat-reveal 2.8s ease-out both}
 #app .capture-inspect.settled .capture-cat{opacity:1;filter:none;animation:encounter-breathe 3s ease-in-out infinite}
 @keyframes encounter-breathe{50%{translate:0 -3px}}
 #app .capture-inspect.settled .capture-cage-dark{opacity:.25;transition:opacity .8s}
 #app .capture-inspect.settled .capture-cage:after{opacity:.12;transition:opacity .8s}
-#app .campaign-scroll:has(>.capture-inspect){padding:0}
-#app .capture-inspect> :not(.capture-cage){flex:none;max-width:calc(100% - 24px);margin:0 12px 12px}
+#app .campaign-screen:has(.capture-inspect){display:block;position:relative}
+#app .campaign-scroll:has(>.capture-inspect){position:absolute;inset:0;padding:0;overflow:visible}
+#app .campaign-screen:has(.capture-inspect)>.campaign-actions{position:absolute;z-index:12;left:0;right:0;bottom:0;padding:12px 12px max(12px,env(safe-area-inset-bottom));background:transparent;border:0;box-shadow:none}
 `;document.head.append(encounterCloseStyle);
 renderDebugQuickbar=()=>'';renderDebugPanel=()=>'';renderIntakeDebug=()=>'';
 const fullFieldBackground=bookBackground;
