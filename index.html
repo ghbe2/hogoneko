@@ -78,7 +78,6 @@
     .story-screen h1 { margin:16px 0 4px; font-size:24px; color:#75594f; }
     .story-screen p { margin:12px 0; font-size:12px; line-height:2; color:#8b746c; }
     .story-screen .intro-illustration { max-height:220px; }
-    .story-icon { position:absolute; left:28px; top:32px; font-size:45px; z-index:2; }
     .story-pages { display:flex; justify-content:center; gap:8px; margin:10px; }
     .story-pages i { width:7px; height:7px; border-radius:50%; background:#dcd0c5; }
     .story-pages i.current { width:22px; border-radius:5px; background:#cd8190; }
@@ -3415,13 +3414,13 @@ function renderTitle(state) {
 
 function renderOpeningStory(state) {
   const stories = [
-    { title:"この街で、出会う命。", icon:"🏘️", copy:"いつもの帰り道。<br>草むらの奥で、小さな目が光った。<br>この街には、外で暮らす猫たちがいる。" },
-    { title:"安心できる場所を、ひとつ。", icon:"🩺", copy:"保護猫活動は、出会って終わりじゃない。<br>獣医さんに体を診てもらい、<br>その子のペースで休める場所を用意する。" },
-    { title:"どんな未来も、その子のために。", icon:"🏠", copy:"心とからだを育み、新しい家族へ。<br>外での暮らしが合う子には、手術後に<br>元の地域へ戻して見守るTNRという道も。<br>まずは、あなたの最初の一歩から。" },
+    { title:"この街で、出会う命。", copy:"いつもの帰り道。<br>草むらの奥で、小さな目が光った。<br>この街には、外で暮らす猫たちがいる。" },
+    { title:"安心できる場所を、ひとつ。", copy:"保護猫活動は、出会って終わりじゃない。<br>獣医さんに体を診てもらい、<br>その子のペースで休める場所を用意する。" },
+    { title:"その子に合う、未来へ。", copy:"心とからだを育み、新しい家族へ。<br>外での暮らしが合う子には、手術後に<br>元の地域へ戻して見守るTNRという道も。<br>まずは、あなたの最初の一歩から。" },
   ];
   const index = Math.max(0, Math.min(2, state.onboarding.storyIndex));
   const story = stories[index];
-  return `<section class="story-screen" aria-label="保護猫活動のミニストーリー"><small class="story-eyebrow">はじめての保護猫活動</small><div class="intro-illustration"><span class="story-icon">${story.icon}</span>${renderCatArt(initialCat)}</div><h1>${story.title}</h1><p>${story.copy}</p><div class="title-actions"><div class="story-pages" aria-label="${index + 1} / 3">${stories.map((_, i) => `<i class="${i === index ? "current" : ""}"></i>`).join("")}</div><button class="campaign-button" data-action="next-story">${index === 2 ? "住宅街へ、最初の保護に" : "つぎへ"}</button>${index ? `<button class="story-back" data-action="previous-story">ひとつ前へ</button>` : ""}</div></section>`;
+  return `<section class="story-screen" aria-label="保護猫活動のミニストーリー"><small class="story-eyebrow">はじめての保護猫活動</small><div class="intro-illustration">${renderCatArt(initialCat)}</div><h1>${story.title}</h1><p>${story.copy}</p><div class="title-actions"><div class="story-pages" aria-label="${index + 1} / 3">${stories.map((_, i) => `<i class="${i === index ? "current" : ""}"></i>`).join("")}</div><button class="campaign-button" data-action="next-story">${index === 2 ? "住宅街へ、最初の保護に" : "つぎへ"}</button>${index ? `<button class="story-back" data-action="previous-story">ひとつ前へ</button>` : ""}</div></section>`;
 }
 
 function getScreenGuide(state) {

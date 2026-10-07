@@ -74,7 +74,7 @@ render=function(state){
  // Replace icons in existing controls without replacing their event targets.
  app.querySelectorAll('[data-item]').forEach(el=>{const svg=bookIcons[el.dataset.item];if(!svg)return;const icon=el.querySelector('.emoji,.big-emoji,.shop-product>span:first-child');if(icon)icon.innerHTML=bookImage(svg);});
  const world=app.querySelector('[data-room-world]');if(world){world.classList.add('book-room');bookBackground(world,SB.rooms[`${state.season}_${bookTime(state)}`]||SB.rooms.spring_day);}
- bookBackground(app.querySelector('.title-screen'),bookScene('opening',state));
+ bookBackground(app.querySelector('.title-screen'),bookScene('opening',state)?.replace('<svg ','<svg preserveAspectRatio="xMidYMid slice" '));
  const area={a1:'field',a2:'park',a3:'alley',a4:'mountain'}[state.campaign.area]||'field';
  bookBackground(app.querySelector('.field-scene'),bookScene(area,state));bookBackground(app.querySelector('.capture-inspect'),bookScene(area,state));
  for(const selector of ['.exam-room','.naming-portrait','.diagnosis-visual'])bookBackground(app.querySelector(selector),bookScene('clinic',state));
