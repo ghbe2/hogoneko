@@ -1,4 +1,14 @@
 'use strict';
+const closeEncounter=renderTrapInspect;
+renderTrapInspect=function(state,cat){const t=document.createElement('template');t.innerHTML=closeEncounter(state,cat);const frame=t.content.querySelector('.capture-footprint'),cage=frame?.querySelector('.capture-cage');if(cage)frame.replaceWith(cage);return t.innerHTML;};
+const encounterCloseStyle=document.createElement('style');encounterCloseStyle.textContent=`
+#app .capture-inspect{background-image:none!important;background:radial-gradient(ellipse at 50% 42%,#f9ebd0,#dfcfb7);padding:16px 10px;gap:18px}
+#app .capture-inspect .capture-cage{width:min(100%,360px);height:280px;flex-shrink:0}
+#app .capture-inspect .capture-cat{width:155px;height:174px}
+#app .capture-inspect.settled .capture-cage-dark{opacity:.25;transition:opacity .8s}
+#app .capture-inspect.settled .capture-cage:after{opacity:.4;transition:opacity .8s}
+@media(max-height:600px){#app .capture-inspect .capture-cage{height:240px}#app .capture-inspect{gap:12px}}
+`;document.head.append(encounterCloseStyle);
 renderDebugQuickbar=()=>'';renderDebugPanel=()=>'';renderIntakeDebug=()=>'';
 const fullFieldBackground=bookBackground;
 bookBackground=function(node,svg){if(node?.matches('.field-scene')&&svg)svg=svg.replace('<svg ','<svg preserveAspectRatio="xMidYMid slice" ');return fullFieldBackground(node,svg);};
