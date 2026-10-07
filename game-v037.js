@@ -2,12 +2,13 @@
 const closeEncounter=renderTrapInspect;
 const closeMount=mountGameCats;
 mountGameCats=function(){closeMount();app.querySelectorAll('.capture-cat .game-cat-svg').forEach(svg=>{if(svg.dataset.framed)return;svg.dataset.framed='1';setTimeout(()=>{if(!svg.isConnected)return;let points=[];const inverse=svg.getScreenCTM()?.inverse();if(!inverse)return;svg.querySelectorAll('path,ellipse,circle,polygon').forEach(el=>{if(el.closest('defs,clipPath,mask'))return;for(let n=el;n&&n!==svg;n=n.parentElement){const s=getComputedStyle(n);if(s.display==='none'||s.visibility==='hidden'||Number(s.opacity)===0)return;}const r=el.getBoundingClientRect();if(!r.width&&!r.height)return;points.push(new DOMPoint(r.left,r.top).matrixTransform(inverse),new DOMPoint(r.right,r.bottom).matrixTransform(inverse));});if(!points.length)return;const x=Math.min(...points.map(p=>p.x)),y=Math.min(...points.map(p=>p.y)),w=Math.max(...points.map(p=>p.x))-x,h=Math.max(...points.map(p=>p.y))-y;svg.setAttribute('viewBox',`${x-w*.08} ${y-h*.1} ${w*1.16} ${h*1.2}`);svg.setAttribute('preserveAspectRatio','xMidYMid meet');},500);});};
-renderTrapInspect=function(state,cat){const t=document.createElement('template');t.innerHTML=closeEncounter(state,cat);const frame=t.content.querySelector('.capture-footprint'),cage=frame?.querySelector('.capture-cage');if(cage)frame.replaceWith(cage);return t.innerHTML;};
+renderTrapInspect=function(state,cat){const t=document.createElement('template');t.innerHTML=closeEncounter(state,cat);const frame=t.content.querySelector('.capture-footprint'),cage=frame?.querySelector('.capture-cage');if(cage)frame.replaceWith(cage);const food=t.content.querySelector('.capture-food');if(food)food.innerHTML=bookImage(bookIcons.starter_food);return t.innerHTML;};
 const encounterCloseStyle=document.createElement('style');encounterCloseStyle.textContent=`
 #app .capture-inspect{background-image:none!important;background:radial-gradient(ellipse at 50% 42%,#f9ebd0,#dfcfb7);padding:0;gap:10px;display:flex;flex-direction:column}
 #app .capture-inspect .capture-cage{width:100%;height:auto;min-height:240px;flex:1;border:0;border-radius:0;box-shadow:none}
 #app .capture-inspect .capture-cat{width:90%;height:90%;left:5%;right:auto;bottom:3%;transform:none;animation:none}
 #app .capture-inspect .capture-cat .game-cat-svg{width:100%;height:100%;transform:scale(.85);transform-origin:center center}
+#app .capture-food .book-icon{width:60px;height:40px;object-fit:contain}
 #app .capture-inspect.revealing .capture-cat{animation:captured-cat-reveal 2.8s ease-out both}
 #app .capture-inspect.settled .capture-cat{opacity:1;filter:none;animation:encounter-breathe 3s ease-in-out infinite}
 @keyframes encounter-breathe{50%{translate:0 -3px}}

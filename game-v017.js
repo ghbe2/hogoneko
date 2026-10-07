@@ -266,7 +266,7 @@ function animateGameCats(now){
       let model=CatSVG.poseModel(pose,poseTime);
       if(entry.previous&&pose!=='jump'&&now-entry.changed<180)model=CatSVG.mixModel(entry.previous,model,(now-entry.changed)/180);
       if(pose==='jump')model.lift=0;
-      CatSVG.applyPose(entry.rig,model,t,pose);svg.dataset.pose=pose;
+      CatSVG.applyPose(entry.rig,model,poseTime,pose);svg.dataset.pose=pose;
     }
   }
   requestAnimationFrame(animateGameCats);
