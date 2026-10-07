@@ -1,4 +1,13 @@
 'use strict';
+// A reset must not be undone by pagehide/visibility/timer autosaves on reload.
+let resettingSave=false;
+const saveBeforeResetGuard=saveGameState;
+saveGameState=function(state){return resettingSave?false:saveBeforeResetGuard(state);};
+resetGameSave=function(){
+ resettingSave=true;
+ try{localStorage.removeItem(SAVE_KEY);}catch(error){resettingSave=false;window.alert('記録を消せませんでした。ブラウザの保存設定を確認してください。');return;}
+ location.reload();
+};
 // Keep the opening quiet: the illustration, title and one clear start action.
 const quietTitle=renderTitle;
 renderTitle=function(state){
@@ -17,6 +26,9 @@ render=function(state){quietTitleRender(state);const title=app.querySelector('.t
  }
 };
 const openingStyle=document.createElement('style');openingStyle.textContent=`
+html body{width:100%;height:100svh;margin:0;padding:0}
+html body #app{width:100%;max-width:none;height:100svh;max-height:none;border-radius:0;box-shadow:none}
+@supports(height:100dvh){html body,html body #app{height:100dvh}}
 #app .campaign-button{border:1px solid #f0e5d4;border-radius:32px;background:#fff8e9;color:#715746;box-shadow:0 3px 12px #70553414;font-weight:500;transition:transform .15s,background .15s}
 #app .campaign-button.secondary{background:#ffffff75;border-color:#d9c8ae;box-shadow:none;color:#806b58}
 #app .campaign-button:disabled{background:#e8e1d7;border-color:transparent;box-shadow:none;color:#9d9488;cursor:default}
