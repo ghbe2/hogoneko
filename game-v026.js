@@ -70,7 +70,7 @@ render=function(state){
  app.querySelectorAll('button,input,select,textarea,[tabindex]').forEach(el=>{if(el!==target){el.disabled=true;el.setAttribute('tabindex','-1');}});
  const shade=document.createElement('div');shade.className='visit-shade';shade.setAttribute('aria-hidden','true');frame.append(shade);
  target.classList.add('visit-target');
- const notice=document.createElement('div');notice.className='visit-notice';notice.setAttribute('role','status');
+ const notice=document.createElement('div');notice.className='visit-notice system-message';notice.setAttribute('role','status');
  notice.textContent=visit.step==='clinic'?'確認を終えたら、おうちへ戻ろう':`${visit.kind==='clinic'?'手術予定の日です。病院へいこう':'譲渡会の日です。会場へいこう'}${visit.step==='outing'?' — おでかけをタップ':''}`;
  frame.append(notice);
  if(visit.step==='clinic')shade.classList.add('clinic-shade');
@@ -81,6 +81,9 @@ app.addEventListener('click',event=>{
  if(action==='confirm-clinic-visit')dispatch({type:'CONFIRM_CLINIC_VISIT'});
 });
 const visitStyle=document.createElement('style');visitStyle.textContent=`
-.required-visit{position:relative}.visit-shade{position:absolute;inset:0;background:#302b254d;z-index:140;touch-action:none}.visit-target{position:relative!important;z-index:142!important;box-shadow:0 0 0 5px #f8df9c,0 0 0 9px #fff9!important;opacity:1!important;pointer-events:auto!important}.book-map-hotspot.visit-target{position:absolute!important}.visit-notice{position:absolute;z-index:143;top:68px;left:18px;right:18px;padding:14px;border-radius:14px;background:#fff9e9;color:#584c38;text-align:center;font-size:14px;pointer-events:none}.book-map-hotspot.event{left:73%;top:70%}.clinic-shade{background:transparent}.required-visit .footer,.required-visit footer,.required-visit .campaign-footer{z-index:auto}
+.required-visit{position:relative}.visit-shade{position:absolute;inset:0;background:#302b254d;z-index:140;touch-action:none}.visit-target{position:relative!important;z-index:142!important;box-shadow:0 0 0 5px #f8df9c,0 0 0 9px #fff9!important;opacity:1!important;pointer-events:auto!important}.book-map-hotspot.visit-target{position:absolute!important}
+#app .game-frame.required-visit>.controls{z-index:142}
+.system-message{position:absolute;z-index:143;top:calc(148px + 12.7%);transform:translateY(-50%);left:18px;right:18px;padding:12px 14px;border-radius:14px;background:#fff9e9;color:#584c38;text-align:center;font-size:14px;line-height:1.6;pointer-events:none}
+.book-map-hotspot.event{left:73%;top:70%}.clinic-shade{background:transparent}.required-visit .footer,.required-visit footer,.required-visit .campaign-footer{z-index:auto}
 `;document.head.append(visitStyle);
 gameState=reconcileVisit(gameState);

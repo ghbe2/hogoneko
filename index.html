@@ -3409,7 +3409,8 @@ function renderCampaignProgress(step) {
 
 function renderTitle(state) {
   const continuing = state.onboarding.status !== "new";
-  return `<section class="title-screen" aria-label="タイトル"><h1>ホゴネコ</h1><div class="intro-illustration">${renderCatArt(initialCat)}</div><div class="title-actions"><button class="opening-start" data-action="start-game"><span>${continuing ? "つづきから" : "はじめる"}</span><span aria-hidden="true">→</span></button></div></section>`;
+  const titleCat = continuing && getCat(state).status === 'raising' ? getCat(state) : initialCat;
+  return `<section class="title-screen" aria-label="タイトル"><h1>ホゴネコ</h1><div class="intro-illustration">${renderCatArt(titleCat)}</div><div class="title-actions"><button class="opening-start" data-action="start-game"><span>${continuing ? "つづきから" : "はじめる"}</span><span aria-hidden="true">→</span></button></div></section>`;
 }
 
 function renderOpeningStory(state) {
