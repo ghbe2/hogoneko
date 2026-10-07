@@ -4,13 +4,25 @@ let furnitureUndo=[];
 const ROOM_CONTROL_RESERVE=128;
 const ROOM_MENU_RESERVE=144;
 function layoutWallStart(height=app.clientHeight||window.innerHeight){return ROOM_MENU_RESERVE/height*100;}
+// The painted skirting is at y=429 in the 760-unit room artwork.
+function roomPlacementBounds(height=app.clientHeight||window.innerHeight){return {wallTop:ROOM_MENU_RESERVE,wallBottom:height*429/760-8,floorTop:height*429/760+8,floorBottom:height-ROOM_CONTROL_RESERVE};}
+function furnitureHeight(itemId){return itemId==='tower'?150:['bowl','water'].includes(itemId)?45:['shelf','decor_sun','litter'].includes(itemId)?65:84;}
+function constrainFurnitureY(itemId,y,height=app.clientHeight||window.innerHeight,itemHeight=furnitureHeight(itemId)){
+ const b=roomPlacementBounds(height),wall=getItem(itemId)?.zone==='wall';
+ // Floor objects stand on their bottom edge; tall objects may rise above the skirting.
+ const min=wall?b.wallTop:Math.max(b.wallTop,b.floorTop-itemHeight),max=(wall?b.wallBottom:b.floorBottom)-itemHeight;
+ return Math.max(min,Math.min(max,y*height/100))/height*100;
+}
 function layoutFloorLimit(itemId,height=app.clientHeight||window.innerHeight){
  const itemHeight=itemId==='tower'?150:['bowl','water'].includes(itemId)?45:['shelf','decor_sun','litter'].includes(itemId)?65:84;
  return Math.max(8,(height-ROOM_CONTROL_RESERVE-itemHeight)/height*100);
 }
-function keepFurnitureAboveControls(state){return {...state,rooms:state.rooms.map(room=>({...room,wall:room.wall.map(p=>({...p,y:Math.max(p.y,layoutWallStart())})),floor:room.floor.map(p=>({...p,y:Math.min(p.y,layoutFloorLimit(p.itemId))}))}))};}
+function keepFurnitureAboveControls(state){return {...state,rooms:state.rooms.map(room=>({...room,wall:room.wall.map(p=>({...p,y:constrainFurnitureY(p.itemId,p.y)})),floor:room.floor.map(p=>({...p,y:constrainFurnitureY(p.itemId,p.y)}))}))};}
 const dragBeforeControlZone=moveLayoutDrag;
-moveLayoutDrag=function(draft,x,y){dragBeforeControlZone(draft,x,y);if(draft.moved&&draft.ghost&&!draft.store){const wall=draft.zone==='wall';draft.y=wall?Math.max(draft.y,layoutWallStart(draft.stageRect.height)):Math.min(draft.y,layoutFloorLimit(draft.itemId,draft.stageRect.height));draft.ghost.style.top=draft.y+'%';draft.valid=draft.valid&&(wall?y>=draft.stageRect.top+ROOM_MENU_RESERVE:y<draft.stageRect.bottom-ROOM_CONTROL_RESERVE);draft.ghost.classList.toggle('invalid',!draft.valid);if(!draft.valid)draft.hint.textContent=wall?'メニューより下に置く':'操作エリアより上に置く';}};
+moveLayoutDrag=function(draft,x,y){dragBeforeControlZone(draft,x,y);if(draft.moved&&draft.ghost&&!draft.store){const r=draft.stageRect,b=roomPlacementBounds(r.height),wall=draft.zone==='wall',raw=y-r.top-draft.offsetY,bottom=raw+draft.height;
+ draft.y=constrainFurnitureY(draft.itemId,raw/r.height*100,r.height,draft.height);draft.ghost.style.top=draft.y+'%';
+ draft.valid=x>=r.left&&x<=r.right&&y>=r.top+b.wallTop&&y<=r.top+b.floorBottom&&(wall?bottom<=b.wallBottom:bottom>=b.floorTop);
+ draft.ghost.classList.toggle('invalid',!draft.valid);draft.hint.textContent=draft.valid?'離してここに置く':wall?'壁の枠内に置く':'家具の足元を床の枠内に置く';}};
 function daylightAt(date=new Date()){
  const hour=date.getHours()+date.getMinutes()/60;
  if(hour<6||hour>=19)return null;
@@ -23,8 +35,7 @@ getAvailableRoamPoints=function(state){const points=roamingBeforeSun(state),sun=
 const furnitureReducer=reduceGameState;
 reduceGameState=function(state,action){
  state=keepFurnitureAboveControls(state);
- if(action.type==='DROP_LAYOUT_ITEM'&&!action.store&&getItem(action.itemId)?.zone==='wall')action={...action,y:Math.max(action.y,layoutWallStart())};
- if(action.type==='DROP_LAYOUT_ITEM'&&!action.store&&getItem(action.itemId)?.zone==='floor')action={...action,y:Math.min(action.y,layoutFloorLimit(action.itemId))};
+ if(action.type==='DROP_LAYOUT_ITEM'&&!action.store)action={...action,y:constrainFurnitureY(action.itemId,action.y)};
  if(action.type==='ROAM_CAT'&&daylightAt()&&getAffinity(getCat(state),{affinityType:'sun'}).score>0&&Math.random()<.65)action={...action,index:990};
  if(action.type==='PICK_FURNITURE'){
   const item=getItem(action.itemId);if(!item||!owned(state,item.id)||getDurability(state,item.id)<=0)return state;
@@ -47,6 +58,7 @@ renderLayoutPalette=function(state){
 const roomInterfaceRender=render;
 render=function(state){state=keepFurnitureAboveControls(state);if(state.campaign.phase==='room'||state.campaign.phase==='intake')gameState=state;roomInterfaceRender(state);const frame=app.querySelector('.game-frame');if(!frame)return;
  const world=frame.querySelector('[data-room-world]'),sun=daylightAt();
+ if(world){const b=roomPlacementBounds();for(const [key,value]of Object.entries(b))world.style.setProperty('--placement-'+key,value+'px');}
  if(world&&sun&&!world.querySelector('.window-sunlight')){const light=document.createElement('div');light.className='window-sunlight '+sun.period;light.style.clipPath=`polygon(${sun.polygon})`;light.setAttribute('aria-hidden','true');world.prepend(light);}
  frame.querySelectorAll('.touch-switch-hint').forEach(n=>n.remove());
  if(state.ui.layoutMode||state.campaign.phase==='intake'){
@@ -62,7 +74,7 @@ const roomInterfaceStyle=document.createElement('style');roomInterfaceStyle.text
 #app .game-frame .bottom-menu{gap:4px;padding:4px 10px;display:flex;justify-content:space-between}
 #app .game-frame .bottom-menu button{flex:1;min-width:0;min-height:52px;background:#fff9ede8;border:0;border-radius:16px;padding:6px 2px}
 #app .game-frame.layout-mode>.controls{display:none}
-#app .layout-zone.wall-zone{top:144px}
+#app .layout-zone.wall-zone{top:var(--placement-wallTop);height:calc(var(--placement-wallBottom) - var(--placement-wallTop));bottom:auto}
 #app .window-sunlight{position:absolute;inset:0;z-index:1;pointer-events:none;background:#fff0ae48}
 #app .window-sunlight.evening{background:#ffd29650}
 #app .window-sunlight.noon{background:#fff5c550}
@@ -231,7 +243,7 @@ const openingStyle=document.createElement('style');openingStyle.textContent=`
 #app .main-command-row .main-command{position:relative;flex:none;transform:none}
 #app .sub-command-row{position:absolute;right:8px;top:0}
 #app .tiered-dock .main-command small{font:700 14px/1.2 system-ui,sans-serif;min-width:26px;padding:3px 5px;top:-8px;right:-4px;background:#746044;color:#fffdf5}
-#app .layout-zone.floor-zone{bottom:128px}
+#app .layout-zone.floor-zone{top:var(--placement-floorTop);height:calc(var(--placement-floorBottom) - var(--placement-floorTop));bottom:auto}
 #app .campaign-button{border:1px solid #f0e5d4;border-radius:32px;background:#fff8e9;color:#715746;box-shadow:0 3px 12px #70553414;font-weight:500;transition:transform .15s,background .15s}
 #app .campaign-button.secondary{background:#ffffff75;border-color:#d9c8ae;box-shadow:none;color:#806b58}
 #app .campaign-button:disabled{background:#e8e1d7;border-color:transparent;box-shadow:none;color:#9d9488;cursor:default}
