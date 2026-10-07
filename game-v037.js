@@ -1,4 +1,39 @@
 'use strict';
+renderDebugQuickbar=()=>'';renderDebugPanel=()=>'';renderIntakeDebug=()=>'';
+const fullFieldBackground=bookBackground;
+bookBackground=function(node,svg){if(node?.matches('.field-scene')&&svg)svg=svg.replace('<svg ','<svg preserveAspectRatio="xMidYMid slice" ');return fullFieldBackground(node,svg);};
+const baitFirstReduce=reduceGameState;
+reduceGameState=function(state,action){
+ const c=state.campaign;
+ if(action.type==='FIELD_TOGGLE_FOOD'){
+  if(c.phase!=='field'||c.trapWaiting||!getFood(action.id)||getFood(action.id).water)return state;
+  const selected=c.bait.includes(action.id);
+  if(!selected&&(!(state.inventory[action.id]>=1)||c.bait.length>=CONFIG.capture.maxMix))return state;
+  return {...state,campaign:{...c,bait:selected?c.bait.filter(id=>id!==action.id):[...c.bait,action.id]}};
+ }
+ if(action.type==='FIELD_PLACE_TRAP'&&(!c.bait.length||c.bait.some(id=>state.inventory[id]<1)))return state;
+ return baitFirstReduce(state,action);
+};
+const autoTrapDispatch=dispatch;
+dispatch=function(action){autoTrapDispatch(action);if(action.type==='FIELD_PLACE_TRAP'&&gameState.campaign.phase==='field'&&gameState.campaign.trapPlaced&&!gameState.campaign.trapWaiting)autoTrapDispatch({type:'FINISH_FIELD_PREP'});};
+const baitFirstField=renderField;
+renderField=function(state){
+ const t=document.createElement('template');t.innerHTML=baitFirstField(state);const c=state.campaign;
+ t.content.querySelector('.campaign-frame')?.classList.add('field-fullscreen');
+ t.content.querySelectorAll('.prepared-bait,[data-action="finish-field-prep"]').forEach(n=>n.remove());
+ const kit=t.content.querySelector('.field-kit');if(kit){
+  const trap=FIELD_TRAPS.find(t=>t.id===c.fieldTrap)||FIELD_TRAPS[0];
+  kit.innerHTML=c.trapWaiting?'':`<div class="field-food-list" aria-label="保護に使う餌">${CONFIG.stage1.foods.filter(f=>!f.water).map(f=>`<button class="field-food-pill ${c.bait.includes(f.id)?'selected':''}" aria-pressed="${c.bait.includes(f.id)}" data-action="field-toggle-food" data-id="${f.id}" ${state.inventory[f.id]>=1?'':'disabled'}><span>${f.emoji}</span><strong>${f.label}</strong><small>${c.bait.includes(f.id)?'✓ ':''}${f.unlimited?'∞':'×'+(state.inventory[f.id]||0)}</small></button>`).join('')}</div><div class="field-trap-row"><button class="gear-card" data-field-drag="trap" data-trap="${trap.id}" ${c.bait.length?'':'disabled'}><span>${trap.emoji}</span><strong>${trap.label}</strong><small>ドラッグして置く</small></button><button class="field-switch" data-action="field-menu" data-kind="trap" aria-label="保護器を選ぶ">切り替え ▾</button></div>`;
+ }
+ const status=t.content.querySelector('.trap-status');if(status)status.textContent=c.trapReady?'':c.trapWaiting?'…':c.bait.length?'保護器を置こう':'餌を選ぼう';
+ return t.innerHTML;
+};
+app.addEventListener('click',e=>{const b=e.target.closest('[data-action="field-toggle-food"]');if(b&&!b.disabled)dispatch({type:'FIELD_TOGGLE_FOOD',id:b.dataset.id});});
+const fieldStyle=document.createElement('style');fieldStyle.textContent=`
+.screen-guide,.debug-quickbar,.debug-panel,.intake-debug-panel{display:none!important}.tutorial-focus{outline:none!important;animation:none!important}
+#app .field-fullscreen .campaign-screen{position:relative;flex:1;min-height:0;padding:0}#app .field-fullscreen .campaign-scroll{position:relative;flex:1;height:100%;padding:0;display:block}#app .field-fullscreen .field-scene{position:absolute;inset:0;width:100%;height:100%;max-height:none;min-height:0;margin:0;border-radius:0;aspect-ratio:auto}#app .field-fullscreen .field-scene>svg{width:100%;height:100%}
+#app .field-fullscreen .field-kit{position:absolute;bottom:12px;left:12px;right:12px;display:flex;flex-direction:column;gap:10px;padding:0;margin:0;z-index:4;background:none}#app .field-kit:empty{display:none}.field-food-list{display:flex;gap:8px;overflow-x:auto;touch-action:pan-x;padding:4px}.field-food-pill{flex:0 0 104px;min-height:76px;border:1px solid #e1d2bb;border-radius:22px;background:#fff8eeed;padding:8px;color:#715746;display:grid;justify-items:center;gap:3px}.field-food-pill.selected{border:2px solid #8a9d73;background:#edf2de}.field-food-pill:disabled{opacity:.45}.field-food-pill strong{font-size:11px;font-weight:500}.field-food-pill small{font-size:11px}.field-food-pill img{width:32px;height:28px;object-fit:contain}.field-trap-row{display:flex;align-items:center;justify-content:center;gap:10px}#app .field-trap-row .gear-card{width:185px;min-height:68px;border-radius:32px;background:#fff8e9;border:1px solid #e1d2bb;box-shadow:none}#app .field-trap-row .field-switch{width:auto;min-height:44px;border-radius:24px;padding:10px 16px;background:#fff8e9}#app .field-trap-row .gear-card:disabled{opacity:.45}
+`;document.head.append(fieldStyle);
 // A reset must not be undone by pagehide/visibility/timer autosaves on reload.
 let resettingSave=false;
 const saveBeforeResetGuard=saveGameState;
