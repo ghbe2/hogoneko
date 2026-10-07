@@ -56,18 +56,19 @@ moveCommandDrag=function(draft,x,y){
  const inside=stage&&x>=stage.left&&x<=stage.right&&y>=stage.top&&y<=stage.bottom;
  document.querySelectorAll('[data-drop-target="clean"]').forEach(node=>{
   const b=node.getBoundingClientRect(),dx=Math.max(b.left-x,0,x-b.right),dy=Math.max(b.top-y,0,y-b.bottom);
-  const hitRadius=tool.id==='starter_clean'&&node.dataset.problem!=='hair'?2:radius;
+  const hitRadius=tool.id==='starter_clean'&&node.dataset.problem!=='hair'?18:radius;
   const hit=inside&&Math.hypot(dx,dy)<=hitRadius;
   node.classList.toggle('drop-hover',hit);
   if(hit&&(node.dataset.problem==='hair'||getProblemLevel(getCat(gameState),node.dataset.problem)>0))targets.push({problem:node.dataset.problem,hairId:node.dataset.hair});
  });
  draft.valid=!!targets.length;draft.ghost.classList.toggle('invalid',!draft.valid);
  draft.ghost.style.setProperty('--scrub-size',(radius*2)+'px');
- if(!draft.valid||distance>80){r.distance=0;return;}
+ // Briefly moving off the stain must not erase the rubbing already performed.
+ if(!draft.valid)return;
  if(!gameState.inventory[tool.id])return;
  r.distance+=Math.min(distance,24);
  const hairTargets=targets.filter(t=>t.problem==='hair');
- const threshold=tool.id==='starter_clean'?(hairTargets.length?8:96):48/Math.sqrt(Math.max(.5,tool.power));
+ const threshold=tool.id==='starter_clean'?(hairTargets.length?8:32):24/Math.sqrt(Math.max(.5,tool.power));
  draft.ghost.style.setProperty('--scrub-turn',(r.distance/threshold*25)+'deg');
  if(r.distance>=threshold&&performance.now()-r.lastAt>160){
   r.distance=0;r.lastAt=performance.now();dispatch({type:'RUB_CLEAN',cleanerId:tool.id,targets:tool.id==='starter_clean'?(hairTargets.length?hairTargets:targets.slice(0,1)):targets});
