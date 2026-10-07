@@ -2,24 +2,28 @@
 // One furniture library; selection and placement are separate interactions.
 let furnitureUndo=[];
 const ROOM_CONTROL_RESERVE=128;
+const ROOM_MENU_RESERVE=144;
+function layoutWallStart(height=app.clientHeight||window.innerHeight){return ROOM_MENU_RESERVE/height*100;}
 function layoutFloorLimit(itemId,height=app.clientHeight||window.innerHeight){
  const itemHeight=itemId==='tower'?150:['bowl','water'].includes(itemId)?45:['shelf','decor_sun','litter'].includes(itemId)?65:84;
  return Math.max(8,(height-ROOM_CONTROL_RESERVE-itemHeight)/height*100);
 }
-function keepFurnitureAboveControls(state){return {...state,rooms:state.rooms.map(room=>({...room,floor:room.floor.map(p=>({...p,y:Math.min(p.y,layoutFloorLimit(p.itemId))}))}))};}
+function keepFurnitureAboveControls(state){return {...state,rooms:state.rooms.map(room=>({...room,wall:room.wall.map(p=>({...p,y:Math.max(p.y,layoutWallStart())})),floor:room.floor.map(p=>({...p,y:Math.min(p.y,layoutFloorLimit(p.itemId))}))}))};}
 const dragBeforeControlZone=moveLayoutDrag;
-moveLayoutDrag=function(draft,x,y){dragBeforeControlZone(draft,x,y);if(draft.moved&&draft.ghost&&draft.zone==='floor'&&!draft.store){draft.y=Math.min(draft.y,layoutFloorLimit(draft.itemId,draft.stageRect.height));draft.ghost.style.top=draft.y+'%';draft.valid=draft.valid&&y<draft.stageRect.bottom-ROOM_CONTROL_RESERVE;draft.ghost.classList.toggle('invalid',!draft.valid);if(!draft.valid)draft.hint.textContent='操作エリアより上に置く';}};
+moveLayoutDrag=function(draft,x,y){dragBeforeControlZone(draft,x,y);if(draft.moved&&draft.ghost&&!draft.store){const wall=draft.zone==='wall';draft.y=wall?Math.max(draft.y,layoutWallStart(draft.stageRect.height)):Math.min(draft.y,layoutFloorLimit(draft.itemId,draft.stageRect.height));draft.ghost.style.top=draft.y+'%';draft.valid=draft.valid&&(wall?y>=draft.stageRect.top+ROOM_MENU_RESERVE:y<draft.stageRect.bottom-ROOM_CONTROL_RESERVE);draft.ghost.classList.toggle('invalid',!draft.valid);if(!draft.valid)draft.hint.textContent=wall?'メニューより下に置く':'操作エリアより上に置く';}};
 function daylightAt(date=new Date()){
  const hour=date.getHours()+date.getMinutes()/60;
  if(hour<6||hour>=19)return null;
  const t=(hour-6)/13,x=73-46*t;
- return {x,y:72,polygon:`24% 50%, 55% 50%, ${Math.min(96,x+23)}% 89%, ${Math.max(4,x-23)}% 89%`,period:hour<11?'morning':hour<15?'noon':'evening'};
+ const window=roomWindowGeometry(),edge=(window.y+310*window.scale)/760*100;
+ return {x,y:72,polygon:`37% ${edge}%, 65% ${edge}%, ${Math.min(96,x+23)}% 89%, ${Math.max(4,x-23)}% 89%`,period:hour<11?'morning':hour<15?'noon':'evening'};
 }
 const roamingBeforeSun=getAvailableRoamPoints;
 getAvailableRoamPoints=function(state){const points=roamingBeforeSun(state),sun=daylightAt();if(sun)points.push({id:'sunlight',index:990,x:sun.x-7,y:62,scale:.75,distance:'near',surface:'floor'});return points;};
 const furnitureReducer=reduceGameState;
 reduceGameState=function(state,action){
  state=keepFurnitureAboveControls(state);
+ if(action.type==='DROP_LAYOUT_ITEM'&&!action.store&&getItem(action.itemId)?.zone==='wall')action={...action,y:Math.max(action.y,layoutWallStart())};
  if(action.type==='DROP_LAYOUT_ITEM'&&!action.store&&getItem(action.itemId)?.zone==='floor')action={...action,y:Math.min(action.y,layoutFloorLimit(action.itemId))};
  if(action.type==='ROAM_CAT'&&daylightAt()&&getAffinity(getCat(state),{affinityType:'sun'}).score>0&&Math.random()<.65)action={...action,index:990};
  if(action.type==='PICK_FURNITURE'){
@@ -58,6 +62,7 @@ const roomInterfaceStyle=document.createElement('style');roomInterfaceStyle.text
 #app .game-frame .bottom-menu{gap:4px;padding:4px 10px;display:flex;justify-content:space-between}
 #app .game-frame .bottom-menu button{flex:1;min-width:0;min-height:52px;background:#fff9ede8;border:0;border-radius:16px;padding:6px 2px}
 #app .game-frame.layout-mode>.controls{display:none}
+#app .layout-zone.wall-zone{top:144px}
 #app .window-sunlight{position:absolute;inset:0;z-index:1;pointer-events:none;background:#fff0ae48}
 #app .window-sunlight.evening{background:#ffd29650}
 #app .window-sunlight.noon{background:#fff5c550}

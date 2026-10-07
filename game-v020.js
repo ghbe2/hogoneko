@@ -43,7 +43,12 @@ bookIcons.doll=SB.placed.find(t=>t.type==='friend').svg;bookIcons.sunmat=SB.plac
 for(const [id,svg] of Object.entries(bookIcons)){if(TOOL_META[id])TOOL_META[id].emoji=bookImage(svg);const p=productById(id);if(p)p.emoji=bookImage(svg);if(getItem(id)?.kind==='hand')TOY_EMOJI[id]=bookImage(svg);}
 const bookScene=(id,state)=>SB.scenes[`${id}_${state.season}`]||SB.scenes[`${id}_spring`];
 function bookTime(state){const hour=new Date().getHours();return hour<6||hour>=19?'night':hour<11?'morning':hour<15?'day':'evening';}
-function bookBackground(node,svg){if(node&&svg){if(node.matches('[data-room-world]'))svg=svg.replace(/preserveAspectRatio="[^"]*"/g,'').replace('<svg ','<svg preserveAspectRatio="none" ');node.style.backgroundImage=`url("${bookURI(svg)}")`;node.classList.add('book-background');}}
+function roomWindowGeometry(height=app.clientHeight||window.innerHeight){return {scale:.65,x:98,y:148*760/height-69*.65};}
+function bookBackground(node,svg){if(node&&svg){if(node.matches('[data-room-world]')){
+ svg=svg.replace(/preserveAspectRatio="[^"]*"/g,'').replace('<svg ','<svg preserveAspectRatio="none" ');
+ const marker='<!-- The window is architecture; the shelf below is a removable object. -->',window=roomWindowGeometry();
+ if(svg.includes(marker))svg=svg.replace(marker,`${marker}<g data-room-window="true" transform="translate(${window.x} ${window.y}) scale(${window.scale})">`).replace('</svg>','</g></svg>');
+ }node.style.backgroundImage=`url("${bookURI(svg)}")`;node.classList.add('book-background');}}
 const bookCrop=(svg,box)=>svg.replace(/viewBox="[^"]+"/,`viewBox="${box}"`);
 const placedBeforeBook=renderPlacedItem;
 renderPlacedItem=function(placed,state,clue){
