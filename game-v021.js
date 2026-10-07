@@ -52,7 +52,6 @@ renderCommandDock=function(state){
   const id=button.dataset.tab==='play'?state.ui.equippedHand:button.dataset.tab==='food'?state.ui.equippedFood:state.ui.equippedCleaner;
   button.title=button.querySelector('strong').textContent;
   button.querySelector('strong').remove();
-  button.insertAdjacentHTML('afterbegin','<span class="lift-tip" aria-hidden="true">△</span>');
   if(starterIDs.includes(id))button.querySelector('small').textContent='∞';
  });
  return template.innerHTML;
@@ -96,7 +95,6 @@ const compactStyle=document.createElement('style');compactStyle.textContent=`
 .tiered-dock .main-command .command-emoji{display:grid;place-items:center;width:42px;height:42px}
 .tiered-dock .main-command .command-emoji .book-icon{width:38px;height:38px;object-fit:contain}
 .tiered-dock .main-command::after{bottom:-11px;font-size:10px;padding:2px 8px;white-space:nowrap}
-.lift-tip{position:absolute;top:-19px;left:calc(50% - 7px);font-size:14px;color:#fff9ed;text-shadow:0 1px 2px #775a3e;pointer-events:none}
 .tiered-dock .main-command small{top:-3px;right:-2px;bottom:auto;font-size:9px;min-width:18px}
 .tiered-dock .sub-command{position:relative;isolation:isolate;overflow:hidden}
 .tiered-dock .sub-command::before{content:'';position:absolute;inset:0;background:#e6b5ac;transform:scaleX(0);transform-origin:left;z-index:-1}

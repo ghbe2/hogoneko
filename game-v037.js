@@ -1,6 +1,14 @@
 'use strict';
 // One furniture library; selection and placement are separate interactions.
 let furnitureUndo=[];
+const ROOM_CONTROL_RESERVE=128;
+function layoutFloorLimit(itemId,height=app.clientHeight||window.innerHeight){
+ const itemHeight=itemId==='tower'?150:['bowl','water'].includes(itemId)?45:['shelf','decor_sun','litter'].includes(itemId)?65:84;
+ return Math.max(8,(height-ROOM_CONTROL_RESERVE-itemHeight)/height*100);
+}
+function keepFurnitureAboveControls(state){return {...state,rooms:state.rooms.map(room=>({...room,floor:room.floor.map(p=>({...p,y:Math.min(p.y,layoutFloorLimit(p.itemId))}))}))};}
+const dragBeforeControlZone=moveLayoutDrag;
+moveLayoutDrag=function(draft,x,y){dragBeforeControlZone(draft,x,y);if(draft.moved&&draft.ghost&&draft.zone==='floor'&&!draft.store){draft.y=Math.min(draft.y,layoutFloorLimit(draft.itemId,draft.stageRect.height));draft.ghost.style.top=draft.y+'%';draft.valid=draft.valid&&y<draft.stageRect.bottom-ROOM_CONTROL_RESERVE;draft.ghost.classList.toggle('invalid',!draft.valid);if(!draft.valid)draft.hint.textContent='操作エリアより上に置く';}};
 function daylightAt(date=new Date()){
  const hour=date.getHours()+date.getMinutes()/60;
  if(hour<6||hour>=19)return null;
@@ -11,13 +19,15 @@ const roamingBeforeSun=getAvailableRoamPoints;
 getAvailableRoamPoints=function(state){const points=roamingBeforeSun(state),sun=daylightAt();if(sun)points.push({id:'sunlight',index:990,x:sun.x-7,y:62,scale:.75,distance:'near',surface:'floor'});return points;};
 const furnitureReducer=reduceGameState;
 reduceGameState=function(state,action){
+ state=keepFurnitureAboveControls(state);
+ if(action.type==='DROP_LAYOUT_ITEM'&&!action.store&&getItem(action.itemId)?.zone==='floor')action={...action,y:Math.min(action.y,layoutFloorLimit(action.itemId))};
  if(action.type==='ROAM_CAT'&&daylightAt()&&getAffinity(getCat(state),{affinityType:'sun'}).score>0&&Math.random()<.65)action={...action,index:990};
  if(action.type==='PICK_FURNITURE'){
   const item=getItem(action.itemId);if(!item||!owned(state,item.id)||getDurability(state,item.id)<=0)return state;
   const placed=getPlaced(getRoom(state)).find(p=>p.itemId===item.id);
   if(placed)return {...state,ui:{...state.ui,layoutTrayOpen:false,lastLayoutItem:item.id}};
   furnitureUndo.push(structuredClone(state.rooms));
-  const next=furnitureReducer(state,{type:'DROP_LAYOUT_ITEM',itemId:item.id,x:42,y:item.zone==='wall'?30:65});
+  const next=furnitureReducer(state,{type:'DROP_LAYOUT_ITEM',itemId:item.id,x:42,y:item.zone==='wall'?30:Math.min(65,layoutFloorLimit(item.id))});
   return {...next,ui:{...next.ui,layoutTrayOpen:false,lastLayoutItem:item.id}};
  }
  if(action.type==='UNDO_FURNITURE')return furnitureUndo.length?{...state,rooms:furnitureUndo.pop(),ui:{...state.ui,lastLayoutItem:null}}:state;
@@ -31,7 +41,7 @@ renderLayoutPalette=function(state){
  return `<div class="layout-library modal-layer" role="dialog" aria-label="家具を選ぶ"><section class="furniture-sheet"><header><h2>家具を選ぶ</h2><button data-action="toggle-layout-tray" aria-label="閉じる">×</button></header><nav>${[['all','すべて'],['floor','床'],['wall','壁']].map(([id,label])=>`<button data-action="set-layout-filter" data-filter="${id}" aria-pressed="${filter===id}">${label}</button>`).join('')}</nav><div class="furniture-grid">${ids.map(id=>`<button data-action="pick-furniture" data-item="${id}" ${getDurability(state,id)>0?'':'disabled'}>${bookIcons[id]?bookImage(bookIcons[id]):TOOL_META[id]?.emoji||''}<strong>${getItem(id).label}</strong><small>${placed.has(id)?'配置済み':getItem(id).zone==='wall'?'壁に置く':'床に置く'}</small>${renderDurability(state,id)}</button>`).join('')}</div><button class="furniture-close" data-action="toggle-layout-tray">部屋へ戻る</button></section></div>`;
 };
 const roomInterfaceRender=render;
-render=function(state){roomInterfaceRender(state);const frame=app.querySelector('.game-frame');if(!frame)return;
+render=function(state){state=keepFurnitureAboveControls(state);if(state.campaign.phase==='room'||state.campaign.phase==='intake')gameState=state;roomInterfaceRender(state);const frame=app.querySelector('.game-frame');if(!frame)return;
  const world=frame.querySelector('[data-room-world]'),sun=daylightAt();
  if(world&&sun&&!world.querySelector('.window-sunlight')){const light=document.createElement('div');light.className='window-sunlight '+sun.period;light.style.clipPath=`polygon(${sun.polygon})`;light.setAttribute('aria-hidden','true');world.prepend(light);}
  frame.querySelectorAll('.touch-switch-hint').forEach(n=>n.remove());
@@ -212,12 +222,11 @@ const openingStyle=document.createElement('style');openingStyle.textContent=`
 #app .intake-layout .layout-edge-palette{bottom:80px}
 #app .game-frame .command-dock{bottom:20px}
 #app .command-dock.tiered-dock{width:calc(100% - 24px);max-width:none;display:block;--slot:clamp(54px,17vw,68px);height:88px}
-#app .main-command-row{position:relative;display:block;height:88px;width:100%}
-#app .main-command-row .main-command{position:absolute;top:50%;transform:translateY(-50%)}
-#app .main-command-row .main-command:nth-child(1){left:0}
-#app .main-command-row .main-command:nth-child(2){left:calc(25% - 5px)}
-#app .main-command-row .main-command:nth-child(3){left:calc(50% - 10px)}
-#app .sub-command-row{position:absolute;right:0;top:0}
+#app .main-command-row{position:relative;display:flex;align-items:center;justify-content:space-evenly;height:88px;width:calc(100% - 94px);gap:4px}
+#app .main-command-row .main-command{position:relative;flex:none;transform:none}
+#app .sub-command-row{position:absolute;right:8px;top:0}
+#app .tiered-dock .main-command small{font:700 14px/1.2 system-ui,sans-serif;min-width:26px;padding:3px 5px;top:-8px;right:-4px;background:#746044;color:#fffdf5}
+#app .layout-zone.floor-zone{bottom:128px}
 #app .campaign-button{border:1px solid #f0e5d4;border-radius:32px;background:#fff8e9;color:#715746;box-shadow:0 3px 12px #70553414;font-weight:500;transition:transform .15s,background .15s}
 #app .campaign-button.secondary{background:#ffffff75;border-color:#d9c8ae;box-shadow:none;color:#806b58}
 #app .campaign-button:disabled{background:#e8e1d7;border-color:transparent;box-shadow:none;color:#9d9488;cursor:default}

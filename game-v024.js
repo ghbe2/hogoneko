@@ -23,7 +23,6 @@ const paperCatIcon=new XMLSerializer().serializeToString(faceSvg);
 const paperEmojiMap={'📣':careArt.call,'✋':careArt.hand,'🤲':careArt.hand,'🪮':careArt.comb,'🧴':careArt.wipe,'🧻':careArt.roll,'🧼':careArt.wipe,'🫧':careArt.spray,'🥫':careArt.tin,'🐟':careArt.fish,'🐱':paperCatIcon,'🐈':paperCatIcon,'😺':paperCatIcon,'🐾':paperCatIcon,'💰':careArt.coin,'🪙':careArt.coin,'🎒':LifeArt.icons.inventoryMenu,'📅':LifeArt.icons.schedule,'📒':LifeArt.icons.notebook,'🏠':LifeArt.icons.layout,'👜':LifeArt.icons.inventoryMenu};
 const paperV024Render=render;
 render=function(state){paperV024Render(state);
- app.querySelectorAll('.lift-tip').forEach(n=>n.innerHTML='<svg viewBox="0 0 32 18" width="26" height="16"><path d="M6 15Q4 3 15 3Q27 2 25 15M11 10l1 4m8-5-1 5" fill="none" stroke="#8b7657" stroke-width="1.5" stroke-linecap="round"/></svg>');
  const walker=document.createTreeWalker(app,NodeFilter.SHOW_TEXT),nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
  const pattern=new RegExp('('+Object.keys(paperEmojiMap).join('|')+')','gu');
  for(const node of nodes){if(node.parentElement.closest('svg,script,style,textarea,input'))continue;const chunks=node.textContent.split(pattern);if(chunks.length===1)continue;const frag=document.createDocumentFragment();for(const chunk of chunks){if(paperEmojiMap[chunk]){const span=document.createElement('span');span.className='paper-inline';span.innerHTML=bookImage(paperEmojiMap[chunk]);span.setAttribute('aria-hidden','true');frag.append(span);}else frag.append(document.createTextNode(chunk));}node.replaceWith(frag);}
@@ -41,7 +40,6 @@ button,input,select,.label,.touch-switch-hint{font-weight:600}
 .tiered-dock .main-command:nth-child(3){border-radius:43% 49% 41% 50%;background:#e0dcc0}
 .tiered-dock .main-command::after{background:#e9d7b3;color:#72583f;border-radius:3px 7px 2px 5px;box-shadow:0 1px #a88b5e44;letter-spacing:.05em;font-weight:600}
 .tiered-dock .main-command small{background:#9b835f;color:#fff1d3;border-radius:4px 6px 3px 5px;font-weight:400}
-.lift-tip{top:-15px;left:calc(50% - 13px);text-shadow:none}
 .tiered-dock .sub-command{border:0;background:#eaddbe;border-radius:48% 39% 43% 36%;box-shadow:1px 2px 0 #80694733;color:#6a573e}
 .tiered-dock .sub-command::before{background:#c3b084}
 .command-ghost,.field-drag-ghost{border:0!important;background:none!important;box-shadow:none!important;filter:drop-shadow(1px 5px 2px #57472c44);border-radius:0}
