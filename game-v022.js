@@ -1,4 +1,11 @@
 'use strict';
+// Long presses here belong to the game, not the browser's text/context menu.
+window.addEventListener('contextmenu',event=>{if(event.target.closest('[data-action="touch-now"],[data-action="call-cat"],.command-dock'))event.preventDefault();},true);
+let quickHoldRelease=null,quickPressStarted=null;
+window.addEventListener('pointerdown',event=>{quickPressStarted=event.target.closest('[data-action="touch-now"],[data-action="call-cat"]')?{id:event.pointerId,at:Date.now()}:null;},true);
+window.addEventListener('pointerup',event=>{if(quickPressStarted?.id===event.pointerId&&Date.now()-quickPressStarted.at>=550)quickHoldRelease={x:event.clientX,y:event.clientY,until:Date.now()+700};quickPressStarted=null;},true);
+window.addEventListener('pointercancel',()=>{quickPressStarted=null;},true);
+window.addEventListener('click',event=>{const release=quickHoldRelease;if(release&&Date.now()<release.until&&Math.hypot(event.clientX-release.x,event.clientY-release.y)<12){quickHoldRelease=null;event.preventDefault();event.stopImmediatePropagation();}},true);
 // Rubbing is distance driven: waiting or dropping a tool never cleans anything.
 TOUCH_TOOLS.splice(TOUCH_TOOLS.findIndex(t=>t.id==='pickup'),1);
 if(gameState.ui.touchMode==='pickup')gameState.ui.touchMode='pet';
@@ -18,7 +25,7 @@ reduceGameState=function(state,action){
   for(const target of action.targets){
    if(target.problem==='hair'){
     const cat=getCat(next);if(!cat.body.hair.some(h=>h.id===target.hairId))continue;
-    next={...next,cats:next.cats.map((c,i)=>i?c:{...c,body:{...c.body,hair:c.body.hair.map(h=>h.id===target.hairId?{...h,wipeProgress:(h.wipeProgress||0)+(tool.id==='starter_clean'?.2:1)}:h).filter(h=>(h.wipeProgress||0)<.999)}})};worked=true;
+    next={...next,cats:next.cats.map((c,i)=>i?c:{...c,body:{...c.body,hair:c.body.hair.filter(h=>h.id!==target.hairId)}})};worked=true;
    }else{
     const before=getProblemLevel(getCat(next),target.problem);if(before<=0)continue;
     let trial=rubReducer({...next,inventory:{...next.inventory,[tool.id]:state.inventory[tool.id]}},{type:'START_CARE',operation:'clean',cleanerId:tool.id,problem:target.problem});
@@ -39,12 +46,13 @@ moveCommandDrag=function(draft,x,y){
  draft.ghost.style.left=x+'px';draft.ghost.style.top=y+'px';
  const tool=getCleaner(draft.itemId),r=draft.rub;if(!tool||!r)return;
  const distance=Math.hypot(x-r.x,y-r.y);r.x=x;r.y=y;
- const radius=tool.id==='starter_clean'?2:12+tool.power*12,targets=[];
+ const radius=tool.id==='starter_clean'?28:12+tool.power*12,targets=[];
  const stage=document.querySelector('.stage')?.getBoundingClientRect();
  const inside=stage&&x>=stage.left&&x<=stage.right&&y>=stage.top&&y<=stage.bottom;
  document.querySelectorAll('[data-drop-target="clean"]').forEach(node=>{
   const b=node.getBoundingClientRect(),dx=Math.max(b.left-x,0,x-b.right),dy=Math.max(b.top-y,0,y-b.bottom);
-  const hit=inside&&Math.hypot(dx,dy)<=radius;
+  const hitRadius=tool.id==='starter_clean'&&node.dataset.problem!=='hair'?2:radius;
+  const hit=inside&&Math.hypot(dx,dy)<=hitRadius;
   node.classList.toggle('drop-hover',hit);
   if(hit&&(node.dataset.problem==='hair'||getProblemLevel(getCat(gameState),node.dataset.problem)>0))targets.push({problem:node.dataset.problem,hairId:node.dataset.hair});
  });
@@ -53,10 +61,11 @@ moveCommandDrag=function(draft,x,y){
  if(!draft.valid||distance>80){r.distance=0;return;}
  if(!gameState.inventory[tool.id])return;
  r.distance+=Math.min(distance,24);
- const threshold=tool.id==='starter_clean'?96:48/Math.sqrt(Math.max(.5,tool.power));
+ const hairTargets=targets.filter(t=>t.problem==='hair');
+ const threshold=tool.id==='starter_clean'?(hairTargets.length?8:96):48/Math.sqrt(Math.max(.5,tool.power));
  draft.ghost.style.setProperty('--scrub-turn',(r.distance/threshold*25)+'deg');
  if(r.distance>=threshold&&performance.now()-r.lastAt>160){
-  r.distance=0;r.lastAt=performance.now();dispatch({type:'RUB_CLEAN',cleanerId:tool.id,targets:tool.id==='starter_clean'?targets.slice(0,1):targets});
+  r.distance=0;r.lastAt=performance.now();dispatch({type:'RUB_CLEAN',cleanerId:tool.id,targets:tool.id==='starter_clean'?(hairTargets.length?hairTargets:targets.slice(0,1)):targets});
   draft.ghost.classList.remove('rub-flash');void draft.ghost.offsetWidth;draft.ghost.classList.add('rub-flash');
  }
 };
@@ -93,6 +102,7 @@ window.addEventListener('pointermove',event=>{
 window.addEventListener('pointerup',event=>{if(catRub?.id===event.pointerId){event.preventDefault();event.stopImmediatePropagation();suppressClickUntil=Date.now()+600;endCatRub();}},true);
 window.addEventListener('pointercancel',endCatRub,true);window.addEventListener('blur',endCatRub);
 const rubStyle=document.createElement('style');rubStyle.textContent=`
+[data-action="touch-now"],[data-action="call-cat"]{touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
 .inventory-menu-sheet .inventory-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}
 .rub-tool{overflow:visible;transform:translate(-50%,-50%) rotate(var(--scrub-turn,0deg))}
 .rub-tool::before{content:'';position:absolute;width:var(--scrub-size,36px);height:var(--scrub-size,36px);left:50%;top:50%;transform:translate(-50%,-50%);border:1px dashed #fff9e6;border-radius:50%;background:#fff9e622;z-index:-1}
