@@ -1,4 +1,12 @@
 'use strict';
+const roomComfortBeforeFirstCat=getRoomComfortBreakdown;
+getRoomComfortBreakdown=function(state){
+ const result=roomComfortBeforeFirstCat(state);
+ if(!state.flags.firstCatWelcomed&&!state.album.length&&state.onboarding.status!=='done'&&state.campaign.phase==='intake')return {...result,missingEssential:[],canExit:true};
+ return result;
+};
+const firstWelcomeReducer=reduceGameState;
+reduceGameState=function(state,action){const next=firstWelcomeReducer(state,action);return action.type==='ACCEPT_CAT'&&next.campaign.phase==='room'?{...next,flags:{...next.flags,firstCatWelcomed:true}}:next;};
 const stableEncounterRender=render;let encounterMarkup=null;
 render=function(state){
  if(!titleScreenOpen&&state.campaign.phase==='trapInspect'&&!state.ui.modal){
@@ -114,6 +122,13 @@ render=function(state){quietTitleRender(state);const title=app.querySelector('.t
  }
 };
 const openingStyle=document.createElement('style');openingStyle.textContent=`
+#app .game-frame{display:block;position:relative}
+#app .game-frame>.stage{position:absolute;inset:0;height:100%;width:100%}
+#app .game-frame>.hud{position:absolute;top:0;left:0;right:0;background:linear-gradient(#fffaf4e6,#fffaf400);border:0;pointer-events:none}
+#app .game-frame>.hud button,#app .game-frame>.hud a{pointer-events:auto}
+#app .game-frame>.controls{position:absolute;bottom:0;left:0;right:0;z-index:30;background:transparent;border:0;box-shadow:none}
+#app .game-frame .bottom-menu{background:transparent;border:0;box-shadow:none}
+#app .game-frame .command-dock{bottom:82px}
 #app .campaign-button{border:1px solid #f0e5d4;border-radius:32px;background:#fff8e9;color:#715746;box-shadow:0 3px 12px #70553414;font-weight:500;transition:transform .15s,background .15s}
 #app .campaign-button.secondary{background:#ffffff75;border-color:#d9c8ae;box-shadow:none;color:#806b58}
 #app .campaign-button:disabled{background:#e8e1d7;border-color:transparent;box-shadow:none;color:#9d9488;cursor:default}

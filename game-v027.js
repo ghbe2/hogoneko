@@ -1,17 +1,25 @@
 'use strict';
 // One authoritative clock for online, offline and debugging. savedAt is not a cursor.
 const REAL_TICK_MS=3*60*60*1000;
+// Local morning/noon/evening boundaries; sleep adds no new care needs.
+function careSlotsBetween(from,to){
+ let count=0;const day=new Date(from);day.setHours(0,0,0,0);
+ while(day.getTime()<=to){for(const hour of [7,13,19]){const at=new Date(day);at.setHours(hour,0,0,0);if(at>from&&at<=to)count++;}day.setDate(day.getDate()+1);}
+ return count;
+}
 const REAL_TIME_TUNING={graceTicks:8,heartLossPerNeed:.1,adultWeightLoss:5,kittenWeightLoss:1};
 function ensureRealClock(state,now=Date.now()){
  const clock=state.realClock;
  if(clock?.version===1&&Number.isFinite(clock.processedAt)&&Number.isInteger(clock.dayTicks)&&clock.dayTicks>=0&&clock.dayTicks<8)return state;
  return {...state,realClock:{version:1,processedAt:now,dayTicks:0}};
 }
-function advanceRealTicks(state,ticks){
+function advanceRealTicks(state,ticks,realtime=false){
  let next=state;
  for(let i=0;i<ticks;i++){
   // Reuse meals, drinking, digestion and shedding in chronological order, one tick at a time.
-  next=advanceCatLife(next,1);
+  const from=(realtime?state.realClock.processedAt:(state.realClock.careSimulatedAt??state.realClock.processedAt))+i*REAL_TICK_MS;
+  const careTicks=careSlotsBetween(realtime?Math.max(from,state.realClock.careProcessedAt??from):from,from+REAL_TICK_MS);
+  if(careTicks)next=advanceCatLife(next,careTicks);
   let cat=getCat(next),body={...cat.body},ui={...next.ui},dayTicks=next.realClock.dayTicks+1;
   const missingFood=body.satiety<25,missingWater=body.hydration<25,dirty=body.litter>=3||body.vomit>0;
   const neglect={...(body.realNeglectTicks||{})};
@@ -38,7 +46,7 @@ function advanceRealTicks(state,ticks){
   }
   next={...next,week,durability,cats:next.cats.map(c=>c.id===cat.id?{...cat,body}:c),realClock:{...next.realClock,dayTicks},ui};
  }
- return next;
+ return {...next,realClock:{...next.realClock,careSimulatedAt:(state.realClock.careSimulatedAt??state.realClock.processedAt)+ticks*REAL_TICK_MS}};
 }
 function syncRealTime(state,now=Date.now()){
  if(!Number.isFinite(now))return state;
@@ -46,9 +54,11 @@ function syncRealTime(state,now=Date.now()){
  if(now<state.realClock.processedAt)return state; // Clock rollback never replays time.
  if(getCat(state).status!=='raising')return {...state,realClock:{...state.realClock,processedAt:now,dayTicks:0}};
  const ticks=Math.floor((now-state.realClock.processedAt)/REAL_TICK_MS);
- if(!ticks)return state;
- const next=advanceRealTicks(state,ticks);
- return reconcileVisit({...next,realClock:{...next.realClock,processedAt:state.realClock.processedAt+ticks*REAL_TICK_MS},lastSeenAt:now});
+ let next=ticks?advanceRealTicks(state,ticks,true):state;
+ const processedAt=state.realClock.processedAt+ticks*REAL_TICK_MS;
+ const remaining=careSlotsBetween(Math.max(processedAt,state.realClock.careProcessedAt??processedAt),now);
+ if(remaining)next=advanceCatLife(next,remaining);
+ return reconcileVisit({...next,realClock:{...next.realClock,processedAt,careProcessedAt:now},lastSeenAt:now});
 }
 const beforeRealTimeReducer=reduceGameState;
 reduceGameState=function(state,action){

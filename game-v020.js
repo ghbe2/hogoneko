@@ -23,7 +23,14 @@ for(const [kind,entries] of [['hand',SB.hand],['placed',SB.placed]])for(const en
 }
 // Old possessions are not removed or converted into different IDs.
 const bookSVG=body=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 220">${body}</svg>`;
-const bowlSVG=(water=false,filled=true)=>bookSVG(`<path d="M35 108Q125 82 217 108L203 162Q124 193 49 163Z" fill="${water?'#6d8063':'#ba765e'}"/><ellipse cx="126" cy="109" rx="89" ry="25" fill="#f6edda"/><ellipse cx="126" cy="112" rx="72" ry="15" fill="${filled?(water?'#b6cdd1':'#765639'):'#ceb998'}"/>`);
+function bowlSVG(water=false,level=100){
+ const amount=typeof level==="boolean"?(level?100:0):Math.max(0,Math.min(100,Number(level)||0));
+ const body=water?'<path d="M63 82L72 171Q125 205 181 171L190 82Z" fill="#668eaa"/><ellipse cx="126" cy="82" rx="64" ry="25" fill="#f7f2df"/><ellipse cx="126" cy="85" rx="53" ry="18" fill="#455f6c"/>':'<path d="M22 123L42 157Q125 185 211 157L230 123Z" fill="#bd7658"/><ellipse cx="126" cy="123" rx="104" ry="30" fill="#f7e8c9"/><ellipse cx="126" cy="124" rx="89" ry="22" fill="#99704e"/>';
+ let contents="";
+ if(water&&amount){const y=100-amount*.14;contents=`<ellipse cx="126" cy="${y}" rx="51" ry="${9+amount*.07}" fill="#82c5d6"/><path d="M94 ${y}q15-8 28-3m10 6q15 4 25-4" fill="none" stroke="#edfcff" stroke-width="4" stroke-linecap="round"/>`;}
+ if(!water)for(let i=0;i<Math.ceil(amount/6);i++){const x=59+(i%6)*26,y=114+Math.floor(i/6)*10;contents+=`<ellipse cx="${x}" cy="${y}" rx="8" ry="5" fill="${i%2?"#765033":"#b58a4f"}" transform="rotate(${i%3*25} ${x} ${y})"/>`;}
+ return bookSVG(body+contents).replace('0 0 250 220',water?'45 52 165 155':'12 86 230 105');
+}
 Object.assign(bookIcons,{
  bowl:bowlSVG(),water:bowlSVG(true),
  litter:bookSVG('<path d="M30 90Q125 64 220 90L205 169Q125 196 46 169Z" fill="#6d8063"/><ellipse cx="125" cy="90" rx="95" ry="27" fill="#f6edda"/><ellipse cx="125" cy="94" rx="79" ry="19" fill="#d6bb89"/>'),
@@ -42,7 +49,7 @@ const placedBeforeBook=renderPlacedItem;
 renderPlacedItem=function(placed,state,clue){
  let html=placedBeforeBook(placed,state,clue),svg=bookIcons[placed.itemId];if(!svg)return html;
  const id=placed.itemId,body=getCat(state).body;
- if(id==='bowl')svg=bowlSVG(false,body.foodLevel>0);if(id==='water')svg=bowlSVG(true,body.waterLevel>0);
+ if(id==='bowl')svg=bowlSVG(false,body.foodLevel);if(id==='water')svg=bowlSVG(true,body.waterLevel);
  const t=document.createElement('template');t.innerHTML=html;const el=t.content.querySelector('.placed-item');if(!el)return html;
  el.classList.add('book-furniture');el.style.width=(id==='tower'?90:id==='shelf'||id==='decor_sun'?100:84)+'px';el.style.height=(id==='tower'?150:id==='shelf'||id==='decor_sun'?65:id==='bowl'||id==='water'?45:id==='litter'?65:84)+'px';
  el.insertAdjacentHTML('afterbegin',bookImage(svg,'book-furniture-art'));
