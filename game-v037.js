@@ -128,6 +128,7 @@ const openingStyle=document.createElement('style');openingStyle.textContent=`
 #app .game-frame>.hud button,#app .game-frame>.hud a{pointer-events:auto}
 #app .game-frame>.controls{position:absolute;bottom:0;left:0;right:0;z-index:30;background:transparent;border:0;box-shadow:none}
 #app .game-frame .bottom-menu{background:transparent;border:0;box-shadow:none}
+#app .game-frame:has(.modal-layer)>.hud,#app .game-frame:has(.modal-layer)>.controls{visibility:hidden;pointer-events:none}
 #app .intake-layout>.intake-footer{position:absolute;left:12px;right:12px;bottom:12px;z-index:40;background:transparent;border:0;padding:0;min-height:52px;pointer-events:none}
 #app .intake-footer-call{pointer-events:auto;min-height:52px;border-radius:28px;background:#637d59;color:#fffdf5;font-size:15px;box-shadow:0 4px 12px #43593b30}
 #app .intake-layout .layout-tray-toggle{bottom:80px}
@@ -138,6 +139,8 @@ const openingStyle=document.createElement('style');openingStyle.textContent=`
 #app .campaign-button:disabled{background:#e8e1d7;border-color:transparent;box-shadow:none;color:#9d9488;cursor:default}
 #app .campaign-button:not(:disabled):active{transform:scale(.98);background:#fffdf4}
 #app .campaign-button:focus-visible{outline:3px solid #876f4c;outline-offset:3px}
+#app [data-action="close-schedule-intro"]{background:#637d59;color:#fffdf5;border-color:#637d59;min-height:56px;font-size:16px;font-weight:700;box-shadow:0 4px 12px #43593b30;flex-shrink:0}
+#app [data-action="close-schedule-intro"]:active{background:#526b49}
 #app .story-screen .title-actions{display:grid;grid-template-rows:16px 56px 44px;row-gap:6px;flex:0 0 128px;height:128px;padding:0;margin-top:auto;width:100%;justify-items:center}
 #app .story-screen .story-pages{grid-row:1;margin:0;align-self:center}
 #app .story-screen [data-action="next-story"]{grid-row:2;min-height:56px;width:min(100%,260px);font-size:15px;letter-spacing:.08em}
