@@ -230,8 +230,9 @@ function mountGameCats(){
     const dna=JSON.parse(decodeURIComponent(svg.dataset.dna));
     // Scale about the SVG's ground anchor, so feet stay on the same surface.
     const rig=CatSVG.buildCat(svg,'game',dna,375,dna.age==='adult'?1.25:1);svg.querySelector('.floor')?.remove();
-    CatSVG.applyPose(rig,CatSVG.poseModel('sit',0),0,'sit');
-    svgRigs.set(svg,{rig,pose:'sit',since:performance.now(),previous:null,changed:0});
+    const [initialPose]=scenePose(svg);
+    CatSVG.applyPose(rig,CatSVG.poseModel(initialPose,0),0,initialPose);
+    svgRigs.set(svg,{rig,pose:initialPose,since:performance.now(),previous:null,changed:0});
   });
 }
 function scenePose(svg){
