@@ -7,7 +7,7 @@ const encounterCloseStyle=document.createElement('style');encounterCloseStyle.te
 #app .capture-inspect{background-image:none!important;background:radial-gradient(ellipse at 50% 42%,#f9ebd0,#dfcfb7);padding:0;gap:10px;display:flex;flex-direction:column}
 #app .capture-inspect .capture-cage{width:100%;height:auto;min-height:240px;flex:1;border:0;border-radius:0;box-shadow:none}
 #app .capture-inspect .capture-cat{width:90%;height:90%;left:5%;right:auto;bottom:3%;transform:none;animation:none}
-#app .capture-inspect .capture-cat .game-cat-svg{width:100%;height:100%;transform:scale(1.45);transform-origin:center center}
+#app .capture-inspect .capture-cat .game-cat-svg{width:100%;height:100%;transform:scale(.85);transform-origin:center center}
 #app .capture-inspect.revealing .capture-cat{animation:captured-cat-reveal 2.8s ease-out both}
 #app .capture-inspect.settled .capture-cat{opacity:1;filter:none;animation:encounter-breathe 3s ease-in-out infinite}
 @keyframes encounter-breathe{50%{translate:0 -3px}}
@@ -44,7 +44,8 @@ renderField=function(state){
   const trap=FIELD_TRAPS.find(t=>t.id===c.fieldTrap)||FIELD_TRAPS[0];
   kit.innerHTML=c.trapWaiting?'':`<div class="field-food-list" aria-label="保護に使う餌">${CONFIG.stage1.foods.filter(f=>!f.water).map(f=>`<button class="field-food-pill ${c.bait.includes(f.id)?'selected':''}" aria-pressed="${c.bait.includes(f.id)}" data-action="field-toggle-food" data-id="${f.id}" ${state.inventory[f.id]>=1?'':'disabled'}><span>${f.emoji}</span><strong>${f.label}</strong><small>${c.bait.includes(f.id)?'✓ ':''}${f.unlimited?'∞':'×'+(state.inventory[f.id]||0)}</small></button>`).join('')}</div><div class="field-trap-row"><button class="gear-card" data-field-drag="trap" data-trap="${trap.id}" ${c.bait.length?'':'disabled'}><span>${trap.emoji}</span><strong>${trap.label}</strong><small>ドラッグして置く</small></button><button class="field-switch" data-action="field-menu" data-kind="trap" aria-label="保護器を選ぶ">切り替え ▾</button></div>`;
  }
- if(kit&&!c.trapWaiting){
+ if(kit){
+  if(c.trapWaiting)kit.innerHTML='<div class="field-trap-row"><button class="gear-card"></button><button class="field-switch"></button></div>';
   kit.classList.add('encounter-kit');
   kit.querySelectorAll('.field-food-pill:disabled').forEach(n=>n.remove());
   const row=kit.querySelector('.field-trap-row'),button=row.querySelector('.gear-card');
@@ -52,6 +53,8 @@ renderField=function(state){
   button.innerHTML=`<svg viewBox="0 0 220 125" aria-hidden="true"><ellipse cx="112" cy="111" rx="92" ry="9" fill="#574a3820"/><path d="M30 35L65 15H193V88L163 110H30Z" fill="#e7ddc3" stroke="#746e5b" stroke-width="3"/><path d="M30 35H163L193 15M163 35V110M163 110L193 88" fill="none" stroke="#746e5b" stroke-width="3"/><path d="M45 38V105M64 38V105M84 38V105M104 38V105M124 38V105M144 38V105M174 32V98M185 25V91M34 58H160M34 82H160" fill="none" stroke="#8b8771" stroke-width="3"/><path d="M91 16V8Q91 3 98 3H123Q130 3 130 8V16" fill="none" stroke="#746e5b" stroke-width="4"/><ellipse cx="100" cy="98" rx="23" ry="5" fill="${c.bait.length?'#b68b59':'#c9bfa7'}"/></svg><small>${c.bait.length?'草むらへ、そっと置く':'まずは、ごはんを選んで'}</small>`;
   const change=row.querySelector('.field-switch');change.innerHTML='⇄';change.classList.add('encounter-change');change.title='保護器を選ぶ';
   kit.prepend(row);
+  const placed=t.content.querySelector('.field-scene .trap');if(placed){placed.classList.add('illustrated-trap');placed.replaceChildren(button.querySelector('svg').cloneNode(true));}
+  if(c.trapWaiting)kit.replaceChildren();
  }
  const status=t.content.querySelector('.trap-status');if(status)status.remove();
  return t.innerHTML;
@@ -61,6 +64,7 @@ window.addEventListener('pointerdown',e=>{const svg=e.target.closest('.encounter
 const fieldStyle=document.createElement('style');fieldStyle.textContent=`
 .screen-guide,.debug-quickbar,.debug-panel,.intake-debug-panel{display:none!important}.tutorial-focus{outline:none!important;animation:none!important}
 #app .field-scene .trap.ready{border-color:#70675f}
+#app .field-scene .illustrated-trap{width:180px;height:110px;border:0;border-radius:0;background:none;box-shadow:none;padding:0;opacity:1}#app .field-scene .illustrated-trap:after{display:none}#app .illustrated-trap>svg{width:100%;height:100%;pointer-events:none}
 #app .field-fullscreen .campaign-screen{position:relative;flex:1;min-height:0;padding:0}#app .field-fullscreen .campaign-scroll{position:relative;flex:1;height:100%;padding:0;display:block}#app .field-fullscreen .field-scene{position:absolute;inset:0;width:100%;height:100%;max-height:none;min-height:0;margin:0;border-radius:0;aspect-ratio:auto}#app .field-fullscreen .field-scene>svg{width:100%;height:100%}
 #app .field-fullscreen .field-kit{position:absolute;bottom:12px;left:12px;right:12px;display:flex;flex-direction:column;gap:10px;padding:0;margin:0;z-index:4;background:none}#app .field-kit:empty{display:none}.field-food-list{display:flex;gap:8px;overflow-x:auto;touch-action:pan-x;padding:4px}.field-food-pill{flex:0 0 104px;min-height:76px;border:1px solid #e1d2bb;border-radius:22px;background:#fff8eeed;padding:8px;color:#715746;display:grid;justify-items:center;gap:3px}.field-food-pill.selected{border:2px solid #8a9d73;background:#edf2de}.field-food-pill:disabled{opacity:.45}.field-food-pill strong{font-size:11px;font-weight:500}.field-food-pill small{font-size:11px}.field-food-pill img{width:32px;height:28px;object-fit:contain}.field-trap-row{display:flex;align-items:center;justify-content:center;gap:10px}#app .field-trap-row .gear-card{width:185px;min-height:68px;border-radius:32px;background:#fff8e9;border:1px solid #e1d2bb;box-shadow:none}#app .field-trap-row .field-switch{width:auto;min-height:44px;border-radius:24px;padding:10px 16px;background:#fff8e9}#app .field-trap-row .gear-card:disabled{opacity:.45}
 #app .field-fullscreen .encounter-kit{max-width:480px;margin:auto;gap:4px;bottom: max(16px,env(safe-area-inset-bottom));left:16px;right:16px;isolation:isolate}
