@@ -128,6 +128,10 @@ const openingStyle=document.createElement('style');openingStyle.textContent=`
 #app .game-frame>.hud button,#app .game-frame>.hud a{pointer-events:auto}
 #app .game-frame>.controls{position:absolute;bottom:0;left:0;right:0;z-index:30;background:transparent;border:0;box-shadow:none}
 #app .game-frame .bottom-menu{background:transparent;border:0;box-shadow:none}
+#app .intake-layout>.intake-footer{position:absolute;left:12px;right:12px;bottom:12px;z-index:40;background:transparent;border:0;padding:0;min-height:52px;pointer-events:none}
+#app .intake-footer-call{pointer-events:auto;min-height:52px;border-radius:28px;background:#637d59;color:#fffdf5;font-size:15px;box-shadow:0 4px 12px #43593b30}
+#app .intake-layout .layout-tray-toggle{bottom:80px}
+#app .intake-layout .layout-edge-palette{bottom:80px}
 #app .game-frame .command-dock{bottom:82px}
 #app .campaign-button{border:1px solid #f0e5d4;border-radius:32px;background:#fff8e9;color:#715746;box-shadow:0 3px 12px #70553414;font-weight:500;transition:transform .15s,background .15s}
 #app .campaign-button.secondary{background:#ffffff75;border-color:#d9c8ae;box-shadow:none;color:#806b58}
