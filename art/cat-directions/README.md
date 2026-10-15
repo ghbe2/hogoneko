@@ -1,0 +1,40 @@
+# 猫ビジュアル候補 — 2026-09-07
+
+内蔵画像生成で作成したアート方向の比較サンプル。ゲームへの組み込み用パーツ分割・連番・リグは未作成。
+
+- A: 自然寄り。成猫の骨格と細身の輪郭を優先。
+- B: 中間。目と頭を少し強調した方向。今回の生成ではAとの差は控えめ。
+- C: 強めのデフォルメ。毛の細密描写を減らし、輪郭と大きな柄で読む方向。
+
+各シートに成猫・子猫、キジトラ、錆柄の胴体＋三毛の尾、尾なし・短尾を含む。
+
+## 本番アセットの構造案
+
+年齢（子猫・成猫）は別の体型・骨格。頭、胴体、前後左右の脚、尾に独立した柄マスクを持たせる。輪郭・陰影と柄を分け、同じ動作に柄を差し替えられる構成にする。
+尾は長尾・短尾・尾なしの形状選択。尾なしでは尾の描画と尾の動作のみ省略する。個体ごとに乱数の種と部位別柄・色を保存し、画面や動作のたびに柄を抽選し直さない。
+『胴は錆、尾は三毛』はゲーム内の自由な柄組み合わせとして扱う。生物学的な遺伝シミュレーションは行わない。
+
+候補を決めた後、80px前後の実表示サイズで識別性を確認し、正面・横・背面、歩行・しゃがみ・跳躍・着地の共通仕様へ進める。
+
+## 最終生成プロンプト
+
+### C 最終稿の追加指示
+
+Use case: stylized-concept. Create a polished professional 2D CAT CHARACTER DESIGN COMPARISON SHEET for a Japanese rescue-cat mobile game. This is an art-direction sample, not final rigged assets. Warm off-white background, generous whitespace, crisp readable silhouettes, subtle cel shading, restrained soft linework and broad coat-pattern shapes that remain readable at 80px. C — SOFT: stronger stylization, rounder cheeks and paws, head ~35% enlarged, shorter compact body but unmistakable real quadruped anatomy. Not a ball, not a mascot standing upright.
+One sheet with 6 full-body cats arranged as two rows of three, all same camera three-quarter side view facing left, consistent identity/proportions within age, soft ground contact shadows, no room props. Top row ADULT: left brown mackerel tabby walking slowly on FOUR paws with low level spine; middle same base adult in seated pose, black-orange TORTOISESHELL TORSO with a distinctly WHITE-ORANGE-BLACK CALICO TAIL (intentional modular fantasy coat combination), subtle transition seam; right same adult tortoiseshell with genuinely NO TAIL, natural rump no stump. Bottom row KITTEN: younger smaller body, larger head relative to body, larger ears, shorter muzzle, first brown tabby in crouch; second tortoiseshell body + calico tail; third bobtail kitten with tiny round short tail. Age must be obvious by proportions not just scale. Show whole paws, ears and tails uncut, anatomically valid four legs, no human posture, no clothes, no enormous anime eyes, no extra limbs. Pattern pieces must look like one coherent cat, not sewn patchwork. Small clean English labels only: style letter at top, ADULT, KITTEN, TABBY, MIXED COAT, NO TAIL, BOBTAIL. Production concept quality.
+REVISION: Make this a CLEARLY GRAPHIC, STRONGLY STYLIZED game direction, not a realistic painted cat. Completely remove individual hair rendering and fine fur textures. Large flat color islands with only one cel-shadow layer. Chunky simplified silhouette, head 1.5x natural, short but distinct four legs, almond eyes, tidy bold tapered contour. Like a beautifully designed 2D animated-film animal, not realistic pet portrait. Body coat should have ONLY 5-8 large orange islands on dark base, bold tabby stripes. Keep anatomical horizontal spine and unmistakable kitten vs adult.
+
+### A
+
+Use case: stylized-concept. Create a polished professional 2D CAT CHARACTER DESIGN COMPARISON SHEET for a Japanese rescue-cat mobile game. This is an art-direction sample, not final rigged assets. Warm off-white background, generous whitespace, crisp readable silhouettes, subtle cel shading, restrained soft linework and broad coat-pattern shapes that remain readable at 80px. A — NATURAL: restrained stylization, believable lean adult anatomy, delicate face, small feline eyes, real shoulder blades and hocks. Slightly simplified graphic shapes, not photorealistic.
+One sheet with 6 full-body cats arranged as two rows of three, all same camera three-quarter side view facing left, consistent identity/proportions within age, soft ground contact shadows, no room props. Top row ADULT: left brown mackerel tabby walking slowly on FOUR paws with low level spine; middle same base adult in seated pose, black-orange TORTOISESHELL TORSO with a distinctly WHITE-ORANGE-BLACK CALICO TAIL (intentional modular fantasy coat combination), subtle transition seam; right same adult tortoiseshell with genuinely NO TAIL, natural rump no stump. Bottom row KITTEN: younger smaller body, larger head relative to body, larger ears, shorter muzzle, first brown tabby in crouch; second tortoiseshell body + calico tail; third bobtail kitten with tiny round short tail. Age must be obvious by proportions not just scale. Show whole paws, ears and tails uncut, anatomically valid four legs, no human posture, no clothes, no enormous anime eyes, no extra limbs. Pattern pieces must look like one coherent cat, not sewn patchwork. Small clean English labels only: style letter at top, ADULT, KITTEN, TABBY, MIXED COAT, NO TAIL, BOBTAIL. Production concept quality.
+
+### B
+
+Use case: stylized-concept. Create a polished professional 2D CAT CHARACTER DESIGN COMPARISON SHEET for a Japanese rescue-cat mobile game. This is an art-direction sample, not final rigged assets. Warm off-white background, generous whitespace, crisp readable silhouettes, subtle cel shading, restrained soft linework and broad coat-pattern shapes that remain readable at 80px. B — BALANCED: moderate stylization, compact supple torso, clearly feline long horizontal back and digitigrade legs, head ~20% enlarged, expressive but natural almond eyes. Most suitable as polished mobile game art.
+One sheet with 6 full-body cats arranged as two rows of three, all same camera three-quarter side view facing left, consistent identity/proportions within age, soft ground contact shadows, no room props. Top row ADULT: left brown mackerel tabby walking slowly on FOUR paws with low level spine; middle same base adult in seated pose, black-orange TORTOISESHELL TORSO with a distinctly WHITE-ORANGE-BLACK CALICO TAIL (intentional modular fantasy coat combination), subtle transition seam; right same adult tortoiseshell with genuinely NO TAIL, natural rump no stump. Bottom row KITTEN: younger smaller body, larger head relative to body, larger ears, shorter muzzle, first brown tabby in crouch; second tortoiseshell body + calico tail; third bobtail kitten with tiny round short tail. Age must be obvious by proportions not just scale. Show whole paws, ears and tails uncut, anatomically valid four legs, no human posture, no clothes, no enormous anime eyes, no extra limbs. Pattern pieces must look like one coherent cat, not sewn patchwork. Small clean English labels only: style letter at top, ADULT, KITTEN, TABBY, MIXED COAT, NO TAIL, BOBTAIL. Production concept quality.
+
+### C 初稿
+
+Use case: stylized-concept. Create a polished professional 2D CAT CHARACTER DESIGN COMPARISON SHEET for a Japanese rescue-cat mobile game. This is an art-direction sample, not final rigged assets. Warm off-white background, generous whitespace, crisp readable silhouettes, subtle cel shading, restrained soft linework and broad coat-pattern shapes that remain readable at 80px. C — SOFT: stronger stylization, rounder cheeks and paws, head ~35% enlarged, shorter compact body but unmistakable real quadruped anatomy. Not a ball, not a mascot standing upright.
+One sheet with 6 full-body cats arranged as two rows of three, all same camera three-quarter side view facing left, consistent identity/proportions within age, soft ground contact shadows, no room props. Top row ADULT: left brown mackerel tabby walking slowly on FOUR paws with low level spine; middle same base adult in seated pose, black-orange TORTOISESHELL TORSO with a distinctly WHITE-ORANGE-BLACK CALICO TAIL (intentional modular fantasy coat combination), subtle transition seam; right same adult tortoiseshell with genuinely NO TAIL, natural rump no stump. Bottom row KITTEN: younger smaller body, larger head relative to body, larger ears, shorter muzzle, first brown tabby in crouch; second tortoiseshell body + calico tail; third bobtail kitten with tiny round short tail. Age must be obvious by proportions not just scale. Show whole paws, ears and tails uncut, anatomically valid four legs, no human posture, no clothes, no enormous anime eyes, no extra limbs. Pattern pieces must look like one coherent cat, not sewn patchwork. Small clean English labels only: style letter at top, ADULT, KITTEN, TABBY, MIXED COAT, NO TAIL, BOBTAIL. Production concept quality.

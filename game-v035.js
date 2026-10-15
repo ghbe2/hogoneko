@@ -40,7 +40,7 @@ render=function(state){
  const cat=app.querySelector('.cat-object');if(!cat)return;
  const b=cat.getBoundingClientRect(),s=stage.getBoundingClientRect();
  const cue=document.createElement('span');cue.className='feel-cue';cue.style.left=`${Math.max(25,Math.min(s.width-25,b.left+b.width/2-s.left))}px`;cue.style.top=`${Math.max(35,b.top-s.top)}px`;
- cue.textContent={superMatch:'♫ ♫',match:'♪',neutral:'！',dislike:'↶',superDislike:'💢'}[f.affinity];
+ cue.textContent={superMatch:'♡',match:'♡',neutral:'',dislike:'',superDislike:'💢'}[f.affinity];
  cue.setAttribute('role','status');cue.setAttribute('aria-label',{superMatch:'大喜び',match:'うれしそう',neutral:'気付いてこちらを見る',dislike:'身を引く',superDislike:'強く嫌がる'}[f.affinity]);stage.appendChild(cue);
  if(f.delta!==0){const meter=document.createElement('aside');meter.className='live-heart-meter care-heart-meter';meter.innerHTML=renderHeartVisual(getCat(state));stage.appendChild(meter);meter.classList.add(f.delta>0?'heart-growing':'heart-falling');}
  if(lastFeelId!==f.id){showFeel(cat,f.affinity);if(f.delta>0)spawnLiveFeedback(cat,f.affinity,true);lastFeelId=f.id;}
@@ -50,7 +50,7 @@ const feelSpawn=spawnLiveFeedback;
 spawnLiveFeedback=function(cat,affinity,big=false,moodOnly=false){
  feelSpawn(cat,affinity,big,moodOnly);
  if(big||moodOnly)showFeel(cat,affinity);
- const stage=cat.closest('.stage');if(moodOnly){const cue=stage?.querySelector('.live-heart:last-child');if(cue)cue.textContent={superMatch:'♫',match:'♪',neutral:'！',dislike:'↶',superDislike:'💢'}[affinity];}
+ const stage=cat.closest('.stage');if(moodOnly){const cue=stage?.querySelector('.live-heart:last-child');if(cue)cue.textContent={superMatch:'♡',match:'♡',neutral:'',dislike:'',superDislike:'💢'}[affinity];}
  if(!moodOnly){const meter=stage?.querySelector('.live-heart-meter');if(meter){meter.classList.remove('heart-growing');void meter.offsetWidth;meter.classList.add('heart-growing');}}
 };
 const feelMeter=updateLiveHeartMeter;

@@ -1,0 +1,32 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),path=require('node:path'),{pathToFileURL}=require('node:url');
+(async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{const p=await b.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
+for(const [width,height]of [[320,568],[375,812]]){
+ await p.setViewportSize({width,height});await p.goto(pathToFileURL(path.resolve('index.html')).href+'?check=1&scenario=room');
+ await p.evaluate(()=>{let c=getCat(gameState);c.body.days=5;c.body.weight=3100;c.body.sick=false;c.surgery=null;gameState.coins=50;dispatch({type:'OPEN_MAP_SHOP',shopId:'clinic'})});
+ assert.equal(await p.locator('.clinic-commands button').count(),3);
+ assert(await p.locator('[data-first="exam"]').isDisabled());
+ assert(await p.locator('.clinic-commands').evaluate(n=>n.getBoundingClientRect().bottom<=document.querySelector('.reception-actions').getBoundingClientRect().top));
+ await p.screenshot({path:`tests/screenshots/clinic-commands-${width}.png`});
+ await p.click('[data-clinic="examine"]');assert(await p.getByText('健康チェックの結果',{exact:true}).isVisible());assert.equal(await p.locator('.reception-checks').count(),0);
+ await p.screenshot({path:`tests/screenshots/clinic-health-${width}.png`});
+ assert(await p.locator('.reception-panel').evaluate(n=>n.getBoundingClientRect().height<=284),'No viewport-stretched card');
+ assert(await p.evaluate(()=>document.querySelector('.reception-exit').getBoundingClientRect().bottom+8<=document.querySelector('.reception-speech').getBoundingClientRect().top),'Exit separated from speech');
+ await p.click('[data-clinic="menu"]');assert.equal(await p.evaluate(()=>gameState.campaign.clinicExamined),false);
+ await p.click('[data-action="go-surgery"]');assert(await p.locator('.surgery-sheet').isVisible());
+ const earsBefore=await p.evaluate(()=>['earL','earR'].map(part=>document.querySelector(`.surgery-cat [data-part="${part}"] path`).getAttribute('d')));
+ await p.click('[data-action="start-surgery"]');assert.equal(await p.evaluate(()=>gameState.coins),38);assert.equal(await p.locator('.surgery-progress,.surgery-curtain').count(),0);
+ await p.waitForTimeout(1400);await p.evaluate(()=>render(gameState));
+ assert(await p.locator('.surgery-snip').evaluate(n=>Number(getComputedStyle(n).opacity)>.9));
+ assert(await p.locator('.surgery-snip').evaluate(n=>{let r=n.getBoundingClientRect(),s=document.querySelector('.surgery-room').getBoundingClientRect();return r.left>s.left&&r.top>s.top&&r.top<document.querySelector('.surgery-sheet').getBoundingClientRect().top}));
+ assert(await p.evaluate(()=>{const snip=document.querySelector('.surgery-snip'),room=document.querySelector('.surgery-room').getBoundingClientRect(),ear=document.querySelector('.surgery-cat [data-part="innerR"]').getBoundingClientRect();return Math.abs(parseFloat(snip.style.left)+room.left-(ear.left+ear.width/2))<5}),'Snip on cat-left / viewer-right');
+ await p.screenshot({path:`tests/screenshots/ear-snip-${width}.png`});
+ assert(await p.locator('.surgery-snip b').evaluate(n=>{const r=n.getBoundingClientRect(),room=document.querySelector('.surgery-room').getBoundingClientRect();return r.top>=room.top&&r.right<=room.right}),'Snip label stays inside scene');
+ await p.locator('.surgery-done').waitFor();assert.equal(await p.evaluate(()=>getCat(gameState).phenotype.earCut),'left');assert.equal(await p.evaluate(()=>gameState.coins),38);
+ const earsAfter=await p.evaluate(()=>['earL','earR'].map(part=>document.querySelector(`.surgery-cat [data-part="${part}"] path`).getAttribute('d')));
+ assert.equal(earsBefore[0],earsAfter[0],'Viewer-left ear untouched');assert.notEqual(earsBefore[1],earsAfter[1],'Viewer-right ear is the one cut');
+ await p.evaluate(()=>dispatch({type:'START_SURGERY'}));assert.equal(await p.evaluate(()=>gameState.coins),38);
+ await p.evaluate(()=>{getCat(gameState).body.sick=true;dispatch({type:'OPEN_MAP_SHOP',shopId:'clinic'})});await p.click('[data-clinic="examine"]');assert(await p.locator('[data-action="treat-cat"]').isVisible());
+ assert(await p.evaluate(()=>document.documentElement.scrollHeight<=innerHeight));
+}
+assert.deepEqual(errors,[]);console.log('PASS independent commands, health results/treatment, timed ear snip without reset, actual ear cut, charge once, both sizes');
+}finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});

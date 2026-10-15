@@ -64,9 +64,9 @@ const owned=(state,id)=>Number(state.inventory[id])>0;
 const productById=id=>SHOP_CATALOG.find(p=>p.id===id);
 function stableCatSeed(id){let value=2166136261;for(const char of String(id))value=Math.imul(value^char.charCodeAt(0),16777619);return value>>>0;}
 function phenotypeFor(cat){
-  if(cat.phenotype)return {...cat.phenotype,age:cat.age,earCut:cat.status==='tnr'?'left':cat.phenotype.earCut};
+  if(cat.phenotype)return {...cat.phenotype,age:cat.age,earCut:cat.surgery?.status==='done'||cat.status==='tnr'?'left':cat.phenotype.earCut};
   const dna=CatSVG.sampleDNA(stableCatSeed(cat.id));
-  return {...dna,age:cat.age||'adult',earCut:cat.status==='tnr'?'left':'none',mood:'neutral'};
+  return {...dna,age:cat.age||'adult',earCut:cat.surgery?.status==='done'||cat.status==='tnr'?'left':'none',mood:'neutral'};
 }
 function withPhenotype(cat,random=false){
   const dna=random?{...CatSVG.sampleDNA(crypto.getRandomValues(new Uint32Array(1))[0]),earCut:'none',mood:'neutral'}:phenotypeFor(cat);
@@ -236,6 +236,14 @@ getScreenGuide=function(state){
 renderCatArt=function(cat){const dna=phenotypeFor(cat);return `<svg class="game-cat-svg" viewBox="200 55 320 320" preserveAspectRatio="xMidYMax meet" data-cat-id="${String(cat.id).replace(/[^a-zA-Z0-9_-]/g,'')}" data-dna="${encodeURIComponent(JSON.stringify(dna))}" aria-hidden="true"></svg>`;};
 const svgRigs=new Map();
 function mountGameCats(){
+  // Rendering inventory/cleaning must not restart the living cat's rig clock.
+  // Transfer only the same room cat and phenotype; portraits and new cats are separate rigs.
+  app.querySelectorAll('.cat-object .game-cat-svg,.held-cat .game-cat-svg').forEach(fresh=>{
+    if(svgRigs.has(fresh))return;
+    const role=fresh.closest('.held-cat')?'held':'room';
+    const prior=[...svgRigs].find(([svg,entry])=>!svg.isConnected&&entry.roomCat===role&&svg.dataset.catId===fresh.dataset.catId&&svg.dataset.dna===fresh.dataset.dna);
+    if(prior)fresh.replaceWith(prior[0]);
+  });
   for(const [svg] of svgRigs)if(!svg.isConnected)svgRigs.delete(svg);
   app.querySelectorAll('.game-cat-svg').forEach(svg=>{
     if(svgRigs.has(svg))return;
@@ -244,7 +252,7 @@ function mountGameCats(){
     const rig=CatSVG.buildCat(svg,'game',dna,375,dna.age==='adult'?1.25:1);svg.querySelector('.floor')?.remove();
     const [initialPose]=scenePose(svg);
     CatSVG.applyPose(rig,CatSVG.poseModel(initialPose,0),0,initialPose);
-    svgRigs.set(svg,{rig,pose:initialPose,since:performance.now(),previous:null,changed:0});
+    svgRigs.set(svg,{rig,pose:initialPose,since:performance.now(),previous:null,changed:0,roomCat:svg.closest('.held-cat')?'held':svg.closest('.cat-object')?'room':null});
   });
 }
 function scenePose(svg){
@@ -272,20 +280,24 @@ function animateGameCats(now){
     for(const [svg,entry] of svgRigs){
       if(!svg.isConnected){svgRigs.delete(svg);continue;}
       let [pose,mood]=scenePose(svg),t=(now-entry.since)/1000;
-      if(pose!==entry.pose){entry.previous=CatSVG.poseModel(entry.pose,t);entry.pose=pose;entry.since=now;entry.changed=now;t=0;}
+      if(pose!==entry.pose){entry.previous=entry.lastModel||CatSVG.poseModel(entry.pose,t);entry.pose=pose;entry.since=now;entry.changed=now;t=0;}
       entry.rig.d.mood=mood;
       // World movement owns the jump arc; the SVG only bends its limbs.
       const poseTime=pose==='jump'?.3+Math.min(.7,t/CONFIG.stage1.jumpMs*1000*.7):pose==='punch'?t*(svg.closest('.toy-eager')?1.4:.85):t;
       let model=CatSVG.poseModel(pose,poseTime);
       if(entry.previous&&pose!=='jump'&&now-entry.changed<180)model=CatSVG.mixModel(entry.previous,model,(now-entry.changed)/180);
       if(pose==='jump')model.lift=0;
-      CatSVG.applyPose(entry.rig,model,poseTime,pose);svg.dataset.pose=pose;
+      entry.lastModel=model;CatSVG.applyPose(entry.rig,model,poseTime,pose);svg.dataset.pose=pose;
     }
   }
   requestAnimationFrame(animateGameCats);
 }
 const renderBeforeV017=render;
 render=function(state){
+  const oldCat=app.querySelector('.cat-object'),motionAt=performance.now();
+  const oldId=oldCat?.querySelector('.game-cat-svg')?.dataset.catId;
+  const cssMotion=(oldCat?.getAnimations()||[]).filter(a=>a.animationName).map(a=>({name:a.animationName,time:a.currentTime}));
+  const travel=oldCat?._travelAnimation,travelTime=travel?.currentTime;
   renderBeforeV017(state);
   const wallet=app.querySelector('.hud-side>span,.campaign-wallet');
   if(wallet){
@@ -306,6 +318,17 @@ render=function(state){
   const lastTnr=state.album.filter(c=>c.outcome==='tnr'&&c.phenotype).at(-1);
   if(lastTnr)app.querySelectorAll('.field-tnr-cat').forEach(n=>{n.innerHTML=renderCatArt({...lastTnr,id:lastTnr.catId,status:'tnr'});});
   mountGameCats();
+  const newCat=app.querySelector('.cat-object');
+  if(newCat&&oldId===newCat.querySelector('.game-cat-svg')?.dataset.catId){
+    const elapsed=performance.now()-motionAt;
+    for(const saved of cssMotion){const a=newCat.getAnimations().find(a=>a.animationName===saved.name);if(a&&saved.time!=null)a.currentTime=saved.time+elapsed;}
+    if(travel?.playState==='running'&&travelTime!=null&&!state.ui.holdingCat&&!state.ui.layoutMode){
+      const a=newCat.animate(travel.effect.getKeyframes(),travel.effect.getTiming());a.currentTime=travelTime+elapsed;
+      newCat._travelAnimation=a;for(const cls of ['walking','jumping'])newCat.classList.toggle(cls,oldCat.classList.contains(cls));
+      newCat.style.setProperty('--cat-facing',oldCat.style.getPropertyValue('--cat-facing'));
+      const finish=()=>{if(newCat._travelAnimation===a){newCat.classList.remove('walking','jumping');newCat._travelAnimation=null;}};a.onfinish=finish;a.oncancel=finish;travel.cancel();
+    }
+  }
 };
 app.addEventListener('click',event=>{
   if(Date.now()<suppressClickUntil)return;

@@ -61,11 +61,11 @@ render=function(state){state=keepFurnitureAboveControls(state);if(state.campaign
  if(world){const b=roomPlacementBounds();for(const [key,value]of Object.entries(b))world.style.setProperty('--placement-'+key,value+'px');}
  if(world&&sun&&!world.querySelector('.window-sunlight')){const light=document.createElement('div');light.className='window-sunlight '+sun.period;light.style.clipPath=`polygon(${sun.polygon})`;light.setAttribute('aria-hidden','true');world.prepend(light);}
  frame.querySelectorAll('.touch-switch-hint').forEach(n=>n.remove());
- if(state.ui.layoutMode||state.campaign.phase==='intake'){
+ if(state.ui.layoutMode){
   frame.querySelectorAll('[data-layout-item]').forEach(n=>n.classList.toggle('layout-selected',n.dataset.layoutItem===state.ui.lastLayoutItem));
   frame.querySelectorAll('.layout-tray-toggle:not(.layout-store-target)').forEach(n=>n.remove());
   if(!frame.querySelector('.layout-workbar')){
-   const stage=frame.querySelector('.stage');stage.insertAdjacentHTML('beforeend',`<div class="layout-workbar"><button data-action="undo-furniture" ${furnitureUndo.length?'':'disabled'} aria-label="配置を戻す">↶</button><button data-action="toggle-layout-tray">＋ 家具を追加</button>${state.campaign.phase==='intake'?'':'<button class="layout-done" data-action="toggle-layout">完了</button>'}</div><button class="layout-tray-toggle layout-store-target" aria-label="家具をしまう">ここにしまう</button>`);
+   const stage=frame.querySelector('.stage');stage.insertAdjacentHTML('beforeend',`<div class="layout-workbar"><button data-action="undo-furniture" ${furnitureUndo.length?'':'disabled'} aria-label="配置を戻す">↶</button><button data-action="toggle-layout-tray">＋ 家具を追加</button><button class="layout-done" data-action="toggle-layout">完了</button></div><button class="layout-tray-toggle layout-store-target" aria-label="家具をしまう">ここにしまう</button>`);
   }
  }
 };
@@ -145,67 +145,13 @@ const encounterCloseStyle=document.createElement('style');encounterCloseStyle.te
 renderDebugQuickbar=()=>'';renderDebugPanel=()=>'';renderIntakeDebug=()=>'';
 const fullFieldBackground=bookBackground;
 bookBackground=function(node,svg){if(node?.matches('.field-scene')&&svg)svg=svg.replace('<svg ','<svg preserveAspectRatio="xMidYMid slice" ');return fullFieldBackground(node,svg);};
-const baitFirstReduce=reduceGameState;
-reduceGameState=function(state,action){
- const c=state.campaign;
- if(action.type==='FIELD_TOGGLE_FOOD'){
-  if(c.phase!=='field'||c.trapWaiting||!getFood(action.id)||getFood(action.id).water)return state;
-  const selected=c.bait.includes(action.id);
-  if(!selected&&(!(state.inventory[action.id]>=1)||c.bait.length>=CONFIG.capture.maxMix))return state;
-  return {...state,campaign:{...c,bait:selected?c.bait.filter(id=>id!==action.id):[...c.bait,action.id]}};
- }
- if(action.type==='FIELD_PLACE_TRAP'&&(!c.bait.length||c.bait.some(id=>state.inventory[id]<1)))return state;
- return baitFirstReduce(state,action);
-};
-const autoTrapDispatch=dispatch;
-dispatch=function(action){autoTrapDispatch(action);if(action.type==='FIELD_PLACE_TRAP'&&gameState.campaign.phase==='field'&&gameState.campaign.trapPlaced&&!gameState.campaign.trapWaiting)autoTrapDispatch({type:'FINISH_FIELD_PREP'});};
-const baitFirstField=renderField;
-renderField=function(state){
- const t=document.createElement('template');t.innerHTML=baitFirstField(state);const c=state.campaign;
- t.content.querySelector('.campaign-frame')?.classList.add('field-fullscreen');
- t.content.querySelectorAll('.prepared-bait,[data-action="finish-field-prep"]').forEach(n=>n.remove());
- // Bait selection stays plural in state; the cage shows a single serving.
- const serving=t.content.querySelector('.trap-bait');if(serving)serving.innerHTML=c.bait.length?(getFood(c.bait[0])?.emoji||'◉'):'';
- const kit=t.content.querySelector('.field-kit');if(kit){
-  const trap=FIELD_TRAPS.find(t=>t.id===c.fieldTrap)||FIELD_TRAPS[0];
-  kit.innerHTML=c.trapWaiting?'':`<div class="field-food-list" aria-label="保護に使う餌">${CONFIG.stage1.foods.filter(f=>!f.water).map(f=>`<button class="field-food-pill ${c.bait.includes(f.id)?'selected':''}" aria-pressed="${c.bait.includes(f.id)}" data-action="field-toggle-food" data-id="${f.id}" ${state.inventory[f.id]>=1?'':'disabled'}><span>${f.emoji}</span><strong>${f.label}</strong><small>${c.bait.includes(f.id)?'✓ ':''}${f.unlimited?'∞':'×'+(state.inventory[f.id]||0)}</small></button>`).join('')}</div><div class="field-trap-row"><button class="gear-card" data-field-drag="trap" data-trap="${trap.id}" ${c.bait.length?'':'disabled'}><span>${trap.emoji}</span><strong>${trap.label}</strong><small>ドラッグして置く</small></button><button class="field-switch" data-action="field-menu" data-kind="trap" aria-label="保護器を選ぶ">切り替え ▾</button></div>`;
- }
- if(kit){
-  if(c.trapWaiting)kit.innerHTML='<div class="field-trap-row"><button class="gear-card"></button><button class="field-switch"></button></div>';
-  kit.classList.add('encounter-kit');
-  kit.querySelectorAll('.field-food-pill:disabled').forEach(n=>n.remove());
-  const row=kit.querySelector('.field-trap-row'),button=row.querySelector('.gear-card');
-  button.classList.add('encounter-trap');
-  button.innerHTML=`<svg viewBox="0 0 220 125" aria-hidden="true"><ellipse cx="112" cy="111" rx="92" ry="9" fill="#574a3820"/><path d="M30 35L65 15H193V88L163 110H30Z" fill="#e7ddc3" stroke="#746e5b" stroke-width="3"/><path d="M30 35H163L193 15M163 35V110M163 110L193 88" fill="none" stroke="#746e5b" stroke-width="3"/><path d="M45 38V105M64 38V105M84 38V105M104 38V105M124 38V105M144 38V105M174 32V98M185 25V91M34 58H160M34 82H160" fill="none" stroke="#8b8771" stroke-width="3"/><path d="M91 16V8Q91 3 98 3H123Q130 3 130 8V16" fill="none" stroke="#746e5b" stroke-width="4"/><ellipse cx="100" cy="98" rx="23" ry="5" fill="${c.bait.length?'#b68b59':'#c9bfa7'}"/></svg><small>${c.bait.length?'草むらへ、そっと置く':'まずは、ごはんを選んで'}</small>`;
-  const change=row.querySelector('.field-switch');change.innerHTML='⇄';change.classList.add('encounter-change');change.title='保護器を選ぶ';
-  kit.prepend(row);
-  const placed=t.content.querySelector('.field-scene .trap');if(placed){placed.classList.add('illustrated-trap');placed.replaceChildren(button.querySelector('svg').cloneNode(true));}
-  if(c.trapWaiting)kit.replaceChildren();
- }
- const status=t.content.querySelector('.trap-status');if(status)status.remove();
- return t.innerHTML;
-};
-app.addEventListener('click',e=>{const b=e.target.closest('[data-action="field-toggle-food"]');if(b&&!b.disabled)dispatch({type:'FIELD_TOGGLE_FOOD',id:b.dataset.id});});
+// Field selection and committed encounter rendering live in game-encounter.js.
 window.addEventListener('pointerdown',e=>{const svg=e.target.closest('.encounter-trap')?.querySelector('svg');if(svg&&fieldDragDraft?.ghost){fieldDragDraft.ghost.replaceChildren(svg.cloneNode(true));fieldDragDraft.ghost.style.width='160px';fieldDragDraft.ghost.style.height='100px';}});
 const fieldStyle=document.createElement('style');fieldStyle.textContent=`
 .screen-guide,.debug-quickbar,.debug-panel,.intake-debug-panel{display:none!important}.tutorial-focus{outline:none!important;animation:none!important}
 #app .field-scene .trap.ready{border-color:#70675f}
-#app .field-scene .illustrated-trap{width:180px;height:110px;border:0;border-radius:0;background:none;box-shadow:none;padding:0;opacity:1}#app .field-scene .illustrated-trap:after{display:none}#app .illustrated-trap>svg{width:100%;height:100%;pointer-events:none}
+#app .field-scene .illustrated-trap{width:160px;height:100px;transform:translate(-50%,-50%);border:0;border-radius:0;background:none;box-shadow:none;padding:0;opacity:1}#app .field-scene .illustrated-trap:after{display:none}#app .illustrated-trap>svg{width:100%;height:100%;pointer-events:none}
 #app .field-fullscreen .campaign-screen{position:relative;flex:1;min-height:0;padding:0}#app .field-fullscreen .campaign-scroll{position:relative;flex:1;height:100%;padding:0;display:block}#app .field-fullscreen .field-scene{position:absolute;inset:0;width:100%;height:100%;max-height:none;min-height:0;margin:0;border-radius:0;aspect-ratio:auto}#app .field-fullscreen .field-scene>svg{width:100%;height:100%}
-#app .field-fullscreen .field-kit{position:absolute;bottom:12px;left:12px;right:12px;display:flex;flex-direction:column;gap:10px;padding:0;margin:0;z-index:4;background:none}#app .field-kit:empty{display:none}.field-food-list{display:flex;gap:8px;overflow-x:auto;touch-action:pan-x;padding:4px}.field-food-pill{flex:0 0 104px;min-height:76px;border:1px solid #e1d2bb;border-radius:22px;background:#fff8eeed;padding:8px;color:#715746;display:grid;justify-items:center;gap:3px}.field-food-pill.selected{border:2px solid #8a9d73;background:#edf2de}.field-food-pill:disabled{opacity:.45}.field-food-pill strong{font-size:11px;font-weight:500}.field-food-pill small{font-size:11px}.field-food-pill img{width:32px;height:28px;object-fit:contain}.field-trap-row{display:flex;align-items:center;justify-content:center;gap:10px}#app .field-trap-row .gear-card{width:185px;min-height:68px;border-radius:32px;background:#fff8e9;border:1px solid #e1d2bb;box-shadow:none}#app .field-trap-row .field-switch{width:auto;min-height:44px;border-radius:24px;padding:10px 16px;background:#fff8e9}#app .field-trap-row .gear-card:disabled{opacity:.45}
-#app .field-fullscreen .encounter-kit{max-width:480px;margin:auto;gap:4px;bottom: max(16px,env(safe-area-inset-bottom));left:16px;right:16px;isolation:isolate}
-.encounter-kit:before{content:'';position:absolute;inset:-20px -16px -25px;background:linear-gradient(transparent,#eee0c7b0 45%,#eee0c7e8);z-index:-1;pointer-events:none}
-#app .encounter-kit .field-trap-row{position:relative;width:230px;align-self:center;gap:0}
-#app .encounter-kit .encounter-trap{display:flex;flex-direction:column;align-items:center;width:220px;height:146px;padding:0;border:0;border-radius:0;background:none;box-shadow:none;gap:0;opacity:1;cursor:grab}
-.encounter-trap svg{width:210px;height:120px;pointer-events:none;filter:drop-shadow(0 5px 6px #574a3820);transition:transform .2s}
-#app .encounter-trap small{font-size:12px;letter-spacing:.08em;color:#655b45;background:none}.encounter-trap:disabled svg{opacity:.55}.encounter-trap:not(:disabled):hover svg{transform:translateY(-4px)}
-#app .encounter-kit .encounter-change{position:absolute;right:-8px;top:34px;width:44px;height:44px;min-height:44px;border:1px solid #fff9e9a0;border-radius:50%;padding:0;background:#fff9e9bd;box-shadow:none;font-size:22px;color:#726750}
-.encounter-kit .field-food-list{padding:8px 4px 4px;gap:10px;scrollbar-width:none;scroll-snap-type:x proximity}.encounter-kit .field-food-list::-webkit-scrollbar{display:none}
-.encounter-kit .field-food-pill{flex:0 0 82px;min-height:92px;padding:5px 2px;gap:4px;border:0;border-radius:0;background:none;scroll-snap-align:start;position:relative;align-content:start}
-.encounter-kit .field-food-pill>span{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:#fff7e7b0;border:2px solid transparent;transition:background .2s,transform .2s}
-.encounter-kit .field-food-pill.selected{background:none;border:0}.encounter-kit .field-food-pill.selected>span{background:#fff9e9;border-color:#788b60;transform:translateY(-3px);box-shadow:0 3px 10px #57654320}
-.encounter-kit .field-food-pill img{width:42px;height:36px}.encounter-kit .field-food-pill strong{max-width:82px;line-height:1.4;font-size:11px}.encounter-kit .field-food-pill small{font-size:11px;color:#736951}
-#app .encounter-kit .field-trap-row .encounter-change{border-radius:50%;width:44px;height:44px;padding:0}.encounter-kit .field-food-list{width:max-content;max-width:100%;align-self:center}
 `;document.head.append(fieldStyle);
 // A reset must not be undone by pagehide/visibility/timer autosaves on reload.
 let resettingSave=false;
@@ -338,9 +284,11 @@ const discoveryPose=scenePose;
 scenePose=function(svg){const pose=discoveryPose(svg);if(svg.closest('.cat-object')&&discoveryScene(gameState)&&!gameState.ui.playMode&&!['walk','jump'].includes(pose[0]))return [Date.now()%4500<2900?'punch':'sit','neutral'];return pose;};
 const discoveryRender=render;let lastDiscovery=null;
 render=function(state){
+ const coinTime=app.querySelector('.discovery-pickup span')?.getAnimations()[0]?.currentTime,coinAt=performance.now();
  discoveryRender(state);const cat=app.querySelector('.cat-object'),stage=app.querySelector('.stage');if(!cat||!stage||state.ui.modal||state.ui.layoutMode)return;
  const c=cat.getBoundingClientRect(),s=stage.getBoundingClientRect();
  if(discoveryScene(state)){const clue=document.createElement('button');clue.type='button';clue.className='discovery-pickup';clue.dataset.action='pick-discovery-coin';clue.innerHTML='<span>●</span>';clue.setAttribute('aria-label','ネコが遊んでいるコインを拾う');stage.appendChild(clue);positionDiscoveryCoin();}
+ const coinMotion=app.querySelector('.discovery-pickup span')?.getAnimations()[0];if(coinMotion&&coinTime!=null)coinMotion.currentTime=coinTime+performance.now()-coinAt;
  const found=state.ui.coinDiscovery;if(!found||found.id===lastDiscovery||found.until<Date.now())return;lastDiscovery=found.id;
  const coin=document.createElement('span');coin.className='discovery-coin';coin.textContent='● +5';coin.setAttribute('role','status');coin.setAttribute('aria-label','5コインを見つけた');const x=Math.max(30,Math.min(s.width-50,c.left-s.left+c.width/2)),y=Math.max(35,c.top-s.top+c.height*.5);coin.style.left=x+'px';coin.style.top=y+'px';stage.appendChild(coin);
  coin.animate([{translate:'0 0',opacity:0,scale:.5},{offset:.2,translate:'0 -25px',opacity:1,scale:1.15},{offset:.6,translate:'0 -25px',opacity:1,scale:1},{translate:`${s.width-42-x}px ${-y}px`,opacity:0,scale:.45}],{duration:2100,fill:'forwards'});setTimeout(()=>coin.remove(),2200);

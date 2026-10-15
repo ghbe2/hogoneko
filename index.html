@@ -1181,44 +1181,25 @@
     .area-status { display:flex; gap:5px; margin-top:7px; }
     .area-status i { width:9px; height:9px; border-radius:50%; background:#c8d4c1; }
     .area-status i:first-child { background:#7da173; }
-    .town-full-map { min-height:0; position:relative; overflow:hidden; background:linear-gradient(#cfe4df 0 32%,#b9d2ad 32% 100%); }
-    .town-full-map::before { content:""; position:absolute; left:43%; top:-12%; width:82px; height:130%; background:#e7d8c7; transform:rotate(13deg); box-shadow:inset 0 0 0 2px rgba(120,94,71,.05); }
-    .town-full-map::after { content:""; position:absolute; inset:0; pointer-events:none; background:radial-gradient(circle at 12px 12px,rgba(255,255,255,.35) 0 2px,transparent 2.5px) 0 0/38px 38px; }
-    .map-node { position:absolute; z-index:3; border:1px solid rgba(75,65,55,.1); border-radius:16px; padding:8px; background:#fffaf5; box-shadow:0 7px 16px rgba(69,61,50,.14); text-align:left; }
-    .map-node .node-emoji { display:block; font-size:25px; line-height:1; }
-    .map-node strong { display:block; margin-top:4px; font-size:10px; }
-    .map-node small { display:block; margin-top:2px; color:var(--muted); font-size:7px; }
-    .map-node.locked { filter:grayscale(.72); opacity:.62; box-shadow:none; }
-    .map-node.locked::after { content:"🔒"; position:absolute; right:7px; top:6px; font-size:11px; }
-    .map-stage-1 { right:18px; bottom:116px; width:142px; min-height:92px; border:2px solid #d87388; }
-    .map-stage-2 { left:24px; bottom:245px; width:118px; min-height:75px; }
-    .map-stage-3 { right:27px; top:144px; width:116px; min-height:75px; }
-    .map-stage-4 { left:38px; top:55px; width:112px; min-height:75px; }
-    .map-home { left:15px; bottom:20px; width:112px; min-height:78px; }
-    .map-shop-cluster { position:absolute; z-index:4; left:15px; bottom:116px; width:130px; padding:8px; border-radius:17px; background:rgba(255,250,244,.78); box-shadow:0 5px 14px rgba(65,60,48,.12); }
-    .map-shop-cluster > strong { display:block; margin-bottom:6px; color:#6b5d59; font-size:8px; }
-    .shop-node-row { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
-    .shop-node { min-width:0; height:56px; border:0; border-radius:10px; padding:4px 2px; background:#fff; box-shadow:0 2px 5px rgba(70,58,52,.1); }
-    .shop-node span { display:block; font-size:18px; }
-    .shop-node small { display:block; overflow:hidden; color:#6e605d; font-size:6px; white-space:nowrap; }
     .shop-sheet { display:grid; gap:10px; }
     .shop-hero { min-height:110px; display:grid; place-items:center; align-content:center; gap:5px; border-radius:20px; background:#e2eee6; }
     .shop-hero span { font-size:45px; }
     .shop-hero strong { font-size:18px; }
-    .shop-products { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .shop-product { min-height:92px; border:1px solid var(--line); border-radius:14px; background:#fff; display:grid; place-items:center; align-content:center; gap:3px; }
+    .shop-products { display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:max-content; align-items:stretch; gap:10px; }
+    .shop-product { min-height:92px; border:1px solid var(--line); border-radius:14px; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:5px; }
     .shop-product span { font-size:26px; }
-    .shop-product strong { font-size:9px; }
-    .shop-product small { color:var(--muted); font-size:8px; }
+    .shop-product strong { font-size:13px; }
+    .shop-product small { color:var(--muted); font-size:11px; line-height:1.5; }
 
     .field-scene { position:relative; height:310px; margin:14px 0; overflow:hidden; border-radius:23px; background:linear-gradient(#c9dfe2 0 43%,#88aa7e 43% 100%); }
     .field-scene::before { content:""; position:absolute; inset:44% 0 0; background:repeating-linear-gradient(74deg,transparent 0 18px,rgba(62,91,57,.2) 19px 22px,transparent 23px 33px); }
     .field-bush { position:absolute; right:-20px; top:87px; width:170px; height:105px; border-radius:55% 10% 50% 15%; background:#587d59; box-shadow:-75px 18px 0 #70936b; }
-    .field-eyes { position:absolute; right:70px; top:128px; z-index:3; color:#f4d36c; font-size:17px; letter-spacing:9px; text-shadow:0 0 5px #fff6; }
     .trap { position:absolute; left:50%; bottom:32px; width:132px; height:82px; transform:translateX(-50%); border:5px solid #70675f; border-radius:8px; background:repeating-linear-gradient(90deg,transparent 0 13px,#70675f 14px 17px,transparent 18px 27px),linear-gradient(#ffffff45,#ede2d0a8); box-shadow:0 11px 0 rgba(67,61,51,.12); }
     .field-scene .trap { transform:translate(-50%,-50%); }
     .trap::after { content:""; position:absolute; inset:auto 28px 8px; height:16px; border-radius:50%; background:#b57956; opacity:.8; }
-    .trap.ready { animation:trap-shake .18s linear infinite; border-color:#d06b7f; }
+    .trap.ready { border-color:#70675f; }
+    .trap.ready > svg { animation:trap-shake .18s linear infinite; }
+    @media (prefers-reduced-motion:reduce) { .trap.ready > svg { animation:none; } }
     .trap.empty { opacity:.3; filter:grayscale(.7); }
     .trap-status { position:absolute; left:50%; bottom:125px; z-index:4; transform:translateX(-50%); min-width:150px; padding:7px 11px; border-radius:99px; background:#fffaf2e8; color:#685a57; font-size:10px; font-weight:800; text-align:center; }
     .bait-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
@@ -1227,7 +1208,6 @@
     .bait-card span { font-size:25px; }
     .bait-card strong { font-size:9px; }
     .bait-card small { color:var(--muted); font-size:8px; }
-    .field-tail { position:absolute; right:118px; top:111px; width:56px; height:24px; border-top:10px solid #4e714f; border-radius:50%; transform:rotate(-18deg); animation:tail-peek 2.4s ease-in-out infinite; }
     .field-pawprints { position:absolute; left:24px; bottom:26px; color:rgba(63,83,56,.55); font-size:18px; transform:rotate(-12deg); }
     .field-tnr-cat { position:absolute; left:20px; top:78px; width:65px; height:74px; z-index:3; transform:scale(.45); transform-origin:top left; opacity:.78; }
     .field-tnr-cat > span { position:absolute; z-index:5; left:44px; top:2px; color:#d87388; font-size:18px; }
@@ -1278,7 +1258,6 @@
     .capture-note { width:min(310px,100%); display:grid; grid-template-columns:36px 1fr; align-items:center; gap:8px; padding:11px 13px; border-radius:15px; background:#fff; box-shadow:0 5px 14px rgba(73,54,49,.12); animation:capture-note-in .3s ease-out; }
     .capture-note > span { font-size:24px; text-align:center; }
     .capture-note strong { font-size:11px; line-height:1.6; }
-    @keyframes tail-peek { 50% { transform:rotate(8deg) translateX(8px); } }
     @keyframes cage-approach { 0% { transform:translateY(78px) scale(.48); filter:blur(2px) brightness(.65); } 28% { transform:translateY(28px) scale(.68); } 58% { transform:translateY(4px) scale(.94); filter:blur(0) brightness(.82); } 100% { transform:translateY(0) scale(1); filter:none; } }
     @keyframes cage-cover-lift { 0%,35% { transform:translateY(0); } 52% { transform:translateY(-6%); } 78%,100% { transform:translateY(-104%); } }
     @keyframes cage-eyes { 0%,15% { opacity:0; } 23%,55% { opacity:1; } 34% { opacity:.3; } 63%,100% { opacity:0; } }
@@ -1384,10 +1363,6 @@
     .prep-card strong { display:block; font-size:9px; }
     .prep-card small { display:block; color:var(--muted); font-size:7px; }
 
-    .graduation-stage { position:relative; height:285px; margin-top:16px; overflow:hidden; border-radius:23px; background:linear-gradient(#f5e9e4 0 64%,#ddb896 64%); }
-    .graduation-stage::before { content:"譲渡会"; position:absolute; left:0; right:0; top:20px; color:#b96174; font-size:27px; font-weight:900; letter-spacing:.3em; text-align:center; }
-    .graduation-cat { position:absolute; left:50%; bottom:14px; width:119px; height:134px; transform:translateX(-50%) scale(.88); }
-    .graduation-cat .cat-fallback { inset:0; }
     .readiness-list { display:grid; gap:8px; margin-top:12px; }
     .readiness-row { display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:8px; padding:10px 11px; border-radius:13px; background:#fff; border:1px solid var(--line); }
     .readiness-row > span { font-size:20px; }
@@ -1404,7 +1379,7 @@
     .result-copy { margin-top:12px; padding:15px; border-radius:16px; background:#fff; }
     .result-copy h1 { margin:0; font-size:20px; }
     .result-copy p { margin:7px 0 0; color:var(--muted); font-size:10px; line-height:1.7; }
-    @keyframes trap-shake { 25%{ transform:translate(-52%,-50%) rotate(-1deg); } 75%{ transform:translate(-48%,-50%) rotate(1deg); } }
+    @keyframes trap-shake { 25%{ transform:translateX(-2px) rotate(-1deg); } 75%{ transform:translateX(2px) rotate(1deg); } }
 
     .command-ghost {
       position: fixed;
@@ -1895,39 +1870,39 @@ const CONFIG = {
     ],
     responses: {
       feed: {
-        fear:{ symbol:"…", text:"動かない。見ていない間に皿が減りそう" },
-        normal:{ symbol:"👀", text:"こちらを見て、少し待ってから近づく" },
-        sweet:{ symbol:"♪", text:"足元で待っている。すぐに食べ始めた" },
+        fear:{ symbol:"", text:"動かない。見ていない間に皿が減りそう" },
+        normal:{ symbol:"", text:"こちらを見て、少し待ってから近づく" },
+        sweet:{ symbol:"♡", text:"足元で待っている。すぐに食べ始めた" },
       },
       play: {
-        fear:{ symbol:"👀", text:"遠くから玩具を目で追っている" },
-        normal:{ symbol:"♪", text:"とことこ近づいて、じゃれ始めた" },
+        fear:{ symbol:"", text:"遠くから玩具を目で追っている" },
+        normal:{ symbol:"♡", text:"とことこ近づいて、じゃれ始めた" },
         sweet:{ symbol:"❤", text:"すぐに飛びついて大はしゃぎ" },
       },
       clean: {
-        fear:{ symbol:"…", text:"物音を警戒して部屋の奥へ離れた" },
-        normal:{ symbol:"👀", text:"離れたところから掃除を見ている" },
-        sweet:{ symbol:"♪", text:"そばへ来て、掃除の邪魔をしている" },
+        fear:{ symbol:"", text:"物音を警戒して部屋の奥へ離れた" },
+        normal:{ symbol:"", text:"離れたところから掃除を見ている" },
+        sweet:{ symbol:"♡", text:"そばへ来て、掃除の邪魔をしている" },
       },
       layout: {
-        fear:{ symbol:"…", text:"新しい配置を警戒して奥へ下がった" },
-        normal:{ symbol:"👀", text:"ちらりと見て、そっと匂いを嗅いだ" },
-        sweet:{ symbol:"♪", text:"すぐに確かめに来た" },
+        fear:{ symbol:"", text:"新しい配置を警戒して奥へ下がった" },
+        normal:{ symbol:"", text:"ちらりと見て、そっと匂いを嗅いだ" },
+        sweet:{ symbol:"♡", text:"すぐに確かめに来た" },
       },
       call: {
-        fear:{ symbol:"…", text:"名前を呼んでも、じっと動かない" },
-        normal:{ symbol:"👀", text:"顔を上げて、耳だけこちらへ向けた" },
-        sweet:{ symbol:"♪", text:"鳴いて返事をしながら近づいてきた" },
+        fear:{ symbol:"", text:"名前を呼んでも、じっと動かない" },
+        normal:{ symbol:"", text:"顔を上げて、耳だけこちらへ向けた" },
+        sweet:{ symbol:"♡", text:"鳴いて返事をしながら近づいてきた" },
       },
       pet: {
         fear:{ symbol:"💢", text:"手を避けて、するりと逃げた" },
-        normal:{ symbol:"👀", text:"少しだけ撫でさせてくれた" },
+        normal:{ symbol:"", text:"少しだけ撫でさせてくれた" },
         sweet:{ symbol:"❤", text:"喉を鳴らして手に頬を寄せている" },
       },
       leave: {
-        fear:{ symbol:"…", text:"留守の間、自分の場所で少し落ち着けた" },
-        normal:{ symbol:"👀", text:"留守中に部屋を歩き回った形跡がある" },
-        sweet:{ symbol:"♪", text:"帰りを待っていたようで、近くへ来た" },
+        fear:{ symbol:"", text:"留守の間、自分の場所で少し落ち着けた" },
+        normal:{ symbol:"", text:"留守中に部屋を歩き回った形跡がある" },
+        sweet:{ symbol:"♡", text:"帰りを待っていたようで、近くへ来た" },
       },
     },
     careTrust: {
@@ -2454,6 +2429,7 @@ function getNeglectPenalty(days) {
 }
 
 function updateHeart(cat, amount, options = {}) {
+  if(amount>0)amount*=cat.trustGainRate??1;
   const rounded = Math.round((cat.heart + amount) * 10) / 10;
   if (amount <= 0) return Math.max(0, rounded);
   const limit = options.ignoreCap ? CONFIG.week.heartCapMax : cat.heartCap;
@@ -2645,7 +2621,7 @@ function reduceGameState(state, action) {
         name,
         nickname:null,
         lifeLog:[],
-        heart:CONFIG.stage1.heartStart,
+        heart:cat.rescueProfile?.heart ?? CONFIG.stage1.heartStart,
         heartCap:CONFIG.stage1.heartCapStart,
         intakeEnv:0,
         status:"intake",
@@ -2657,7 +2633,7 @@ function reduceGameState(state, action) {
         flags:{ ...state.flags, firstIntake:true },
         cats:[resetCat],
         campaign:{ ...state.campaign, phase:"intake", intakeItems:[], intakeCalled:false, intakeFeedback:null },
-        ui:{ ...state.ui, layoutMode:true, layoutTrayOpen:true, layoutFilter:"all", debugIntakeOpen:false, scheduleIntro:false, modal:null, reaction:null, catFocus:null },
+        ui:{ ...state.ui, layoutMode:false, layoutTrayOpen:false, layoutFilter:"all", debugIntakeOpen:false, scheduleIntro:false, modal:null, reaction:null, catFocus:null },
       };
     }
 
@@ -3331,6 +3307,7 @@ function dispatch(action) {
   }
   const previousState = gameState;
   let previousPoint = getCatPoint(previousState);
+  const previousDestination = {...previousPoint};
   const visibleCat = document.querySelector('.cat-object');
   if (visibleCat && (visibleCat._travelAnimation?.playState === 'running' || (action.type === 'FINISH_PLAY' && action.live))) {
     const bounds = visibleCat.parentElement.getBoundingClientRect(), css = getComputedStyle(visibleCat);
@@ -3341,7 +3318,8 @@ function dispatch(action) {
   const nextPoint = getCatPoint(gameState);
   saveGameState(gameState);
   render(gameState);
-  if ((previousPoint.x !== nextPoint.x || previousPoint.y !== nextPoint.y || previousPoint.scale !== nextPoint.scale) && !gameState.ui.holdingCat && !gameState.ui.layoutMode) {
+  const continuingTravel=app.querySelector('.cat-object')?._travelAnimation?.playState==='running'&&previousDestination.x===nextPoint.x&&previousDestination.y===nextPoint.y&&previousDestination.scale===nextPoint.scale;
+  if (!continuingTravel && (previousPoint.x !== nextPoint.x || previousPoint.y !== nextPoint.y || previousPoint.scale !== nextPoint.scale) && !gameState.ui.holdingCat && !gameState.ui.layoutMode) {
     animateCatWalk(previousPoint, nextPoint, nextPoint.response ? 900 : CONFIG.stage1.roamWalkMs);
   }
   if (gameState.ui.reaction && gameState.ui.reaction.id !== previousState.ui.reaction?.id) {
@@ -3374,6 +3352,7 @@ function animateCatWalk(from, to) {
 }
 
 function animateFelineTravel(element, from, to, pace = 1) {
+  element._travelAnimation?.cancel();
   const jumping = from.surface !== to.surface && (from.surface !== "floor" || to.surface !== "floor");
   const rect = element.parentElement.getBoundingClientRect();
   const distance = Math.hypot((to.x-from.x)*rect.width/100,(to.y-from.y)*rect.height/100);
@@ -3519,23 +3498,8 @@ function renderIntakeDebug(state) {
   return `<aside class="intake-debug-panel" aria-label="受け入れ判定の内訳"><div class="intake-debug-head"><strong>安心 ${breakdown.total}</strong><span>必要 ${CONFIG.stage1.campaign.intakeThreshold + 1}</span></div><div class="intake-debug-essential">必需品：${missingLabels.length ? `不足 ${missingLabels.join("・")}` : "ごはん皿・トイレ OK"}</div><div class="intake-debug-row"><span>部屋の基本</span><i>固定</i><b>+${breakdown.base}</b></div>${rows}<div class="intake-debug-result">${result}</div></aside>`;
 }
 
-function renderTown(state) {
-  const tnr = state.areas.a1?.tnrCount || 0;
-  const livingWithCat = getCat(state).status === "raising";
-  return `<section class="campaign-frame" aria-label="街の地図"><header class="campaign-hud"><div class="campaign-place"><span class="place-chip">街</span><strong>ホゴネコ</strong></div><span class="campaign-wallet">${DAY_LABELS[state.week.dayOfWeek]}曜日　💰 ${state.coins.toLocaleString("ja-JP")}</span></header>
-    <main class="town-full-map">
-      <div class="map-node map-stage-4 locked"><span class="node-emoji">⛰️</span><strong>ステージ4</strong><small>まだ行けない</small></div>
-      <div class="map-node map-stage-3 locked"><span class="node-emoji">⚓</span><strong>ステージ3</strong><small>まだ行けない</small></div>
-      <div class="map-node map-stage-2 locked"><span class="node-emoji">🌳</span><strong>ステージ2</strong><small>まだ行けない</small></div>
-      <button class="map-node map-stage-1 ${livingWithCat ? "locked" : ""}" data-action="go-rescue" ${livingWithCat ? "disabled" : ""}><span class="node-emoji">🏘️🐾</span><strong>ステージ1・住宅街</strong><small>${livingWithCat ? "いまは保護生活中" : `目撃情報あり・TNR ${tnr}匹`}</small></button>
-      <button class="map-node map-home ${livingWithCat ? "" : "locked"}" data-action="go-home" ${livingWithCat ? "" : "disabled"}><span class="node-emoji">🏠</span><strong>おうち</strong><small>${livingWithCat ? `${getCallName(getCat(state))}が待っている` : "1匹ぶん空いている"}</small></button>
-      <section class="map-shop-cluster"><strong>買い物エリア</strong><div class="shop-node-row">
-        <button class="shop-node" data-action="open-map-shop" data-shop="super"><span>🛒</span><small>スーパー</small></button>
-        <button class="shop-node" data-action="open-map-shop" data-shop="petshop"><span>🧸</span><small>ペット店</small></button>
-        <button class="shop-node" data-action="open-map-shop" data-shop="clinic"><span>🏥</span><small>病院</small></button>
-      </div></section>
-    </main>${renderDebugQuickbar(state)}</section>`;
-}
+// Installed by game-town.js before the first render.
+let renderTown;
 
 function renderMapShop(state) {
   const shopId = state.campaign.shopId || "super";
@@ -3559,7 +3523,7 @@ function renderField(state) {
   const bait = CONFIG.stage1.foods.map(food => `<button class="bait-card ${state.campaign.bait.includes(food.id) ? "selected" : ""} ${state.inventory[food.id] ? "" : "unavailable"}" data-field-drag="bait" data-food="${food.id}" ${state.inventory[food.id] ? "" : "disabled"}><span>${foodEmoji[food.id]}</span><strong>${food.label}</strong><small>×${state.inventory[food.id] || 0}</small></button>`).join("");
   const trap = state.campaign.trapPlaced ? `<button class="trap ${trapClass}" style="left:${state.campaign.trapPosition.x}%;top:${state.campaign.trapPosition.y}%;bottom:auto" ${ready ? `data-action="open-trap" aria-label="揺れている保護器を確認"` : "disabled"}><span class="trap-bait">${state.campaign.bait.map(id => foodEmoji[id]).join("")}</span></button>` : "";
   const tnrCat = (state.areas.a1?.tnrCount || 0) > 0 ? `<div class="field-tnr-cat" aria-label="以前TNRした猫"><span>◢</span>${renderCatArt({ ...getCat(state), name:"" })}</div>` : "";
-  const body = `<div class="field-scene" data-field-drop="scene"><div class="field-bush"></div><span class="field-eyes">••</span><span class="field-tail"></span><span class="field-pawprints">•　•　 •</span>${tnrCat}<span class="trap-status">${status}</span>${trap}</div>
+  const body = `<div class="field-scene" data-field-drop="scene"><div class="field-bush"></div><span class="field-pawprints">•　•　 •</span>${tnrCat}<span class="trap-status">${status}</span>${trap}</div>
     <section class="field-gear"><div class="field-gear-label">保護器</div><div class="trap-choice"><button class="gear-card ${state.campaign.trapPlaced ? "selected" : ""}" data-field-drag="trap" data-trap="trap_standard"><span>▥</span><strong>標準保護器</strong><small>所持 1</small></button><div class="gear-card locked"><span>？</span><strong>未解放</strong><small>ステージ2</small></div></div>
     <div class="field-gear-label">餌・保護器までスワイプ</div><div class="bait-grid">${bait}</div></section>`;
   return renderCampaignShell(state, "住宅街", body, "");
@@ -3612,21 +3576,16 @@ function renderIntake(state, cat) {
   const callScene = called
     ? `<div class="intake-call-wave">${callName}…</div><div class="intake-emerging-cat">${renderCatArt(cat)}</div>`
     : `${mood.liked.length ? `<span class="intake-ambient-heart ${strongLike ? "strong" : ""}" aria-hidden="true">♥</span>` : ""}${feedback ? `<div class="intake-feedback" role="status">${feedback}</div>` : ""}`;
-  return `<section class="game-frame layout-mode intake-layout" aria-label="${cat.name}を迎えるおうち">
+  return `<section class="game-frame ${state.ui.layoutMode ? 'layout-mode' : ''} intake-layout" aria-label="${cat.name}を迎えるおうち">
     <header class="hud"><div class="hud-main"><span class="place-chip">おうち</span></div><div class="hud-side"><strong>${DAY_LABELS[state.week.dayOfWeek]}曜日</strong><span>💰 ${state.coins.toLocaleString("ja-JP")}</span></div></header>
-    <section class="stage"><div class="room-world" style="width:${worldWidth * 100}%;left:-${state.ui.roomPan}%" data-room-world><div class="wall"></div><div class="floor"></div><div class="curtain left"></div><div class="curtain right"></div><div class="layout-zones" aria-hidden="true"><div class="layout-zone wall-zone"><span>壁に置くもの</span></div><div class="layout-zone floor-zone"><span>床に置くもの</span></div></div>${renderFixedWindow(state, CONFIG.stage1.clueCycle[0])}${getPlaced(room).map(placed => renderPlacedItem(placed, state, CONFIG.stage1.clueCycle[0])).join("")}<div class="room-carrier ${called ? "called" : ""} ${mood.disliked.length ? "uneasy" : ""}" aria-label="奥に置いた猫のキャリー"></div>${callScene}</div>
-      ${called ? "" : state.ui.layoutTrayOpen ? renderLayoutPalette(state) : `<button class="layout-tray-toggle" data-action="toggle-layout-tray">家具</button>`}${renderDebugQuickbar(state, true)}${state.ui.debugIntakeOpen ? renderIntakeDebug(state) : ""}</section>
+    <section class="stage"><div class="room-world" style="width:${worldWidth * 100}%;left:-${state.ui.roomPan}%" data-room-world><div class="wall"></div><div class="floor"></div><div class="curtain left"></div><div class="curtain right"></div>${state.ui.layoutMode ? '<div class="layout-zones" aria-hidden="true"><div class="layout-zone wall-zone"><span>壁に置くもの</span></div><div class="layout-zone floor-zone"><span>床に置くもの</span></div></div>' : ''}${renderFixedWindow(state, CONFIG.stage1.clueCycle[0])}${getPlaced(room).map(placed => renderPlacedItem(placed, state, CONFIG.stage1.clueCycle[0])).join("")}<div class="room-carrier ${called ? "called" : ""} ${mood.disliked.length ? "uneasy" : ""}" aria-label="奥に置いた猫のキャリー"></div>${callScene}</div>
+      ${called ? "" : state.ui.layoutMode && state.ui.layoutTrayOpen ? renderLayoutPalette(state) : `<button class="layout-tray-toggle" data-action="toggle-layout">${state.ui.layoutMode ? '完了' : '模様替え'}</button>`}${renderDebugQuickbar(state, true)}${state.ui.debugIntakeOpen ? renderIntakeDebug(state) : ""}</section>
     <footer class="intake-footer">${called ? `${callName}が、キャリーから出てくる` : `<button class="intake-footer-call" data-action="call-intake-cat">「${callName}」と呼ぶ</button>`}</footer>
   </section>`;
 }
 
 function renderGraduation(state, cat) {
-  const heartStage = getHeartStage(cat.heart);
-  const ready = isGraduationReady(state);
-  const body = `<div class="graduation-stage"><div class="graduation-cat">${renderCatArt(cat)}</div></div>
-    <div class="readiness-list"><div class="readiness-row"><span>♡</span><span><strong>こころ</strong><small>${heartStage.label}・手帳のハートで確認</small></span><em>${cat.heart >= 60 ? "ご縁を探せる" : "まだ人がこわい"}</em></div>
-      <div class="readiness-row"><span>⚖️</span><span><strong>からだ</strong><small>${cat.body.weight.toLocaleString("ja-JP")}g・健康状態</small></span><em>${ready ? "準備できた" : "もう少し"}</em></div></div>`;
-  return renderCampaignShell(state, "譲渡会", body, `<button class="campaign-button" data-action="send-event" ${ready ? "" : "disabled"}>譲渡会へ送り出す</button><button class="campaign-button secondary" data-action="postpone-event">もう1日いっしょに過ごす</button>`);
+  return renderCampaignShell(state, "譲渡会", adoptionScene(state), "");
 }
 
 function renderResult(state, cat) {
@@ -3654,6 +3613,7 @@ function renderCampaign(state) {
 }
 
 function render(state) {
+  fitGameViewport();
   if (titleScreenOpen) { document.querySelector("#app").innerHTML = renderTitle(state); return; }
   const cat = getCat(state);
   const room = getRoom(state);
@@ -4141,6 +4101,33 @@ function renderOuting() {
 
 const app = document.querySelector("#app");
 
+// Use the actual visible host, not only viewport units: embedded previews can
+// clip a taller layout viewport. All scenes inherit this same playing area.
+function fitGameViewport() {
+  const root = document.querySelector('#app');
+  if (!root) return;
+  const rect = root.getBoundingClientRect(), viewport = window.visualViewport;
+  let bottom = Math.min(innerHeight, viewport ? viewport.offsetTop + viewport.height : innerHeight);
+  for (let parent = root.parentElement; parent; parent = parent.parentElement) {
+    gameViewportObserver.observe(parent);
+    if (/(hidden|clip|auto|scroll)/.test(getComputedStyle(parent).overflowY)) {
+      const box = parent.getBoundingClientRect();
+      const scale = parent.offsetHeight ? box.height / parent.offsetHeight : 1;
+      bottom = Math.min(bottom, box.top + (parent.clientTop + parent.clientHeight) * scale);
+    }
+  }
+  const scale = root.offsetHeight ? rect.height / root.offsetHeight : 1;
+  const height = Math.max(0, (bottom - rect.top) / (scale || 1));
+  const limit = height.toFixed(2) + 'px';
+  if (root.style.maxHeight !== limit) root.style.maxHeight = limit;
+}
+const gameViewportObserver = new ResizeObserver(fitGameViewport);
+gameViewportObserver.observe(app);
+gameViewportObserver.observe(document.body);
+window.addEventListener('resize', fitGameViewport);
+window.visualViewport?.addEventListener('resize', fitGameViewport);
+window.visualViewport?.addEventListener('scroll', fitGameViewport);
+
 app.addEventListener("click", event => {
   if (Date.now() < suppressClickUntil) return;
   const target = event.target.closest("[data-action]");
@@ -4253,7 +4240,8 @@ app.addEventListener("pointerdown", event => {
     document.body.appendChild(ghost);
     const dropTarget = kind === "trap" ? app.querySelector("[data-field-drop='scene']") : app.querySelector(".trap");
     dropTarget?.classList.add("drop-ready");
-    fieldDragDraft = { kind, ghost, dropTarget, foodId:fieldSource.dataset.food, trapId:fieldSource.dataset.trap };
+    fieldDragDraft = { kind, ghost, dropTarget, source:fieldSource, foodId:fieldSource.dataset.food, trapId:fieldSource.dataset.trap };
+    if(kind==='trap'&&typeof beginEncounterDrag==='function')beginEncounterDrag(fieldDragDraft,event);
     fieldSource.setPointerCapture?.(event.pointerId);
     return;
   }
@@ -4336,8 +4324,8 @@ app.addEventListener("pointerdown", event => {
 app.addEventListener("pointermove", event => {
   if (fieldDragDraft) {
     event.preventDefault();
-    fieldDragDraft.ghost.style.left = `${event.clientX}px`;
-    fieldDragDraft.ghost.style.top = `${event.clientY}px`;
+    if(fieldDragDraft.bounds)moveEncounterDrag(fieldDragDraft,event);
+    else {fieldDragDraft.ghost.style.left = `${event.clientX}px`;fieldDragDraft.ghost.style.top = `${event.clientY}px`;}
     return;
   }
   if (debugHoldTimer && debugHoldDraft && Math.hypot(event.clientX - debugHoldDraft.x, event.clientY - debugHoldDraft.y) > 10) {
@@ -4382,13 +4370,14 @@ app.addEventListener("pointerup", event => {
   if (fieldDragDraft) {
     const draft = fieldDragDraft;
     fieldDragDraft = null;
-    const dropRect = draft.dropTarget?.getBoundingClientRect();
+    const dropRect = draft.bounds||draft.dropTarget?.getBoundingClientRect();
     const valid = Boolean(dropRect && event.clientX >= dropRect.left && event.clientX <= dropRect.right && event.clientY >= dropRect.top && event.clientY <= dropRect.bottom);
     draft.dropTarget?.classList.remove("drop-ready");
     draft.ghost.remove();
+    draft.source?.classList.remove('encounter-drag-source');draft.guide?.remove();
     if (valid && draft.kind === "trap") {
-      const sceneRect = dropRect;
-      dispatch({ type:"FIELD_PLACE_TRAP", trapId:draft.trapId, x:Math.max(20, Math.min(80, ((event.clientX - sceneRect.left) / sceneRect.width) * 100)), y:Math.max(55, Math.min(78, ((event.clientY - sceneRect.top) / sceneRect.height) * 100)) });
+      const sceneRect = draft.dropTarget.getBoundingClientRect();
+      dispatch({ type:"FIELD_PLACE_TRAP", trapId:draft.trapId, x:((event.clientX-sceneRect.left)/sceneRect.width)*100, y:((event.clientY-sceneRect.top)/sceneRect.height)*100 });
     }
     if (valid && draft.kind === "bait") dispatch({ type:"FIELD_ADD_BAIT", foodId:draft.foodId, token:Date.now() });
     return;
@@ -4432,6 +4421,7 @@ app.addEventListener("pointercancel", () => {
   if (fieldDragDraft) {
     fieldDragDraft.dropTarget?.classList.remove("drop-ready");
     fieldDragDraft.ghost?.remove();
+    fieldDragDraft.source?.classList.remove('encounter-drag-source');fieldDragDraft.guide?.remove();
   }
   fieldDragDraft = null;
   if (commandDraft) clearCommandDrag(commandDraft, false);
@@ -5049,7 +5039,7 @@ renderField=function(state){
   const c=state.campaign,trap=FIELD_TRAPS.find(t=>t.id===c.fieldTrap)||FIELD_TRAPS[0],food=getFood(c.fieldFood)||getFood("food_dry");
   const status=!c.trapPlaced?"保護器を草地へ":!c.bait.length?"餌を保護器へ":c.trapReady?"ガタガタ…":c.trapWaiting?"……":"準備ができたら、少し離れよう";
   const fieldTrap=c.trapPlaced?`<button class="trap ${c.trapReady?"ready":""}" style="left:${c.trapPosition.x}%;top:${c.trapPosition.y}%;bottom:auto" ${c.trapReady?'data-action="open-trap" aria-label="保護器を確認"':"disabled"}><span class="trap-bait">${c.bait.map(id=>getFood(id)?.emoji||"◉").join("")}</span></button>`:"";
-  const body=`<div class="field-scene" data-field-drop="scene"><div class="field-bush"></div><span class="field-eyes">••</span><span class="field-tail"></span><span class="field-pawprints">•　•　 •</span>${state.areas.a1?.tnrCount?`<div class="field-tnr-cat">${renderCatArt(getCat(state))}</div>`:""}<span class="trap-status">${status}</span>${fieldTrap}</div>
+  const body=`<div class="field-scene" data-field-drop="scene"><div class="field-bush"></div><span class="field-pawprints">•　•　 •</span>${state.areas.a1?.tnrCount?`<div class="field-tnr-cat">${renderCatArt(getCat(state))}</div>`:""}<span class="trap-status">${status}</span>${fieldTrap}</div>
   <section class="field-gear field-kit"><div><button class="gear-card" data-field-drag="trap" data-trap="${trap.id}" ${c.trapWaiting?"disabled":""}><span>${trap.emoji}</span><strong>${trap.label}</strong><small>草地へ運ぶ</small></button><button class="field-switch" data-action="field-menu" data-kind="trap" ${c.trapWaiting?"disabled":""}>保護器を切り替え ▾</button></div><div><button class="gear-card" data-field-drag="bait" data-food="${food.id}" ${c.trapWaiting||!c.trapPlaced||state.inventory[food.id]<1||c.bait.includes(food.id)?"disabled":""}><span>${food.emoji}</span><strong>${food.label}</strong><small>保護器へ運ぶ · ×${state.inventory[food.id]||0}</small></button><button class="field-switch" data-action="field-menu" data-kind="food" ${c.trapWaiting?"disabled":""}>餌を切り替え ▾</button></div></section>
   <div class="prepared-bait">${c.bait.map(id=>`<button data-action="remove-field-bait" data-id="${id}" ${c.trapWaiting?"disabled":""}>${getFood(id)?.emoji} ${c.trapWaiting?"":"×"}</button>`).join("")}</div>
   ${!c.trapWaiting?`<button class="campaign-button" data-action="finish-field-prep" ${!c.trapPlaced||!c.bait.length?"disabled":""}>準備おわり・少し離れる</button>`:""}`;
@@ -5067,14 +5057,14 @@ getScreenGuide=function(state){
 const inventoryBeforeV016=renderInventory;
 renderInventory=function(state){
   if(state.ui.inventoryTab==="touch")return renderTouchTools(state);
-  let html=inventoryBeforeV016({...state,inventory:{...state.inventory,water_refill:1}});
+  let html=inventoryBeforeV016(state);
   // The play grid contains toys only. Contact actions have their own slot/menu.
   html=html.replace(/<div class="grid-cell[^>]*data-action="contact-action"[\s\S]*?<\/div>/g,"");
   html=html.replace('<nav class="inventory-tabs" aria-label="かばんの分類">','<nav class="inventory-tabs" aria-label="かばんの分類"><button class="inventory-tab" data-action="inventory-tab" data-tab="touch">さわる</button>');
   return html.replace(/(<span class="stock">)×1(<\/span><span class="big-emoji">💧)/,'$1補充可$2');
 };
 function renderTouchTools(state){
-  return `<div class="modal-layer menu-modal" role="dialog" aria-modal="true" aria-label="さわる方法を選ぶ"><section class="menu-sheet"><header class="sheet-head"><small>選んだら、右の「さわる」をタップして実行</small><h2>さわり方</h2></header><div class="inventory-grid">${TOUCH_TOOLS.map(t=>`<button class="grid-cell ${state.ui.touchMode===t.id?"equipped":""}" data-action="contact-action" data-contact="${t.id}" ${t.stock&&!state.inventory[t.stock]?"disabled":""}><span class="big-emoji">${t.emoji}</span><strong>${t.label}</strong><small>${t.stock?`残り${state.inventory[t.stock]||0}回`:t.id==="pickup"?"気分によって逃げる":"タップでなでる"}</small></button>`).join("")}</div><button class="field-switch" data-action="close-modal">とじる</button></section></div>`;
+  return `<div class="modal-layer menu-modal" role="dialog" aria-modal="true" aria-label="さわる道具を選ぶ"><section class="menu-sheet"><header class="sheet-head"><small>道具を選んで、ネコを直接タップ</small><h2>さわる道具</h2></header><div class="inventory-grid">${TOUCH_TOOLS.map(t=>`<button class="grid-cell ${state.ui.touchMode===t.id?"equipped":""}" data-action="contact-action" data-contact="${t.id}" ${t.stock&&!state.inventory[t.stock]?"disabled":""}><span class="big-emoji">${t.emoji}</span><strong>${t.label}</strong><small>${t.stock?`残り${state.inventory[t.stock]||0}回`:"タップでなでる"}</small></button>`).join("")}</div><button class="field-switch" data-action="close-modal">とじる</button></section></div>`;
 }
 function renderNicknameEdit(state){
   const name=getCallName(getCat(state)).replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;');
@@ -5136,27 +5126,20 @@ app.addEventListener('click',event=>{
   if(action==='call-cat')dispatch({type:'EXECUTE_CONTACT',contact:'call'});
   if(action==='touch-now'&&(event.detail===0||Date.now()>=suppressTouchClickUntil))dispatch({type:'TOUCH_NOW',point:getVisibleTouchPoint()});
 });
-let callHold=null,catStroke=null,suppressTouchClickUntil=0;
+let catStroke=null,suppressTouchClickUntil=0;
 app.addEventListener('pointerdown',event=>{
   if(event.button!==0)return;
   const quickAction=event.target.closest('[data-action="call-cat"],[data-action="touch-now"]');
-  if(quickAction){
-    if(callHold||quickAction.disabled)return;
-    event.preventDefault();event.stopImmediatePropagation();
-    callHold={x:event.clientX,y:event.clientY,id:event.pointerId,long:false,touch:quickAction.dataset.action==='touch-now'};
-    callHold.timer=setTimeout(()=>{if(callHold){callHold.long=true;if(callHold.touch){suppressTouchClickUntil=Date.now()+500;dispatch({type:'OPEN_SLOT_MENU',tab:'touch'});}else{suppressClickUntil=Date.now()+500;dispatch({type:'OPEN_NICKNAME'});}}},600);return;
-  }
+  if(quickAction)return;
   if(event.target.closest('.cat-object')&&!gameState.ui.layoutMode&&!gameState.ui.modal&&!gameState.ui.careAnimation&&gameState.campaign.phase==='room')catStroke={x:event.clientX,y:event.clientY,id:event.pointerId,moved:false};
 },true);
 window.addEventListener('pointermove',event=>{
-  if(callHold&&Math.hypot(event.clientX-callHold.x,event.clientY-callHold.y)>10){clearTimeout(callHold.timer);callHold.cancelled=true;}
   if(catStroke&&catStroke.id===event.pointerId&&Math.hypot(event.clientX-catStroke.x,event.clientY-catStroke.y)>9){catStroke.moved=true;event.preventDefault();}
 },{passive:false});
 window.addEventListener('pointerup',event=>{
-  if(callHold&&callHold.id===event.pointerId){const hold=callHold;callHold=null;clearTimeout(hold.timer);event.preventDefault();if(hold.touch)suppressTouchClickUntil=Date.now()+400;else suppressClickUntil=Date.now()+400;if(!hold.long&&!hold.cancelled)dispatch(hold.touch?{type:'TOUCH_NOW',point:getVisibleTouchPoint()}:{type:'EXECUTE_CONTACT',contact:'call'});}
   if(catStroke&&catStroke.id===event.pointerId){const stroke=catStroke;catStroke=null;if(stroke.moved){suppressClickUntil=Date.now()+400;dispatch({type:'TAP_CAT'});}}
 },true);
-window.addEventListener('pointercancel',()=>{if(callHold)clearTimeout(callHold.timer);callHold=null;catStroke=null;});
+window.addEventListener('pointercancel',()=>{catStroke=null;});
 triggerAutoEvent=function(){
   if(titleScreenOpen||document.hidden||getCat(gameState).status!=='raising'||commandDraft||playDraft||gameState.ui.careAnimation||document.activeElement?.matches('input'))return;
   dispatch({type:'LIFE_TICK',ticks:1});
@@ -5167,6 +5150,7 @@ triggerAutoEvent=function(){
 };
 
 </script>
+<script src="assets/book-materials.js"></script>
 <script src="assets/cat-svg.js"></script>
 <script src="game-v017.js"></script>
 <script src="assets/storybook-art.js"></script>
@@ -5189,6 +5173,25 @@ triggerAutoEvent=function(){
 <script src="game-v035.js"></script>
 <script src="game-v036.js"></script>
 <script src="game-v037.js"></script>
+<script src="assets/room-materials.js"></script>
+<script src="game-room-materials.js"></script>
+<script src="assets/plant-materials.js"></script>
+<script src="game-plant-materials.js"></script>
+<script src="game-meeting.js"></script>
+<script src="game-town.js"></script>
+<script src="game-encounter.js"></script>
+<script src="game-shop.js"></script>
+<script src="game-clinic.js"></script>
+<link rel="stylesheet" href="assets/adoption-scene.css">
+<script src="assets/adoption-scene.js"></script>
+<script src="game-adoption.js"></script>
+<script src="game-tutorial.js"></script>
+<link rel="stylesheet" href="assets/introduction.css">
+<script src="game-introduction.js"></script>
+<link rel="stylesheet" href="assets/capture.css">
+<script src="game-capture.js"></script>
+<link rel="stylesheet" href="assets/first-activity.css">
+<script src="game-first-activity.js"></script>
 <script>
 // Render only after every module has installed its current rules and artwork.
 document.addEventListener('DOMContentLoaded', () => render(gameState), {once:true});

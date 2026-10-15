@@ -18,7 +18,7 @@ reduceGameState=function(state,action){
  let next=beforeAreaReducer(state,action);
  if(action.type==='OPEN_TRAP'&&state.campaign.phase==='field'&&next.campaign.phase==='trapInspect'){
   const area=state.campaign.area||'a1',cat=getCat(next);
-  next={...next,cats:[{...cat,rescueArea:area,...(area==='a2'?{age:'kitten',estimatedAgeMonths:4,phenotype:{...cat.phenotype,age:'kitten'},body:{...cat.body,weight:680}}:{})}]};
+  next={...next,cats:[{...cat,rescueArea:area}]};
  }
  if(action.type==='SEND_EVENT'&&next.album.length>state.album.length){
   const area=getCat(state).rescueArea||state.campaign.area||'a1';
@@ -28,13 +28,7 @@ reduceGameState=function(state,action){
  if(action.type==='NEXT_RESCUE'&&next!==state)next={...next,cats:next.cats.map(cat=>({...cat,rescueArea:null}))};
  return next;
 };
-const beforeAreaTown=renderTown;
-renderTown=function(state){
- const t=document.createElement('template');t.innerHTML=beforeAreaTown(state);
- const field=t.content.querySelector('.book-map-hotspot.field');if(field){field.dataset.action='choose-area';field.dataset.area='a1';field.disabled=getCat(state).status!=='candidate';}
- const park=t.content.querySelector('.book-map-hotspot.park');if(park){const unlocked=parkUnlocked(state),button=document.createElement('button');button.className=park.className;button.dataset.action='choose-area';button.dataset.area='a2';button.disabled=!unlocked||getCat(state).status!=='candidate';button.innerHTML=`<strong>公園</strong><small>${unlocked?'子猫のケア':'1匹を見送ると解放'}</small>`;park.replaceWith(button);}
- return t.innerHTML;
-};
+// Town rendering is owned by game-town.js.
 const beforeAreaField=renderField;
 renderField=function(state){const area=state.campaign.area||'a1';return beforeAreaField({...state,areas:{...state.areas,a1:state.areas[area]||{tnrCount:0}}}).replace('>空き地</span>',`>${area==='a2'?'公園':'空き地'}</span>`);};
 const beforeAreaResult=renderResult;

@@ -26,7 +26,7 @@ reduceGameState=function(state,action){
 };
 updateLiveHeartMeter=function(draft){const cat=getCat(gameState);beginBond(cat,cat.heart,Math.round((cat.heart+draft.heartEarned)*10)/10,true);};
 // Keep personality cues, but stop legacy heart bursts and fixed meters.
-spawnLiveFeedback=function(cat,affinity,big=false,moodOnly=false){if(moodOnly){feelSpawn(cat,affinity,false,true);showFeel(cat,affinity);}};
+spawnLiveFeedback=function(cat,affinity,big=false,moodOnly=false){if(moodOnly){showFeel(cat,affinity);if(['superMatch','match','superDislike'].includes(affinity)){feelSpawn(cat,affinity,false,true);const cue=cat.closest('.stage')?.querySelector('.live-heart:last-child');if(cue)cue.textContent=affinity==='superDislike'?'💢':'♡';}}};
 const bondRender=render;
 render=function(state){bondRender(state);app.querySelectorAll('.live-heart-meter,.heart-closeup,.play-heart-burst').forEach(n=>n.remove());};
 function bondNode(cls,text){const n=document.createElement('span');n.className=cls;n.textContent=text;return n;}

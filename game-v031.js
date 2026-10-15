@@ -6,7 +6,7 @@ const fitStyle=document.createElement('style');fitStyle.textContent=`
 #app:has(.modal-layer,.release-overlay) .debug-quickbar,#app:has(.modal-layer,.release-overlay) .screen-guide,.campaign-frame:has(.clinic-sequence,.naming-scene) .screen-guide,.campaign-frame:has(.clinic-sequence,.naming-scene) .debug-quickbar{display:none}
 .notebook-overview .nickname-card{display:none}
 .notebook-overview .notebook-scroll{grid-template-rows:auto auto auto minmax(60px,1fr)}.notebook-overview .identity-chips span{font-size:10px}.notebook-overview .cat-days,.notebook-overview .heart-visual small,.notebook-overview .body-chart-head small,.notebook-overview .photo-section h3{font-size:10px}.notebook-overview .weight-canvas{height:70px}.notebook-overview .body-chart svg{height:56px}.notebook-overview .chart-days{font-size:9px}.notebook-overview .photo-strip{height:60px}.notebook-overview .mini-photo{height:58px}
-.campaign-scroll>.field-scene,.campaign-scroll>.capture-inspect,.campaign-scroll>.graduation-stage,.campaign-scroll>.result-scene{flex:1;min-height:100px;height:auto!important;margin:0}
+.campaign-scroll>.field-scene,.campaign-scroll>.capture-inspect,.campaign-scroll>.result-scene{flex:1;min-height:100px;height:auto!important;margin:0}
 .campaign-scroll>.clinic-sequence,.campaign-scroll>.naming-scene{flex:1;min-height:0;height:100%;display:flex;flex-direction:column;justify-content:center;padding:0;gap:14px}
 .storybook .clinic-sequence>.exam-room{height:100%;min-height:0;aspect-ratio:auto;flex:1;background-size:contain!important;background-repeat:no-repeat}
 .clinic-summary-card{width:100%;height:100%;min-height:0;display:flex;flex-direction:column}
@@ -19,17 +19,14 @@ const fitStyle=document.createElement('style');fitStyle.textContent=`
 .campaign-scroll>.result-copy{flex:none}.result-copy h1{font-size:22px;margin:4px 0}.result-copy p{margin:8px 0;line-height:1.7}
 .campaign-scroll>.shop-sheet{display:flex;flex-direction:column;flex:1;min-height:0;gap:10px}.shop-sheet>.book-shop-scene{height:clamp(80px,18dvh,160px)!important;flex:none}.shop-sheet>.shop-products{overflow-y:auto;min-height:0;flex:1;touch-action:pan-y;align-content:start;padding:3px}
 .release-shop-heading h1{margin:0;font-size:21px}.shop-sheet>.shop-notice{margin:0}
-.surgery-sheet{min-height:0;margin:auto 0;gap:8px}.surgery-room{height:clamp(70px,18dvh,150px)}
 .schedule-panel{display:flex;flex-direction:column;min-height:0}.schedule-scroll{flex:1;min-height:0;padding:4px 10px;overflow-y:auto}.schedule-panel>.schedule-actions{margin:0;padding:8px 10px 12px;flex:none}
 .schedule-week{flex:none;display:grid;gap:4px;grid-template-rows:repeat(7,minmax(0,1fr))}.schedule-week .timeline-card{padding:4px 8px;min-height:0;display:flex;flex-direction:row;align-items:center;gap:8px}.schedule-week .timeline-card small{flex:0 0 53px;font-size:10px}.schedule-week .timeline-card strong{font-size:12px;margin:0}.schedule-week .timeline-card span{display:none}.schedule-week .timeline-card::before{top:50%;transform:translateY(-50%)}
 .schedule-week .timeline-card.quiet{display:flex}.schedule-week .timeline-card.quiet small{font-size:10px}
 .schedule-week .timeline-card:not(.quiet){display:grid;grid-template-columns:70px minmax(0,1fr);gap:0 8px}.schedule-week .timeline-card:not(.quiet) small{grid-row:span 2}.schedule-week .timeline-card:not(.quiet) span{display:block;font-size:10px;line-height:1.2;margin:0}
-.surgery-cat{height:100%;width:100px;bottom:0}.surgery-cat .game-cat-svg{height:100%!important}
 @media(max-height:650px){
  .notebook-overview .cat-days{display:none}.notebook-overview .weight-canvas{height:56px}.notebook-overview .body-chart svg{height:42px}.notebook-overview .photo-strip{height:44px}.notebook-overview .mini-photo{height:42px}
  .campaign-scroll{padding:12px;gap:10px}.campaign-actions{padding:8px 12px 12px;gap:8px}.campaign-button{min-height:44px;font-size:13px}
  .field-kit{gap:8px;padding:0}.field-kit .gear-card{min-height:60px;padding:6px}.field-kit .gear-card>span{font-size:24px}.field-kit .gear-card small{display:none}.field-kit .field-switch{min-height:36px;margin-top:3px}
- .surgery-sheet{gap:6px}.surgery-room{height:70px}.surgery-check{padding:5px 0}.surgery-sheet h1{margin:0;font-size:18px}.surgery-sheet .medical-footnote{display:none}
  .naming-scene{gap:10px!important}.naming-question h1{font-size:20px}.result-copy h1{font-size:20px}.result-copy p{font-size:12px}
  .wallet-sheet>p:not(.shop-notice){display:none}.wallet-sheet .ad-preview{padding:10px}.wallet-sheet .ad-preview>span{font-size:24px}
  .schedule-panel .sheet-head{padding:8px 12px}.schedule-panel .sheet-head>small{display:none}.schedule-panel .sheet-head h2{margin:0;font-size:18px}

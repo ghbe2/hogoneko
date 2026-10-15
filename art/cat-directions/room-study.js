@@ -30,6 +30,8 @@ function updateScenery(){
  const leaves=season==='winter'?'':`<path d="M147 229Q145 193 170 190Q177 216 147 229M128 259Q100 244 103 221Q132 222 128 259M151 203Q131 180 143 165Q166 179 151 203" fill="${s.leaf}"/>`;
  const details={spring:`<g fill="${s.accent}"><path d="M138 185Q125 176 136 171Q139 159 146 170Q159 172 150 181Q149 193 138 185Z M164 215Q151 209 160 201Q163 191 171 201Q183 202 176 211Q175 224 164 215Z"/><ellipse cx="212" cy="280" rx="5" ry="3"/></g>`,summer:`<path d="M193 252Q189 230 204 222Q223 226 216 243Q232 230 241 244Q240 260 217 263Z" fill="${s.leaf}"/><path d="M111 129Q122 117 135 127Q146 121 153 133L110 136Z" fill="#e4e8d8"/>`,autumn:`<g fill="${s.accent}"><path d="M164 194L176 201 173 219 160 212Z M177 260Q195 262 185 275Q174 275 177 260Z M124 290Q142 281 143 294Q132 303 124 290Z"/></g>`,winter:`<g fill="${s.accent}"><path d="M101 228Q106 218 113 227L125 247Q109 242 101 228M137 179Q138 168 145 169L153 181Z"/><circle cx="187" cy="157" r="3"/><circle cx="274" cy="220" r="3"/><circle cx="225" cy="242" r="2"/><circle cx="119" cy="146" r="2"/></g>`}[season];
  document.querySelector('#outside').innerHTML=`<path fill="${t.sky}" d="M90 80H310V320H90Z"/>${celestial}<path fill="${s.back}" d="M86 263Q145 233 192 261Q243 234 313 250V325H86Z"/><path fill="${s.front}" d="M93 294Q142 263 208 288T310 279V326H93Z"/>${branches}${leaves}${details}`;
+ const outside=document.querySelector('#outside');
+ outside.innerHTML=new DOMParser().parseFromString(BookMaterials.decorate(`<svg xmlns="http://www.w3.org/2000/svg">${outside.innerHTML}</svg>`),'image/svg+xml').documentElement.innerHTML;
  document.querySelector('#closed-curtains').style.display=time==='night'?'':'none';
  document.querySelector('#open-curtains').style.display=time==='night'?'none':'';
  room.classList.toggle('night',time==='night');
@@ -39,3 +41,6 @@ document.querySelector('#season').onchange=updateScenery;
 document.querySelector('#daytime').onchange=updateScenery;
 document.querySelector('#daytime option[value="night"]').textContent='夜・カーテンを閉める';
 updateScenery();
+// Same material artwork as the game; retain the root and its pan handlers.
+const finishedRoom=new DOMParser().parseFromString(RoomMaterials.decorate(new XMLSerializer().serializeToString(room)),'image/svg+xml').documentElement;
+room.innerHTML=finishedRoom.innerHTML;

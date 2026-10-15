@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="450" height="2300" viewBox="0 0 450 2300" role="img" aria-labelledby="title desc">
+<title id="title">ホゴネコ・上へ広がる街</title><desc id="desc">下の生活の街から、空き地、公園、路地裏、山へと一本の道でつながる縦スクロール型のマップ案。</desc>
+<defs>
+ <style>text{font-family:'Yu Gothic',sans-serif;fill:#66553f;text-anchor:middle}.name{font-size:17px;font-weight:600}.sub{font-size:12px;fill:#7f8067}.tag{fill:#fff8e8;stroke:#d8c6a2;stroke-width:1}.road{fill:none;stroke:#dfc69b;stroke-width:36;stroke-linecap:round;stroke-linejoin:round}.window{fill:#abc9c9;stroke:#f8eed6;stroke-width:4}</style>
+ <g id="tree"><path d="M0 0V-57M0-30l-15-12M0-20l16-12" stroke="#8b7450" stroke-width="6" fill="none" stroke-linecap="round"/><path fill="#91a97b" d="M-25-32Q-45-56-22-72Q-24-96 0-98Q30-99 28-72Q48-48 24-31Q0-21-25-32"/><path d="M0-26v-43m0 19l-13-12m13 23l14-11" stroke="#7a9068" stroke-width="3" fill="none"/></g>
+ <g id="pine"><path stroke="#8c7954" stroke-width="6" d="M0 0v-58"/><path fill="#7f986e" d="M0-107L-27-62H-17L-36-24H36L17-62H27Z"/></g>
+ <g id="bush"><ellipse rx="28" ry="15" fill="#b0bf8b"/><circle cx="-10" cy="-5" r="4" fill="#e3b5a3"/><circle cx="-4" cy="0" r="4" fill="#e3b5a3"/></g>
+ <g id="paw" fill="#806849"><ellipse cy="5" rx="9" ry="7"/><ellipse cx="-11" cy="-5" rx="4" ry="5"/><ellipse cx="-4" cy="-12" rx="4" ry="5"/><ellipse cx="6" cy="-11" rx="4" ry="5"/><ellipse cx="13" cy="-3" rx="4" ry="5"/></g>
+ <g id="label"><rect class="tag" x="-70" y="-18" width="140" height="38" rx="14"/></g>
+</defs>
+<path fill="#c2cbaa" d="M0 0h450v2300H0z"/>
+<!-- Landscape bands are broad, overlapping organic shapes, not cards. -->
+<path fill="#b1c09c" d="M0 0h450v455Q300 510 177 440T0 481Z"/>
+<path fill="#d1cdb7" d="M0 521Q130 490 278 541T450 514v1110H0Z"/>
+<!-- Continuous town blocks and paved verges connect the rescue places. -->
+<path d="M15 847H180M301 879H438M12 1274H159M291 1315H438" stroke="#e6ddc4" stroke-width="18" fill="none"/>
+<!-- Keep the explanation areas clear of background buildings. -->
+<path fill="#ccd1b3" d="M0 1650Q166 1600 307 1657T450 1644v656H0Z"/>
+<!-- Single readable route: town → vacant lot → park → alley → mountain. -->
+<path class="road" d="M218 2270L218 2170Q202 2030 218 1890T211 1707Q218 1624 280 1560T227 1402Q117 1321 128 1222T244 1127Q322 1080 279 989T181 820Q161 736 216 660T277 496Q276 417 218 354T237 210"/>
+<path fill="none" stroke="#ece0b9" stroke-width="5" stroke-linecap="round" stroke-dasharray="3 27" d="M218 1666Q224 1612 277 1553M136 1290q-24-71 7-113M224 924q-44-47-43-95M276 497q1-62-40-107"/>
+<!-- 04 Mountain: the last destination, generous summit silhouette. -->
+
+<path fill="#91a58a" d="M29 320L135 120L205 241L287 88L429 320Z"/>
+<path fill="#748f79" d="M132 320L287 88L429 320Z"/>
+<path fill="#e5e6cc" d="M244 153L287 88L329 158L299 141L281 156L268 143Z"/>
+<path fill="#d8dfbd" d="M110 169L135 120L166 174L143 165L133 174L124 162Z"/>
+<path d="M221 326l39-40-11-30 42-33-9-31" fill="none" stroke="#ddc79c" stroke-width="13" stroke-linecap="round"/>
+<use href="#pine" transform="translate(67 364)"/><use href="#pine" transform="translate(361 366) scale(1.1)"/><use href="#pine" transform="translate(397 402) scale(.7)"/>
+
+<use href="#bush" transform="translate(131 451)"/><use href="#bush" transform="translate(340 494)"/>
+<!-- 03 Alley: two rows of buildings enclose a visible narrow passage. -->
+<g transform="translate(-10 224) scale(.6)">
+<path fill="#b4ad94" d="M181 578h91v212h-91z"/><path fill="#ddc7a1" d="M210 578h30l32 212h-91Z"/>
+<path fill="#c4b99d" d="M51 564h131v189H51z"/><path fill="#dcd0b0" d="M272 555h125v209H272z"/>
+<path fill="#958f76" d="M44 553h145v19H44zM264 544h140v19H264z"/>
+<path class="window" d="M71 594h34v40H71zM127 594h34v40h-34zM291 580h34v43h-34zM346 580h32v43h-32zM72 666h33v37H72zM346 665h32v40h-32z"/>
+<path d="M173 579v132h-23M277 574v173h27" stroke="#9b957e" stroke-width="6" fill="none"/>
+<rect x="140" y="717" width="34" height="39" rx="5" fill="#8b9c81"/><path d="M135 717h43" stroke="#6e826d" stroke-width="5"/>
+<path fill="#af9064" d="M279 722h36v37h-36z"/><path stroke="#d8bb87" stroke-width="3" d="M279 722l36 37m0-37l-36 37"/>
+<path fill="#77755e" d="M223 757l-6-14 11 4 10-6-1 17Z"/>
+<!-- Air conditioner and back door distinguish this from a residential entrance. -->
+<rect x="57" y="705" width="47" height="28" rx="3" fill="#e4ddc9" stroke="#a29a82" stroke-width="2"/><circle cx="77" cy="719" r="9" fill="none" stroke="#a29a82" stroke-width="2"/><path d="M109 688h33v65h-33z" fill="#91866c"/>
+</g>
+
+<!-- 02 Park: pond, walking loop, trees and benches. -->
+<g transform="translate(183 432) scale(.6)">
+<ellipse cx="218" cy="1072" rx="159" ry="96" fill="#a2bc8c"/>
+<ellipse cx="218" cy="1072" rx="118" ry="69" fill="none" stroke="#e9d9ad" stroke-width="22"/>
+<path fill="#9cc3c3" d="M166 1040Q214 1001 277 1047Q314 1081 263 1107Q198 1138 160 1097Q139 1063 166 1040Z"/>
+<path d="M180 1054q23-6 41 0m19 34q22-6 39 0" stroke="#c6dddd" stroke-width="3" fill="none"/>
+<use href="#tree" transform="translate(72 1046) scale(.9)"/><use href="#tree" transform="translate(340 1045)"/><use href="#tree" transform="translate(99 1163) scale(.75)"/>
+<path d="M320 1127h57m-52-10h46m-41-7v38m35-38v38" stroke="#937953" stroke-width="6"/>
+<use href="#bush" transform="translate(293 1170)"/>
+<path d="M55 1176H379M63 1160v26m45-26v26m45-26v26m45-26v26m45-26v26m45-26v26m45-26v26m38-26v26" stroke="#8e9279" stroke-width="4"/>
+<path d="M125 1138l15-49h43l17 49M145 1090v29m30-29v29m-36 0h43" fill="none" stroke="#b28e6c" stroke-width="5"/>
+</g>
+
+<!-- 01 Vacant lot: fenced earth with long grass, large enough to read. -->
+<g transform="translate(-10 560) scale(.6)">
+<path fill="#c9bea2" d="M20 1320h90v82H20zm280-10h87v88h-87z"/><path d="M15 1320h99m181-10h97" stroke="#a09076" stroke-width="10"/>
+<path class="window" d="M40 1340h22v28H40zm288-10h25v30h-25z"/>
+<path fill="#d7bd89" d="M75 1380L322 1354L361 1501L94 1542L60 1465Z"/>
+<path d="M76 1382l233-24M84 1364v48m49-55v46m49-52v45m48-51v45m50-49v44" stroke="#95805b" stroke-width="6" fill="none"/>
+<path d="M136 1460l74-8m26 42l56-5m-124 25l33-3" stroke="#c4a779" stroke-width="3"/>
+<use href="#bush" transform="translate(93 1450) scale(1.4)"/><use href="#bush" transform="translate(315 1500) scale(1.5)"/><use href="#bush" transform="translate(276 1400)"/>
+<path fill="#7d8060" d="M288 1492l-5-18 14 7 13-9-2 20Z"/><circle cx="295" cy="1486" r="2" fill="#e9d597"/><circle cx="304" cy="1485" r="2" fill="#e9d597"/>
+</g>
+
+<!-- Town: destinations encircle one plaza; paths reach actual doorways. -->
+<path class="road" d="M222 1902L337 1795M220 1933L101 1992M221 1940L343 1990M221 2033L133 2160"/>
+<ellipse cx="223" cy="1912" rx="59" ry="62" fill="#e8d5ad"/><ellipse cx="223" cy="1912" rx="43" ry="46" fill="none" stroke="#caba95" stroke-width="2" stroke-dasharray="5 9"/>
+<ellipse cx="223" cy="1919" rx="22" ry="13" fill="#aeb59a"/><ellipse cx="223" cy="1913" rx="20" ry="10" fill="#bad4cb"/><path fill="#899981" d="M215 1913l2-28-5-10 12 5 9-5-3 14 5 24Z"/>
+<!-- Residential block -->
+<g aria-label="街の民家" transform="translate(12 1620) scale(.65)"><path fill="#eadfc7" d="M10 30h88v65H10z"/><path fill="#899f90" d="M0 34L54 0l54 34Z"/><path class="window" d="M20 45h23v23H20zm43 0h23v23H63z"/><path fill="#a98a61" d="M46 70h21v25H46z"/></g>
+<g aria-label="街の民家" transform="translate(264 2092) scale(.65)"><path fill="#eadfc7" d="M10 30h88v65H10z"/><path fill="#b3977c" d="M0 34L54 0l54 34Z"/><path class="window" d="M20 45h23v23H20zm43 0h23v23H63z"/><path fill="#a98a61" d="M46 70h21v25H46z"/></g>
+<g aria-label="小さな民家" transform="translate(30 696) scale(.6)"><path fill="#e5d9bb" d="M31 1718h125v84H31z"/><path fill="#ba9275" d="M21 1722l71-44 72 44z"/><path class="window" d="M45 1740h28v30H45zm51 0h28v30H96z"/><path fill="#a38a60" d="M82 1776h26v28H82z"/></g>
+<!-- Pet shop -->
+<path fill="#f0e5c8" d="M290 1719h127v88H290z"/><path fill="#879d76" d="M280 1723l75-53 74 53Z"/><use href="#paw" transform="translate(355 1701)"/>
+<path class="window" d="M302 1738h43v43h-43z"/><path fill="#a98a61" d="M366 1735h32v72h-32z"/><path fill="#87856d" d="M315 1775v-17l6 4 7-4 5 17Z"/>
+
+<!-- Hospital -->
+<path fill="#f6edd6" d="M28 1916h124v88H28z"/><rect x="21" y="1899" width="138" height="21" rx="3" fill="#98b4ae"/>
+<path fill="#729ba3" d="M85 1929h12v11h11v12H97v11H85v-11H74v-12h11Z"/>
+<path class="window" d="M42 1966h28v27H42zM93 1967h40v37H93z"/><path stroke="#f9efdb" stroke-width="3" d="M113 1968v36"/>
+
+<!-- Adoption pavilion -->
+<path fill="#f0e3c5" d="M290 1930h126v72H290z"/><path fill="#bd907b" d="M278 1930l75-44 75 44Z"/><path fill="#f4dfb9" d="M353 1886l-23 44h46Z"/>
+<path d="M294 1930v75m118-75v75" stroke="#9d835f" stroke-width="5"/><rect x="326" y="1940" width="51" height="47" rx="3" fill="#fff4d9"/><use href="#paw" transform="translate(351 1960)"/>
+
+<!-- Home matches opening scene: front path between two trees. -->
+<path fill="#e3caa0" d="M94 2248l21-94h31l46 94 22 52H62Z"/>
+<path fill="#f8edd2" d="M66 2130l61-45 61 45v96H66Z"/><path fill="none" stroke="#c48968" stroke-width="12" d="M54 2135l73-61 73 61"/>
+<path class="window" d="M84 2138h32v37H84z"/><path stroke="#8d724e" stroke-width="5" fill="none" d="M82 2136h36v41H82z"/><path stroke="#f6edd6" stroke-width="3" d="M100 2140v34m-15-18h30"/><path fill="#866747" d="M146 2180h30v46h-30z"/>
+<use href="#tree" transform="translate(32 2241)"/><use href="#tree" transform="translate(213 2235) scale(.9)"/><use href="#bush" transform="translate(69 2246)"/>
+
+<use href="#tree" transform="translate(373 2207) scale(1.2)"/><use href="#bush" transform="translate(319 2244)"/>
+
+</svg>

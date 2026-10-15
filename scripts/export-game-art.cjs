@@ -6,8 +6,8 @@ const {chromium}=require('playwright');const fs=require('node:fs'),path=require(
  const scenes=await page.evaluate(()=>{
   const result={};for(const season of ['spring','summer','autumn','winter']){currentSeason=season;for(const scene of scenes){if(scene.id==='room')continue;const node=new DOMParser().parseFromString(svg(scene),'image/svg+xml').documentElement;node.querySelectorAll('.cat-sample,.layout-guide').forEach(n=>n.remove());if(['opening','map','naming'].includes(scene.id))node.querySelectorAll('text').forEach(n=>n.remove());result[scene.id+'_'+season]=new XMLSerializer().serializeToString(node);}}return result;
  });
- await open('toy-study.html');const hand=await page.evaluate(()=>handheld.map(t=>({...t,svg:picture(t.art).replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ')})));
- await open('interior-toy-study.html');const placed=await page.evaluate(()=>toys.map(t=>({...t,svg:picture(t.art).replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ')})));
+ await open('toy-study.html');const hand=await page.evaluate(()=>handheld.map(t=>({...t,svg:picture(t.art).replace(/<svg\b([^>]*)>/,(_,attrs)=>'<svg xmlns="http://www.w3.org/2000/svg"'+attrs.replace(/\sxmlns="[^"]*"/g,'')+'>')})));
+ await open('interior-toy-study.html');const placed=await page.evaluate(()=>toys.map(t=>({...t,svg:picture(t.art).replace(/<svg\b([^>]*)>/,(_,attrs)=>'<svg xmlns="http://www.w3.org/2000/svg"'+attrs.replace(/\sxmlns="[^"]*"/g,'')+'>')})));
  await open('room-study.html');const rooms={};for(const season of ['spring','summer','autumn','winter'])for(const time of ['morning','day','evening','night']){
   await page.selectOption('#season',season);await page.selectOption('#daytime',time);
   rooms[season+'_'+time]=await page.evaluate(()=>{const node=document.querySelector('#room').cloneNode(true),style=getComputedStyle(document.documentElement);node.setAttribute('xmlns','http://www.w3.org/2000/svg');node.setAttribute('viewBox','0 0 450 760');node.querySelectorAll('.furnishing,#room-cat').forEach(n=>n.remove());return new XMLSerializer().serializeToString(node).replace(/var\((--[\w-]+)\)/g,(_,k)=>style.getPropertyValue(k).trim());});

@@ -13,7 +13,7 @@ function texturedStorySVG(svg,wood){
 }
 bookBackground=function(node,svg){
  // Limit texture to scenery; keep icons, cat coats and readable UI paper clean.
- if(node&&svg&&node.matches('.book-room,.field-scene,.capture-inspect,.title-screen,.book-shop-scene'))svg=texturedStorySVG(svg,node.matches('.book-room'));
+ if(node&&svg&&!svg.includes('data-book-material')&&node.matches('.book-room,.field-scene,.capture-inspect,.title-screen,.book-shop-scene'))svg=texturedStorySVG(svg,node.matches('.book-room'));
  return textureBackground(node,svg);
 };
 

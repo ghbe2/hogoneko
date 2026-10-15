@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="375" height="764" viewBox="0 0 375 764" role="img" aria-labelledby="title desc">
+<title id="title">ホゴネコ・広場を囲む街 SVG案</title>
+<desc id="desc">自宅、動物病院、スーパー、ペットショップ、譲渡会と、空き地、路地裏、公園、山をひとつの街に配置した検討用マップ。</desc>
+<defs>
+ <style>text{font-family:'Yu Gothic','Hiragino Kaku Gothic ProN',sans-serif;fill:#62533e} .name{font-size:12px;font-weight:600;text-anchor:middle}.tag{fill:#fff8e9;stroke:#d9c9a8;stroke-width:.7}.path{fill:none;stroke:#dfc79c;stroke-width:24;stroke-linecap:round;stroke-linejoin:round}.twig{stroke:#87724e;stroke-width:4;stroke-linecap:round}.window{fill:#a9cbd0;stroke:#f7eed7;stroke-width:3}</style>
+ <g id="tree"><path class="twig" d="M0 0V-31"/><path fill="#90a578" d="M-19-25Q-29-43-15-52Q-17-69 0-71Q20-72 20-54Q35-39 18-25Q2-18-19-25"/><path d="M0-15V-48M0-33l-11-9M0-25l12-9" fill="none" stroke="#76895f" stroke-width="2"/></g>
+ <g id="pine"><path class="twig" d="M0 0V-42"/><path fill="#7b956c" d="M0-66L-19-36H-12L-26-12H26L12-36H19Z"/></g>
+ <g id="bush"><ellipse fill="#b1bf8c" rx="19" ry="10"/><circle cx="-8" cy="-3" r="3" fill="#e8b7ab"/><circle cx="-3" cy="1" r="3" fill="#e8b7ab"/></g>
+ <g id="paw" fill="#806748"><ellipse cy="3" rx="7" ry="6"/><ellipse cx="-8" cy="-5" rx="3" ry="4"/><ellipse cx="-2" cy="-9" rx="3" ry="4"/><ellipse cx="5" cy="-8" rx="3" ry="4"/><ellipse cx="10" cy="-3" rx="3" ry="4"/></g>
+</defs>
+<path fill="#bcc7a3" d="M0 0H375V764H0Z"/>
+<path fill="#cbd3b5" d="M0 48Q114 105 216 54T375 68V229Q280 182 218 258T0 257Z"/>
+<path fill="#b0c098" d="M0 615Q105 573 195 641T375 610V764H0Z"/>
+<!-- The four rescue landscapes share the same map as the town. -->
+<path class="path" d="M185 698V513L188 401L103 325L83 247L113 178L197 124L273 187L290 283L252 354L188 401L83 422L65 486M188 401L302 450M185 513L286 573M185 513L85 588"/>
+<path fill="#91a180" d="M117 139L165 57L193 101L214 69L263 142Z"/>
+<path fill="#dce0c9" d="M146 91L165 57L188 94L171 85L162 93L155 84Z"/>
+<path fill="none" stroke="#e2cca5" stroke-width="8" stroke-linecap="round" d="M195 137l-11-16 11-12-12-12"/>
+<use href="#pine" transform="translate(114 148) scale(.6)"/><use href="#pine" transform="translate(268 147) scale(.65)"/>
+<g transform="translate(191 151)"><rect class="tag" x="-35" y="-12" width="70" height="25" rx="10"/><text class="name" y="5">山</text></g>
+<!-- Park: pond, walking loop and a bench, not an ambiguous single tree. -->
+<ellipse cx="287" cy="219" rx="62" ry="40" fill="#a6bd91"/><ellipse cx="287" cy="218" rx="42" ry="25" fill="none" stroke="#eee0ba" stroke-width="9"/>
+<path fill="#a3c6c8" d="M270 201Q301 189 310 213Q303 233 276 224Q259 221 270 201"/>
+<use href="#tree" transform="translate(326 216) scale(.62)"/><use href="#tree" transform="translate(245 217) scale(.7)"/>
+<path d="M307 243h26m-23-6h21m-19-4v17m16-17v17" stroke="#977b50" stroke-width="3"/>
+<g transform="translate(286 267)"><rect class="tag" x="-34" y="-12" width="68" height="25" rx="10"/><text class="name" y="5">公園</text></g>
+<!-- Vacant lot: exposed earth, low fence, grass and a hiding cat. -->
+<path fill="#d7bd8a" d="M24 184L111 175L133 226L24 247Z"/>
+<path d="M27 188l75-8M32 183v19m23-22v18m25-21v17m23-19v16" fill="none" stroke="#998461" stroke-width="3"/>
+<use href="#bush" transform="translate(45 220)"/><use href="#bush" transform="translate(102 229)"/>
+<path d="M87 216l-3-10 9 4 8-5-1 12" fill="#7c7957"/><circle cx="91" cy="213" r="1" fill="#f5e4aa"/><circle cx="97" cy="213" r="1" fill="#f5e4aa"/>
+<g transform="translate(73 259)"><rect class="tag" x="-51" y="-12" width="102" height="36" rx="10"/><text class="name" y="3">空き地</text><text x="0" y="17" text-anchor="middle" font-size="9">最初の保護エリア</text></g>
+<!-- Back alley: an actual narrow passage between buildings. -->
+<path fill="#c5bca2" d="M25 303h39v72H25zM99 301h33v74H99z"/><path fill="#978a73" d="M22 300h45v8H22zM96 298h39v9H96z"/>
+<path fill="#b8ac91" d="M64 314h35v61H64z"/><path fill="#e2d0ac" d="M75 316h17l7 59H64Z"/>
+<path class="window" d="M34 322h17v20H34zM110 318h12v18h-12z"/><rect x="102" y="354" width="16" height="19" rx="3" fill="#81947b"/>
+<g transform="translate(79 389)"><rect class="tag" x="-43" y="-12" width="86" height="25" rx="10"/><text class="name" y="5">路地裏</text></g>
+<!-- Central plaza connects every destination. -->
+<ellipse cx="188" cy="423" rx="55" ry="49" fill="#e7d5ad"/><ellipse cx="188" cy="423" rx="42" ry="36" fill="none" stroke="#c9b78f" stroke-width="1.5" stroke-dasharray="4 6"/>
+<ellipse cx="188" cy="423" rx="21" ry="12" fill="#b8b59a"/><ellipse cx="188" cy="418" rx="19" ry="10" fill="#c5d9cd"/>
+<path fill="#8f9a81" d="M181 416l2-22-4-9 9 4 8-4-2 11 4 20Z"/><path d="M196 413q15 0 10-13" fill="none" stroke="#8f9a81" stroke-width="4"/>
+<use href="#bush" transform="translate(136 454)"/><use href="#bush" transform="translate(231 387)"/>
+<!-- Pet shop: paw gable and large display window. -->
+<path fill="#f0e5c8" d="M245 315h89v56h-89z"/><path fill="#899d73" d="M236 318l53-39 54 39Z"/><use href="#paw" transform="translate(289 302) scale(.8)"/>
+<path class="window" d="M252 327h33v30h-33z"/><rect x="296" y="326" width="26" height="45" fill="#ae8f61"/><path fill="#7f8063" d="M263 352v-12l4 3 5-3 3 12Z"/>
+<g transform="translate(290 384)"><rect class="tag" x="-62" y="-12" width="124" height="25" rx="10"/><text class="name" y="5">ペットショップ</text></g>
+<!-- Supermarket: broad shopfront, striped awning and produce. -->
+<path fill="#ede2c2" d="M20 449h91v61H20z"/><rect x="16" y="440" width="99" height="17" rx="3" fill="#bc8e6a"/>
+<path fill="#fbefce" d="M17 458h98l6 17H11Z"/><path d="M27 458l-2 17m24-17v17m24-17v17m24-17l3 17" stroke="#c48b70" stroke-width="11"/>
+<rect x="31" y="480" width="30" height="29" fill="#a3bfbc"/><rect x="71" y="480" width="27" height="29" fill="#937950"/>
+<rect x="15" y="497" width="22" height="15" fill="#bc9964"/><circle cx="20" cy="495" r="5" fill="#97ab6b"/><circle cx="30" cy="495" r="5" fill="#c79864"/>
+<g transform="translate(65 526)"><rect class="tag" x="-46" y="-12" width="92" height="25" rx="10"/><text class="name" y="5">スーパー</text></g>
+<!-- Animal hospital: blue animal/medical sign and a wide, legible entrance. -->
+<path fill="#f6efd9" d="M250 441h101v72H250z"/><path fill="#99b6b2" d="M244 441v-14h113v14Z"/>
+<path fill="#719ba4" d="M299 447h9v8h8v9h-8v8h-9v-8h-8v-9h8Z"/>
+<rect class="window" x="263" y="477" width="24" height="25"/><path class="window" d="M302 479h33v34h-33z"/><path stroke="#f7eed7" stroke-width="2" d="M318 479v34"/>
+<g transform="translate(301 528)"><rect class="tag" x="-49" y="-12" width="98" height="25" rx="10"/><text class="name" y="5">動物病院</text></g>
+<!-- Adoption square: a recognizable event pavilion, not another house. -->
+<path fill="#f3e7cc" d="M244 575h101v52H244z"/><path fill="#bc8b77" d="M234 575l60-33 61 33Z"/><path fill="#f4dcb3" d="M294 542l-18 33h37Z"/>
+<path stroke="#9d8662" stroke-width="4" d="M247 575v53m95-53v53"/><rect x="273" y="581" width="42" height="38" rx="3" fill="#fff5da"/><use href="#paw" transform="translate(294 598)"/>
+<g transform="translate(293 642)"><rect class="tag" x="-44" y="-12" width="88" height="25" rx="10"/><text class="name" y="5">譲渡会場</text></g>
+<!-- Home echoes the opening: roof, window, front path, flanking trees. -->
+<path fill="#ead8b4" d="M57 676l24-55h21l25 55 25 74H34Z"/>
+<path fill="#f7edd2" d="M51 600l44-31 44 31v69H51Z"/><path fill="none" stroke="#c58b6a" stroke-width="10" stroke-linejoin="miter" d="M43 603l52-42 52 42"/>
+<rect x="65" y="605" width="25" height="28" fill="#a8c7c8" stroke="#927553" stroke-width="4"/><path stroke="#f7efd9" stroke-width="3" d="M77 606v26m-11-14h22"/><path fill="#896b48" d="M106 636h23v33h-23z"/>
+<use href="#tree" transform="translate(29 675) scale(.95)"/><use href="#tree" transform="translate(153 673) scale(.84)"/>
+<use href="#bush" transform="translate(51 683)"/><use href="#bush" transform="translate(133 692)"/>
+<g transform="translate(94 710)"><rect class="tag" x="-40" y="-12" width="80" height="27" rx="11"/><text class="name" y="6">おうち</text></g>
+<use href="#tree" transform="translate(342 726) scale(.8)"/><use href="#bush" transform="translate(246 710)"/>
+<path fill="#fff8ea" d="M0 0H375V48H0Z"/><text x="16" y="30" font-size="13">街 · ホゴネコ</text><circle cx="303" cy="24" r="9" fill="#d7b065"/><text x="319" y="29" font-size="12">41</text>
+<text x="187.5" y="752" text-anchor="middle" font-size="10" fill="#7c8264">広場を囲む街 · SVG構成サンプル</text>
+</svg>

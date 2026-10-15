@@ -6,22 +6,17 @@ window.addEventListener('contextmenu',event=>{
  if(!(event.target instanceof Element)||!event.target.closest('#app')||event.target.closest('input,textarea,[contenteditable="true"]'))return;
  event.preventDefault();event.stopImmediatePropagation();
 },true);
-let quickHoldRelease=null,quickPressStarted=null;
-window.addEventListener('pointerdown',event=>{quickPressStarted=event.target.closest('[data-action="touch-now"],[data-action="call-cat"]')?{id:event.pointerId,at:Date.now()}:null;},true);
-window.addEventListener('pointerup',event=>{if(quickPressStarted?.id===event.pointerId&&Date.now()-quickPressStarted.at>=550)quickHoldRelease={x:event.clientX,y:event.clientY,until:Date.now()+700};quickPressStarted=null;},true);
-window.addEventListener('pointercancel',()=>{quickPressStarted=null;},true);
-window.addEventListener('click',event=>{const release=quickHoldRelease;if(release&&Date.now()<release.until&&Math.hypot(event.clientX-release.x,event.clientY-release.y)<12){quickHoldRelease=null;event.preventDefault();event.stopImmediatePropagation();}},true);
 // Rubbing is distance driven: waiting or dropping a tool never cleans anything.
 TOUCH_TOOLS.splice(TOUCH_TOOLS.findIndex(t=>t.id==='pickup'),1);
 if(gameState.ui.touchMode==='pickup')gameState.ui.touchMode='pet';
 const rubInventory=renderInventory;
 renderInventory=function(state){return rubInventory({...state,ui:{...state.ui,inventoryTab:state.ui.inventoryTab==='touch'?'play':state.ui.inventoryTab}}).replace(/<button[^>]*data-action="inventory-tab"[^>]*data-tab="touch"[^>]*>[\s\S]*?<\/button>/g,'');};
 const rubTouchTools=renderTouchTools;
-renderTouchTools=state=>rubTouchTools(state).replace('選んだら、右の「さわる」をタップして実行','ネコをこすってお手入れ。動かさず長押しで抱く').replace('タップでなでる','ネコをこすると撫でる');
+renderTouchTools=state=>rubTouchTools(state);
 const rubReducer=reduceGameState;
 reduceGameState=function(state,action){
  if(['TAP_CAT','TOUCH_NOW','EXECUTE_CONTACT'].includes(action.type)&&commandDraft&&['clean','food'].includes(commandDraft.command))return state;
- if(action.type==='TOUCH_NOW'&&!action.fromGesture&&!state.ui.holdingCat)return {...state,ui:{...state.ui,touchActive:true,interactionMode:null}};
+ if(action.type==='TOUCH_NOW'&&!action.fromGesture&&!state.ui.holdingCat)return {...state,ui:{...state.ui,modal:'touchTools',touchActive:false,interactionMode:null}};
  if(action.type==='TAP_TROUBLE'&&['hair','vomit','litter','broken'].includes(action.problem))return state;
  if(action.type==='RUB_CLEAN'){
   if(state.campaign.phase!=='room'||state.ui.layoutMode||state.ui.modal||state.ui.careAnimation)return state;
@@ -113,7 +108,7 @@ window.addEventListener('pointermove',event=>{
  r.distance+=Math.min(24,Math.hypot(dx,dy));
  if(r.distance>=45&&!gameState.ui.careAnimation){r.distance=0;dispatch({type:'TOUCH_NOW',fromGesture:true,point:r.point});}
 },{capture:true,passive:false});
-window.addEventListener('pointerup',event=>{if(catRub?.id===event.pointerId){event.preventDefault();event.stopImmediatePropagation();suppressClickUntil=Date.now()+600;endCatRub();}},true);
+window.addEventListener('pointerup',event=>{if(catRub?.id===event.pointerId){event.preventDefault();event.stopImmediatePropagation();const tap=!catRub.moved&&!catRub.held,point=catRub.point;suppressClickUntil=Date.now()+600;endCatRub();if(tap)dispatch({type:'TOUCH_NOW',fromGesture:true,point});}},true);
 window.addEventListener('pointercancel',endCatRub,true);window.addEventListener('blur',endCatRub);
 const rubStyle=document.createElement('style');rubStyle.textContent=`
 [data-action="touch-now"],[data-action="call-cat"]{touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
@@ -130,7 +125,7 @@ const rubStyle=document.createElement('style');rubStyle.textContent=`
 const rubRender=render;
 render=function(state){rubRender(state);
  const touch=app.querySelector('[data-action="touch-now"]');
- if(touch){touch.setAttribute('aria-label','さわる。タップで案内、長押しで撫でる・コーム・ウェットを選ぶ');touch.classList.toggle('touch-ready',!!state.ui.touchActive);}
+ if(touch){touch.setAttribute('aria-label','さわる道具を選ぶ。使うときはネコをタップ');touch.classList.toggle('touch-ready',!!state.ui.touchActive);}
  if(state.ui.touchActive&&!state.ui.modal&&!state.ui.layoutMode)app.querySelector('.stage')?.insertAdjacentHTML('beforeend','<div class="touch-gesture-guide">ネコをこする · 長押しで抱く</div>');
  app.querySelectorAll('[data-drop-target="clean"]').forEach(node=>{
   node.setAttribute('aria-label','掃除道具を持ったまま、ここをこすって掃除');

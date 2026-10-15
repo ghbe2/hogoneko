@@ -90,7 +90,7 @@ function seasonalArt(s){
  const snow=currentSeason==='winter'?path(s.id==='map'?'M83 45L102 30 113 46 103 42 96 49Z':'M14 700Q42 681 64 697L95 706Q53 715 14 700Z','#f5f3e5'):'';
  return a+`<g class="season-details" data-season="${currentSeason}">${decor}${snow}</g>`;
 }
-function svg(s){return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 760" role="img" aria-label="${s.title}${seasonalIds.has(s.id)?'・'+seasonNames[currentSeason]:''}">${seasonalArt(s)}</svg>`;}
+function svg(s){return PlantMaterials.decorate(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 760" role="img" aria-label="${s.title}${seasonalIds.has(s.id)?'・'+seasonNames[currentSeason]:''}">${seasonalArt(s)}</svg>`);}
 const main=document.querySelector('#scenes');
 main.innerHTML=scenes.map(s=>`<button class="scene" data-id="${s.id}" aria-label="${s.title}を拡大"><span class="preview">${s.id==='room'?'<iframe title="部屋の背景見本" tabindex="-1" src="room-study.html?embed=1"></iframe><span class="layout-guide room-guide">猫・世話のエリア</span>':svg(s)}</span><span class="caption"><strong>${s.title}</strong><small>${s.sub}</small></span></button>`).join('');
 const detail=document.querySelector('#detail');let lastButton;

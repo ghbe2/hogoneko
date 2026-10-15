@@ -65,7 +65,7 @@ const art={
 Object.assign(art,window.interiorStudy?.art||{});
 art.dogpuppet=art.dog+'<path d="M91 149L86 177Q126 185 166 177L160 149Z" fill="#d6bb89"/><ellipse cx="126" cy="178" rx="40" ry="6" fill="#b5824e"/>';
 handheld.sort((a,b)=>ideas.findIndex(t=>t.type===a.type)-ideas.findIndex(t=>t.type===b.type));
-function picture(key){return `<svg viewBox="0 0 250 220" aria-hidden="true"><ellipse cx="126" cy="185" rx="74" ry="7" fill="#d9d7c6"/>${art[key]}</svg>`;}
+function picture(key){return BookMaterials.decorate(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 220" aria-hidden="true"><ellipse cx="126" cy="185" rx="74" ry="7" fill="#d9d7c6"/>${art[key]}</svg>`);}
 const filters=document.querySelector('#filters');
 filters.innerHTML='<button data-type="all" aria-pressed="true">すべて</button>'+toys.filter((t,i)=>toys.findIndex(x=>x.type===t.type)===i).map(t=>`<button data-type="${t.type}" aria-pressed="false">${t.label}</button>`).join('');
 if(archive){document.querySelector('h1').textContent='設置・交流アイディアの控え。';document.querySelector('.intro>p').textContent='前回の14案を保存。設置型・ケア用品・分類検討中のものを含む、未確定のアイディア集です。';}

@@ -22,6 +22,9 @@ let source = readSource(path.join(root, relativePage)).replace(/<script src="([^
   if (!file.startsWith(root + path.sep)) throw new Error('External script not allowed: ' + relative);
   return '<script>\n' + readSource(file).replace(/<\/script/gi, '<\\/script') + '\n</script>';
 });
+// Embed the town artwork as well; encrypted releases must not depend on loose assets.
+source=source.replaceAll('src="assets/town-map.svg"', 'src="data:image/svg+xml;charset=utf-8,'+encodeURIComponent(readSource(path.join(root,'assets/town-map.svg')))+'"');
+source=source.replaceAll('href="assets/town-map.svg"', 'href="data:image/svg+xml;charset=utf-8,'+encodeURIComponent(readSource(path.join(root,'assets/town-map.svg')))+'"');
 source=source.replace(/<link rel="stylesheet" href="([^"]+)">/g,(_,relative)=>{
  const file=path.resolve(base,relative);if(!file.startsWith(root+path.sep))throw new Error('Invalid stylesheet');
  return '<style>'+readSource(file)+'</style>';

@@ -1,0 +1,20 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),{pathToFileURL}=require('node:url'),path=require('node:path');
+(async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{const p=await b.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));for(const [width,height]of [[320,568],[375,812]]){
+ await p.setViewportSize({width,height});await p.goto(pathToFileURL(path.resolve('index.html')).href+'?check=1&scenario=room');
+ await p.evaluate(()=>{dispatch({type:'OPEN_SUPPLIES'});gameState={...gameState,coins:50,ui:{...gameState.ui,shopCart:{food_dry:1,groom_comb:1},storeCartOpen:true,storeDetail:null,storeThanks:false,storeConfirm:false}};render(gameState)});
+ const before=await p.locator('.store-cart-list article').evaluateAll(es=>es.map(e=>e.getBoundingClientRect().y));
+ await p.click('[data-store="minus"][data-id="food_dry"]');
+ assert.equal(await p.locator('.store-cart-list article').count(),2);assert.equal(await p.locator('.store-cart-list article').first().locator('.store-quantity span').innerText(),'0');
+ assert(await p.locator('[data-store="minus"][data-id="food_dry"]').isDisabled());assert(await p.locator('[data-store="plus"][data-id="food_dry"]').isEnabled());
+ assert.deepEqual(await p.locator('.store-cart-list article').evaluateAll(es=>es.map(e=>e.getBoundingClientRect().y)),before);
+ await p.click('[data-store="plus"][data-id="food_dry"]');assert.equal(await p.locator('.store-cart-list article').first().locator('.store-quantity span').innerText(),'1');
+ await p.click('[data-store="minus"][data-id="food_dry"]');await p.click('[data-store="minus"][data-id="groom_comb"]');assert(await p.locator('[data-store="confirm"]').isDisabled());
+ assert.deepEqual(await p.evaluate(()=>[storeCount(gameState),storeTotal(gameState)]),[0,0]);
+ assert(await p.evaluate(()=>{const s={...gameState,ui:{...gameState.ui,storeConfirm:true}};return reduceGameState(s,{type:'CHECKOUT_SHOP'})===s}));
+ await p.evaluate(()=>render(gameState));assert.equal(await p.locator('.store-cart-list article').count(),2);
+ await p.click('[data-store="plus"][data-id="groom_comb"]');await p.waitForTimeout(1200);await p.screenshot({path:`tests/screenshots/shop-zero-${width}.png`});
+ const old=await p.evaluate(()=>({coins:gameState.coins,dry:gameState.inventory.food_dry||0,comb:gameState.inventory.groom_comb||0,price:productById('groom_comb').price,quantity:productById('groom_comb').quantity}));
+ await p.click('[data-store="confirm"]');await p.click('[data-store="checkout"]');
+ const next=await p.evaluate(()=>({coins:gameState.coins,dry:gameState.inventory.food_dry||0,comb:gameState.inventory.groom_comb||0}));assert.equal(next.coins,old.coins-old.price);assert.equal(next.dry,old.dry);assert.equal(next.comb,old.comb+old.quantity);
+ assert(await p.evaluate(()=>document.documentElement.scrollHeight<=innerHeight));
+ }assert.deepEqual(errors,[]);console.log('PASS zero row remains in place, minus disabled, plus restores, all-zero blocked, mixed checkout charges only positive counts at both sizes.');}finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});

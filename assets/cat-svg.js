@@ -145,6 +145,7 @@ function buildCat(svg,prefix,d,ground=375,scale=1){
  svg.innerHTML=`<defs>${defs}</defs><g class="floor"><path d="M65 ${ground+1}H655" stroke="#c6cebb" stroke-width="1"/></g><g data-part="props"></g><g data-part="travel"><g data-part="age">${content}</g></g><g data-part="effects"></g>`;
  const nodes={};svg.querySelectorAll('[data-part]').forEach(n=>nodes[n.dataset.part]=n);
  const out={svg,nodes,d:{...d},ground,scale,id,surface:CatSurface.get(coats[d.bodyCoat],d.seed),surfaceYaw:null};
+ window.BookMaterials?.fur(out);
  for(const part of ['earL','earR','head'])nodes[part].querySelector('g').style.display='none';
  nodes.headRear.querySelector('g').innerHTML=CatSurface.project(CatSurface.get(coats[d.headCoat],(d.seed+hash('head'))>>>0),180);
  paintFace(out,0,false);return out;
