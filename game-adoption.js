@@ -30,9 +30,10 @@ let adoptionView=null;
 function createAdoptionView(root){
  const find=id=>root.querySelector('#adoption-'+id),cat=getCat(gameState),dna=phenotypeFor(cat),svg=find('cat');
  const rig=CatSVG.buildCat(svg,'adoption',dna,375,dna.age==='adult'?1.25:1);svg.querySelector('.floor')?.remove();
+ const neighbors=[0,1].map(i=>{const basket=root.querySelector('.adoption-basket').cloneNode(true);basket.classList.add('adoption-neighbor',i?'is-right':'is-left');basket.setAttribute('aria-hidden','true');basket.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));basket.querySelector('.adoption-basket-tag')?.remove();const image=basket.querySelector('.adoption-cat svg'),neighborDNA={...CatSVG.sampleDNA(401+i*83),age:'adult',earCut:'none',mood:'neutral'};const neighborRig=CatSVG.buildCat(image,'adoption-neighbor-'+i,neighborDNA,375,1.25);image.querySelector('.floor')?.remove();root.querySelector('.adoption-stage').append(basket);return neighborRig;});
  const walkers=ADOPTION_COLORS.map((_,i)=>{const n=document.createElement('div');n.className='adoption-person';n.innerHTML=adoptionPerson(i);find('walkway').append(n);return n});
  const speech=document.createElement('p');speech.className='adoption-request-speech';speech.style.whiteSpace='pre-line';root.querySelector('.adoption-stage').append(speech);
- return {root,find,rig,walkers,speech,key:null};
+ return {root,find,rig,neighbors,walkers,speech,key:null};
 }
 function adoptionPosition(n,x,stopped,left=false){n.style.visibility='visible';n.classList.toggle('adoption-stopped',stopped);n.dataset.stopped=String(stopped);n.style.transform=`translateX(${x}px)`;n.querySelector('.adoption-figure').setAttribute('transform',left?'translate(120 0) scale(-1 1)':'');}
 function adoptionVisitors(view,seconds,grade){
@@ -69,6 +70,7 @@ function paintAdoption(view,time){
  if(phase==='request'){const head=view.walkers[4].querySelector('.adoption-head').getBoundingClientRect(),stage=view.root.querySelector('.adoption-stage').getBoundingClientRect();view.speech.style.top=Math.max(8,head.top-stage.top-view.speech.offsetHeight-18)+'px';}
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,t=reduced?0:time/1000,model=CatSVG.poseModel('sit',t);if(phase==='walking'&&!reduced){model.hr=Math.sin(t*.65)*4;model.hx=Math.sin(t*.65)*5;}if(['approach','request','result'].includes(phase)&&adopted){model.hr=5;model.hx=8;}CatSVG.applyPose(view.rig,model,t,'sit');
  if(run?.status==='playing'&&seconds>=adoptionDuration(run))dispatch({type:'FINISH_ADOPTION'});
+ view.neighbors.forEach((rig,i)=>CatSVG.applyPose(rig,CatSVG.poseModel('sit',t+i),t+i,'sit'));
 }
 const adoptionPreviousRender=render;
 render=function(state){const old=adoptionView?.root,motion=storeCaptureMotion(old);adoptionPreviousRender(state);let root=app.querySelector('.adoption-scene');if(root){if(old&&old.dataset.catId===root.dataset.catId){root.replaceWith(old);root=old;storeRestoreMotion(motion);}else adoptionView=createAdoptionView(root);paintAdoption(adoptionView,performance.now());}else adoptionView=null;

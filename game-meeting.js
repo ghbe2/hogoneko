@@ -36,7 +36,7 @@ reduceGameState=function(state,action){
   const nickname=streak>=3&&Math.random()<.3?nextCallName(cat):cat.nickname;
   const named={...state,cats:state.cats.map(c=>c===cat?{...c,nickname,callStreak:streak,lastCalledAt:now}:c)};
   const next=meetingReducer(named,action);
-  return {...next,ui:{...next.ui,callSpeech:{text:getCallName(getCat(named))+'、おいで',until:now+2200}}};
+  return next;
  }
  if(state.ui.equippedFood==='water_refill')state={...state,ui:{...state.ui,equippedFood:'starter_food'}};
  if(action.type==='OPEN_SUPPLIES')return meetingReducer({...state,campaign:{...state.campaign,phase:'shop',shopId:'petshop',shopReturnPhase:state.campaign.phase},ui:{...state.ui,modal:null,layoutMode:false,shopTab:action.tab||'food'}},{type:'CLEAR_MESSAGE'});
@@ -76,10 +76,7 @@ render=function(state){
  const touchButton=app.querySelector('[data-action="touch-now"]'),callButton=app.querySelector('[data-action="call-cat"]');
  if(touchButton){touchButton.setAttribute('aria-label','手に持つ道具を選ぶ');touchButton.querySelector('strong').textContent='どうぐ';}
  if(callButton)callButton.setAttribute('aria-label',getCallName(getCat(state))+'を呼ぶ');
- app.querySelectorAll('.touch-switch-hint,.call-speech').forEach(n=>n.remove());
- if(state.campaign.phase==='room'&&!state.ui.modal&&state.ui.callSpeech?.until>Date.now()){
-  const bubble=document.createElement('div');bubble.className='call-speech';bubble.setAttribute('role','status');bubble.textContent=state.ui.callSpeech.text;app.querySelector('.stage')?.append(bubble);setTimeout(()=>bubble.remove(),state.ui.callSpeech.until-Date.now());
- }
+ app.querySelectorAll('.touch-switch-hint').forEach(n=>n.remove());
  if(state.campaign.shopId==='petshop'&&state.campaign.phase==='shop'){
   app.querySelector('.campaign-place>strong')?.remove();
   const back=app.querySelector('[data-action="back-town"]');if(back&&['intake','room'].includes(state.campaign.shopReturnPhase))back.textContent='おうちへ戻る';
@@ -88,6 +85,5 @@ render=function(state){
 };
 app.addEventListener('click',event=>{const b=event.target.closest('[data-action]');if(!b||b.disabled)return;const type={'open-surgery-check':'OPEN_SURGERY_CHECK','go-surgery':'GO_SURGERY','treat-cat':'TREAT_CAT'}[b.dataset.action];if(type)dispatch({type});});
 const meetingStyle=document.createElement('style');meetingStyle.textContent=`
-.call-speech{position:absolute;z-index:80;right:18px;bottom:145px;max-width:calc(100% - 36px);padding:12px 18px;border-radius:22px;background:#fff9ed;color:#70563e;font-size:16px;box-shadow:0 3px 12px #55452c18;pointer-events:none}.call-speech:after{content:'';position:absolute;right:24px;bottom:-8px;border-width:9px 9px 0 0;border-style:solid;border-color:#fff9ed transparent transparent transparent}
 
 `;document.head.append(meetingStyle);

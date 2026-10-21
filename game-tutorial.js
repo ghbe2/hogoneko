@@ -17,9 +17,11 @@ rollEncounter=function(state,foodId,random=Math.random){
  const encounter=tutorialRollEncounter(state,foodId,random);
  if(!isFirstActivity(state))return encounter;
  const cat=encounter.cat;
+ const base=['slim','skinny'].includes(cat.phenotype?.body)?1780:cat.phenotype?.body==='round'?1900:1840;
+ const sampled=base+Math.floor(random()*80),weight=sampled%10===0?sampled+3:sampled;
  return {...encounter,cat:{...cat,age:'adult',estimatedAgeMonths:24,
   phenotype:{...cat.phenotype,age:'adult'},recoveryUntilDay:0,trustGainRate:1,
-  rescueProfile:{...cat.rescueProfile,condition:null},body:{...cat.body,sick:false,weight:3100}}};
+  rescueProfile:{...cat.rescueProfile,condition:null},body:{...cat.body,sick:false,weight}}};
 };
 const tutorialReducer=reduceGameState;
 reduceGameState=function(state,action){
@@ -53,13 +55,7 @@ reduceGameState=function(state,action){
  return next;
 };
 
-const TOWN_TUTORIAL={
- home:{target:'.town-destination.home',copy:'ここが「あなたの家」です。いまはあなたしか住んでいませんが、ネコを迎え入れるには十分な広さです。'},
- swipe:{target:'.town-map-composition .town-scroll-hint',copy:'一緒に暮らすネコを保護しに行きましょう。スワイプして保護エリアへ',action:'上にスワイプ'},
- area:{target:'.town-area-scene.field .town-area-art',copy:'街はずれの空き地です。'},
- goal:{target:'.town-area.field .town-cat-goal',copy:'住民の声を聴いて、ここには４匹の野良猫がいることが分かっています。'},
- rescue:{target:'.town-area.field .town-area-go',copy:'さっそく保護しに行ってみましょう。',action:'光っているボタンをタップ'}
-};
+// Dialogue is centrally maintained in game-dialogue.js.
 function currentTownTutorial(state){return !titleScreenOpen&&state.onboarding?.status==='active'&&state.campaign.phase==='town'&&!state.campaign.captured?TOWN_TUTORIAL[state.onboarding.townStep]:null;}
 let tutorialFrame=0;
 const tutorialRender=render;
@@ -69,7 +65,7 @@ render=function(state){
  const spec=currentTownTutorial(state);if(!spec)return;
  const target=app.querySelector(spec.target);if(!target)return;
  const layer=document.createElement('section');layer.className='tutorial-focus';
- layer.innerHTML='<div class="tutorial-ring"></div><aside class="tutorial-note" aria-label="せんぱいの案内"><strong>せんぱい</strong><p></p><button type="button">つぎへ →</button><span></span></aside>';
+ layer.innerHTML='<div class="tutorial-ring"></div><aside class="tutorial-note shared-guide-note" aria-label="せんぱいの案内"><strong class="senior-dialogue-name">保護主のせんぱい</strong><p></p><button type="button">つぎへ</button><span></span></aside>';
  layer.querySelector('p').textContent=spec.copy;
  const button=layer.querySelector('button');button.hidden=!!spec.action;
  layer.querySelector('span').textContent=spec.action||'';
@@ -77,13 +73,8 @@ render=function(state){
  app.append(layer);
  const scroller=app.querySelector('.town-map-scroll');
  if(['area','goal','rescue'].includes(state.onboarding.townStep))scroller.scrollTop=scroller.clientHeight*1.5;
- const ring=layer.querySelector('.tutorial-ring'),note=layer.querySelector('.tutorial-note');
  const place=()=>{
   if(!layer.isConnected)return;
-  const a=app.getBoundingClientRect(),r=target.getBoundingClientRect();
-  const x=r.left-a.left,y=r.top-a.top,w=r.width,h=r.height;
-  Object.assign(ring.style,{left:(x-8)+'px',top:(y-8)+'px',width:(w+16)+'px',height:(h+16)+'px'});
-  note.style.top=y+h/2>a.height/2?'12px':'auto';note.style.bottom=y+h/2>a.height/2?'auto':'12px';
   if(state.onboarding.townStep==='swipe'&&Math.abs(scroller.scrollTop/scroller.clientHeight-1.5)<.012){dispatch({type:'TUTORIAL_TOWN_NEXT',arrived:true});return;}
   tutorialFrame=requestAnimationFrame(place);
  };place();

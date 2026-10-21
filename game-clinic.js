@@ -21,13 +21,13 @@ reduceGameState=function(state,action){
 const clinicShop=renderMapShop;
 // The same reception layout is shared by both facilities and every visit state.
 function receptionArt(kind){
- const clinic=kind==='clinic',coat=clinic?'#f6f1e2':'#839575',wall=clinic?'#d7ddcc':'#e5ddc4';
- return `<svg viewBox="0 0 450 300" preserveAspectRatio="${clinic?'xMidYMid meet':'xMidYMin slice'}" aria-hidden="true"><rect width="450" height="300" fill="${wall}"/><path d="M0 220H450V300H0Z" fill="#cfb58c"/>
+ const clinic=kind==='clinic'||kind==='doctor',doctor=kind==='doctor',coat=doctor?'#f6f1e2':clinic?'#91a69a':'#839575',wall=clinic?'#d7ddcc':'#e5ddc4';
+ const art=`<svg viewBox="0 0 450 300" preserveAspectRatio="${clinic?'xMidYMid meet':'xMidYMin slice'}" aria-hidden="true"><rect width="450" height="300" fill="${wall}"/><path d="M0 220H450V300H0Z" fill="#cfb58c"/>
  <rect x="24" y="29" width="150" height="158" rx="3" fill="#b4a17b"/><rect x="31" y="36" width="136" height="144" fill="#f7edd7"/>
  ${clinic?'<path d="M90 53H108V72H127V90H108V109H90V90H71V72H90Z" fill="#90a9a0"/><path d="M56 133H144M56 146H130M56 159H137" stroke="#c2c8b3" stroke-width="4" stroke-linecap="round"/>':'<rect x="38" y="43" width="122" height="130" fill="#b8ccd0"/><path d="M38 138Q78 89 111 135Q137 112 160 139V173H38Z" fill="#a3b38c"/><path d="M97 43V174M38 108H160" stroke="#f6eed9" stroke-width="7"/><path d="M195 28Q291 66 443 28" fill="none" stroke="#ac9776" stroke-width="2"/><path d="M212 33L242 40 224 59Z" fill="#c78e74"/><path d="M270 44L300 44 288 64Z" fill="#96a582"/><path d="M332 41L363 36 350 58Z" fill="#d1b57b"/>'}
  <rect x="385" y="104" width="42" height="121" fill="#b9c3aa"/><path d="M390 146H422M390 185H422" stroke="#e5e9d5" stroke-width="3"/>
  <g class="reception-staff" ${clinic?'transform="translate(-82 -58.75) scale(1.25)"':''}><path d="M272 233L279 163Q285 148 328 148Q371 151 377 173L386 234Z" fill="${coat}"/><path d="M306 147L314 175 330 148" fill="#c19376"/>
- ${clinic?'<path d="M300 152L307 184 286 168M338 152L329 184 350 169" fill="#e0e3d7"/><path d="M299 156Q290 195 308 196M339 156Q345 194 325 196" fill="none" stroke="#78958d" stroke-width="3"/><circle cx="317" cy="198" r="8" fill="#849c91"/><circle cx="317" cy="198" r="4" fill="#d9dfce"/>':'<path d="M295 160L291 233H358L347 159 337 173 306 172Z" fill="#657d57"/><rect x="317" y="184" width="26" height="15" rx="2" fill="#f1e5cd"/><path d="M323 191H336" stroke="#9ea68b" stroke-width="2"/>'}
+ ${doctor?'<path d="M300 152L307 184 286 168M338 152L329 184 350 169" fill="#e0e3d7"/><path d="M299 156Q290 195 308 196M339 156Q345 194 325 196" fill="none" stroke="#78958d" stroke-width="3"/><circle cx="317" cy="198" r="8" fill="#849c91"/><circle cx="317" cy="198" r="4" fill="#d9dfce"/>':clinic?'<path d="M300 151l14 24 19-24-5 38h-20Z" fill="#fff7e5"/><rect x="344" y="179" width="23" height="13" rx="2" fill="#fff7e5"/><path d="M348 184h14m-14 4h8" stroke="#60796c" stroke-width="1.5"/>':'<path d="M295 160L291 233H358L347 159 337 173 306 172Z" fill="#657d57"/><rect x="317" y="184" width="26" height="15" rx="2" fill="#f1e5cd"/><path d="M323 191H336" stroke="#9ea68b" stroke-width="2"/>'}
  <g class="reception-staff-head">${clinic?'<path d="M281 111Q272 62 316 63Q354 57 361 102L350 153 291 154Z" fill="#6c6252"/><path d="M289 100Q292 76 324 80Q352 85 348 117L342 140Q326 159 304 143Q289 136 289 100Z" fill="#cea487"/><path d="M283 109Q278 76 301 73Q318 58 342 76Q360 88 349 111L337 93 319 89 298 104 296 123Z" fill="#6c6252"/>':'<path d="M350 103Q377 80 379 114L370 152 350 139Z" fill="#ac7950"/><path d="M290 100Q286 78 320 77Q351 78 354 105L350 131Q339 153 316 149Q291 143 290 119Z" fill="#dfb596"/><path d="M286 113Q272 91 288 78Q286 64 307 64Q328 51 347 71Q367 73 360 107L345 99 337 82 325 99 312 86 300 107 294 119Z" fill="#ac7950"/><path d="M349 104L360 100" stroke="#708969" stroke-width="5"/><ellipse cx="300" cy="128" rx="6" ry="3" fill="#d69f83"/><ellipse cx="339" cy="129" rx="6" ry="3" fill="#d69f83"/>'}
  <g class="reception-staff-eyes"><path d="M303 115L310 114M329 114L336 115" fill="none" stroke="#514a3c" stroke-width="2.5" stroke-linecap="round"/></g>
  ${clinic?'<g fill="none" stroke="#8e8268" stroke-width="1.5"><rect x="298" y="107" width="17" height="15" rx="6"/><rect x="325" y="107" width="17" height="15" rx="6"/><path d="M315 113H325"/></g>':''}
@@ -36,10 +36,22 @@ function receptionArt(kind){
  <path d="M192 226L450 221V239L188 245Z" fill="#98734f"/><path d="M193 241L450 235V300H193Z" fill="#c7a779"/><path d="M202 246H443" stroke="#dec49a" stroke-width="3"/>
  <path d="M231 219L267 219 274 233 226 234Z" fill="#f1e6cd"/><text x="250" y="230" text-anchor="middle" fill="#736449" font-size="10" font-family="Meiryo,sans-serif">受付</text><rect x="346" y="222" width="41" height="7" rx="1" fill="#e8dbc1"/><path d="M351 218L382 221" stroke="#738776" stroke-width="3" stroke-linecap="round"/>
  </svg>`;
+ if(!clinic)return art;
+ const doc=new DOMParser().parseFromString(art,'image/svg+xml'),svg=doc.documentElement,staff=svg.querySelector('.reception-staff'),head=svg.querySelector('.reception-staff-head');
+ // Rear hair belongs behind the neck and uniform, never in front of the collar.
+ staff.prepend(head.firstElementChild);
+ if(!doctor){
+  const group=doc.createElementNS('http://www.w3.org/2000/svg','g');group.setAttribute('transform','translate(0 310)');
+  while(svg.firstChild)group.append(svg.firstChild);svg.append(group);
+  svg.setAttribute('viewBox','0 0 450 750');svg.setAttribute('preserveAspectRatio','xMidYMax slice');
+  const background=doc.createElementNS('http://www.w3.org/2000/svg','path');background.setAttribute('d','M0 0H450V750H0Z');background.setAttribute('fill',wall);svg.prepend(background);
+  const floor=doc.createElementNS('http://www.w3.org/2000/svg','path');floor.setAttribute('d','M0 410H450V750H0Z');floor.setAttribute('fill','#cfb58c');group.before(floor);
+ }
+ return new XMLSerializer().serializeToString(svg);
 }
 function receptionShell(state,kind,speech,body,action){
  const title=kind==='clinic'?'動物病院':'ふれあい広場';
- return renderCampaignShell(state,title,`<div class="reception-scene is-${kind}"><div class="reception-hero" data-kind="${kind}">${receptionArt(kind)}<button class="reception-exit" data-action="back-town">← 街へ戻る</button><p class="reception-speech">${speech}</p></div><section class="community-panel reception-panel ${kind==='clinic'?'clinic-reception':''}"><header class="reception-heading"><span>受付</span><h1>${title}</h1></header><div class="reception-content">${body}</div><footer class="reception-actions">${action}</footer></section></div>`,'');
+ return renderCampaignShell(state,title,`<div class="reception-scene is-${kind}"><div class="reception-hero" data-kind="${kind}">${receptionArt(kind)}<button class="reception-exit" data-action="back-town">← 街へ戻る</button>${firstActive(state)?'':`<p class="reception-speech">${speech}</p>`}</div><section class="community-panel reception-panel ${kind==='clinic'?'clinic-reception':''}"><header class="reception-heading"><span>受付</span><h1>${title}</h1></header><div class="reception-content">${body}</div><footer class="reception-actions">${action}</footer></section></div>`,'');
 }
 renderMapShop=function(state){
  const cat=getCat(state),c=state.campaign;
@@ -68,10 +80,11 @@ function fitReception(){
 render=function(state){const oldHero=app.querySelector('.reception-hero'),oldArt=oldHero?.querySelector('svg'),motion=storeCaptureMotion(oldArt);clinicRender(state);const hero=app.querySelector('.reception-hero');if(oldArt&&hero?.dataset.kind===oldHero.dataset.kind)hero.querySelector('svg').replaceWith(oldArt);storeRestoreMotion(motion);fitReception();if(state.campaign.phase==='room'){app.querySelectorAll('.home-surgery-status').forEach(n=>n.remove());if(getCat(state).body.sick&&!state.ui.modal&&!state.ui.layoutMode){const note=document.createElement('p');note.className='room-observation';note.textContent='いつもより静かにしている…';app.querySelector('.stage')?.append(note);}}};
 app.addEventListener('click',e=>{if(e.target.closest('[data-clinic="examine"]'))dispatch({type:'EXAMINE_CAT'});if(e.target.closest('[data-clinic="menu"]'))dispatch({type:'CLINIC_MENU'});if(e.target.closest('[data-action="open-plaza"]'))dispatch({type:'OPEN_PLAZA'});});
 const clinicStyle=document.createElement('style');clinicStyle.textContent=`
-.is-clinic .reception-hero{flex:1;min-height:160px;background:linear-gradient(#d7ddcc 0 65%,#cfb58c 65%)}
+.is-clinic .reception-hero{position:absolute;inset:0;min-height:0;background:#d7ddcc}
 .is-clinic .reception-hero>svg{height:100%;width:100%}
 .is-clinic .reception-speech{top:max(64px,calc(50% - 60px))}
-.is-clinic .reception-panel{flex:0 0 282px;grid-template-rows:30px 156px 48px;gap:8px;padding:14px}
+.is-clinic .reception-panel{position:absolute;left:0;right:0;bottom:0;grid-template-rows:30px auto auto;gap:10px;padding:14px}
+.is-clinic .reception-actions:empty{display:none}
 .is-clinic .reception-content{justify-content:flex-start;gap:12px}
 .clinic-commands{display:grid;gap:3px;width:100%}.clinic-commands button{width:100%;min-height:50px;text-align:left;border:1px solid #c8cfb4;border-radius:15px;background:#edf0dd;color:#4f6347;padding:4px 12px}.clinic-commands strong{display:block;font-size:16px;line-height:22px}.clinic-commands strong span{float:right}.clinic-commands small{display:block;font-size:12px;line-height:16px;margin-top:0;color:#776b53}
 #app .campaign-screen:has(.reception-scene){position:relative;padding:0;min-height:0}#app .campaign-scroll:has(>.reception-scene){position:absolute;inset:0;display:block;padding:0}#app .campaign-screen:has(.reception-scene)>.campaign-actions{display:none}

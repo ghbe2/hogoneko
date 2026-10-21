@@ -1,8 +1,20 @@
 'use strict';
+// A single authored companion: the same body, face, coat and limb parts as playable cats.
+const SENIOR_CAT_DNA=Object.freeze({age:'adult',body:'round',head:'oval',eyes:'droop',ears:'small',earCut:'none',tail:'short',eyeColor:'green',mood:'neutral',muzzle:'none',whiskers:'short',headCoat:'tux_gray_0',bodyCoat:'tux_gray_0',legCoat:'tux_gray_0',tailCoat:'tux_gray_0',seed:4107});
+let seniorCatTemplate='',seniorCatInstance=0;
+function seniorCompanionArt(){
+ if(!seniorCatTemplate){
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'),rig=CatSVG.buildCat(svg,'senior-companion',SENIOR_CAT_DNA);
+  CatSVG.applyPose(rig,{...CatSVG.poseModel('sit',0),hy:-150,hs:1.15,by:-65,bh:.75},0,'sit');
+  svg.querySelector('.floor')?.remove();svg.querySelectorAll('.part-outline').forEach(n=>n.remove());seniorCatTemplate=svg.innerHTML;
+ }
+ const content=seniorCatTemplate.replaceAll('senior-companion','senior-companion-'+(++seniorCatInstance));
+ return `<svg class="senior-held-cat" x="60" y="91" width="104" height="105" viewBox="290 150 165 230" preserveAspectRatio="xMidYMax meet" data-companion="senior-gray-tux-v1" aria-hidden="true">${content}</svg>`;
+}
 function seniorArt(){return `<svg viewBox="0 0 220 270" aria-label="ネコを抱いた保護主のせんぱい" role="img">
 <ellipse cx="113" cy="258" rx="65" ry="9" fill="#6c705b22"/>
 <path d="M70 187h81l5 66h-34l-10-48-9 48H70Z" fill="#777b68"/>
-<path d="M62 114Q77 94 109 96Q143 95 160 116l13 84H48Z" fill="#b98466"/>
+<path d="M91 98Q77 101 68 110Q56 122 55 142L48 200H173L165 141Q164 122 152 111Q141 101 126 98Z" fill="#b98466"/>
 <path d="M91 95l18 22 19-22 11 105H78Z" fill="#f4ead2"/>
 <path d="M91 87h34v20q-17 17-34 0" fill="#d9b38d"/>
 <path d="M68 63Q60 14 105 12q48-4 49 51l-7 35H72Z" fill="#655d4d"/>
@@ -11,34 +23,23 @@ function seniorArt(){return `<svg viewBox="0 0 220 270" aria-label="ネコを抱
 <path d="M87 64l9-1m26 0 9 1" stroke="#615a49" stroke-width="3" stroke-linecap="round"/>
 <path d="M100 83q10 7 19-1" fill="none" stroke="#a57660" stroke-width="2.5" stroke-linecap="round"/>
 <ellipse cx="86" cy="76" rx="7" ry="3" fill="#dca58c"/><ellipse cx="133" cy="76" rx="7" ry="3" fill="#dca58c"/>
-<g class="senior-held-cat"><path d="M86 155q-20 22 3 38h52q26-8 10-33" fill="#d7bf8e"/><path d="M148 177q31 6 23-16q-4-10-11-4" fill="none" stroke="#d7bf8e" stroke-width="10" stroke-linecap="round"/>
-<path d="M82 148l-1-29 18 13q12-5 22 0l18-14-2 30q6 26-27 27-34-1-28-27" fill="#e1c99a"/>
-<path d="M85 126l3 16 8-7m38-8-3 15-7-7" fill="#bd947d"/>
-<path d="M93 148q4 4 8 0m18 0q4 4 8 0" fill="none" stroke="#70674e" stroke-width="2" stroke-linecap="round"/>
-<ellipse cx="110" cy="158" rx="10" ry="6" fill="#f5ead1"/><path d="M107 155h6l-3 4Z" fill="#af8870"/>
-<path d="M104 133l3 8m8-8-2 8" stroke="#b49a68" stroke-width="3"/>
-</g><path d="M63 134q-7 34 31 49m64-45q10 34-39 49" fill="none" stroke="#b98466" stroke-width="22" stroke-linecap="round"/>
-<path d="M91 181l19 4m11 1-15 4" stroke="#e3bd98" stroke-width="12" stroke-linecap="round"/>
+${seniorCompanionArt()}<path d="M66 129Q58 152 69 169Q77 181 94 187M153 129Q163 154 148 170Q138 180 124 186" fill="none" stroke="#b98466" stroke-width="18" stroke-linecap="round"/>
+<path d="M92 185Q102 190 111 189M125 185Q118 190 110 190" fill="none" stroke="#e3bd98" stroke-width="10" stroke-linecap="round"/>
 </svg>`;}
-const INTRODUCTION_PAGES=[
- ['この街にも、どの街にも','野良猫がいます。空き地や路地裏。外で生きるのは危険もいっぱい。それでもネコは増えていくのです。'],
- ['野良猫から地域猫に。','過酷な環境で生きるネコが増えないようにする。これが保護猫活動を通じたネコとヒトの共生です。'],
- ['あなたにできること','野良猫を保護して、育てて地域に戻し見守る。']
-];
-function introductionLandscape(){return `<svg class="introduction-landscape" viewBox="0 0 375 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-<path fill="#dce2cf" d="M0 0h375v400H0z"/><circle cx="300" cy="65" r="27" fill="#f4e6b3"/>
+// Dialogue is centrally maintained in game-dialogue.js.
+function introductionLandscape(){return `<svg class="introduction-landscape" viewBox="0 0 375 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<path fill="#dce2cf" d="M0 0h375v700H0z"/><circle cx="300" cy="65" r="27" fill="#f4e6b3"/>
 <path fill="#f6efdb" d="M22 54q10-17 27-6 23-13 31 8H22m166 39q16-26 36-8 19-10 30 10h-66"/>
-<path fill="#bdc8af" d="M0 196q77-38 161 8t214-18v214H0"/>
-<path fill="#e5d9bb" d="M0 134h92v119H0m287-89h88v99h-88"/><path fill="#a49178" d="M0 127h98v9H0m281 29h94v9h-94"/>
-<path fill="#a9c4bd" stroke="#f6edda" stroke-width="4" d="M16 157h25v31H16zm38 0h24v31H54zm253 24h24v27h-24"/>
-<path fill="#d6c19a" d="M177 233q-24 70-79 167h172q-43-75-63-167"/>
+<path fill="#71876e" d="M0 156q77-38 161 8t214-18V700H0Z"/>
+<g transform="translate(0 -35)">
+<path fill="#e5d9bb" d="M0 134H92V253H0Z M287 174H375V263H287Z"/><path fill="#a49178" d="M0 127H98V136H0Z M281 165H375V174H281Z"/>
+<path fill="#a9c4bd" stroke="#f6edda" stroke-width="4" d="M16 157H41V188H16Z M54 157H78V188H54Z M307 183H331V210H307Z"/>
 <path d="M0 259l99-11m-82-12v45m39-49v44m38-48v43" stroke="#9b8d6e" stroke-width="5"/>
-<g fill="#929c78"><ellipse cx="40" cy="310" rx="22" ry="16"/><path d="M26 301l-2-26 13 8 13-9 4 27Z"/><path d="M59 309q24-22 24-5" fill="none" stroke="#929c78" stroke-width="8" stroke-linecap="round"/></g>
-<g fill="#a98d6d"><ellipse cx="315" cy="278" rx="20" ry="13"/><path d="M303 271l-2-23 12 7 13-9 2 24Z"/></g>
-<g fill="#64735c"><path d="M58 297h3v3h-3zm11-1h3v3h-3"/><path d="M306 263h3v3h-3zm13-1h3v3h-3"/></g>
-<path fill="#a8b58b" d="M0 355q24-31 67 0 33-17 57 22H0m253-54q32-28 62-3 41-21 60 18v62H253Z"/>
+</g>
+<path fill="#637d5c" d="M-12 355Q24 324 67 355Q100 338 124 377Q73 388-12 384Z"/>
 </svg>`;}
+function introductionForeground(){return `<svg class="introduction-foreground" viewBox="0 0 375 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path fill="#637d5c" d="M239 700Q270 580 251 500Q242 474 275 464Q296 456 315 470Q356 449 387 488V710Z"/></svg>`;}
 renderOpeningStory=function(state){
- const i=Math.max(0,Math.min(2,state.onboarding.storyIndex)),[heading,copy]=INTRODUCTION_PAGES[i];
- return `<section class="introduction-scene" aria-label="保護猫活動のはじまり"><div class="introduction-picture">${introductionLandscape()}<div class="introduction-senior">${seniorArt()}</div></div><section class="introduction-dialogue"><small>保護主のせんぱい</small><h1>${heading}</h1><p>${copy}</p><nav aria-label="導入ページ"><button class="introduction-back" data-action="previous-story" aria-label="ひとつ前へ" ${i?'':'disabled'}>←</button><button class="introduction-next" data-action="next-story">${i===2?'活動をはじめる':'つぎへ'} <span aria-hidden="true">→</span></button></nav><div class="introduction-pages" aria-label="${i+1} / 3">${INTRODUCTION_PAGES.map((_,n)=>`<i class="${i===n?'current':''}"></i>`).join('')}</div></section></section>`;
+ const i=Math.max(0,Math.min(2,state.onboarding.storyIndex)),[,copy]=INTRODUCTION_PAGES[i];
+ return `<section class="introduction-scene" aria-label="保護猫活動のはじまり"><div class="introduction-picture">${introductionLandscape()}${introductionForeground()}</div><section class="introduction-dialogue"><div class="introduction-speech"><div class="introduction-senior">${seniorArt()}</div><small>保護主のせんぱい</small><p>${copy}</p><nav aria-label="導入ページ"><button class="introduction-back" data-action="previous-story" aria-label="ひとつ前へ" ${i?'':'disabled'}>←</button><button class="introduction-next" data-action="next-story">${i===2?'活動をはじめる':'つぎへ <span aria-hidden="true">→</span>'}</button></nav></div><div class="introduction-pages" aria-label="${i+1} / 3">${INTRODUCTION_PAGES.map((_,n)=>`<i class="${i===n?'current':''}"></i>`).join('')}</div></section></section>`;
 };

@@ -3,13 +3,14 @@
 const storeCart=state=>state.ui.shopCart||{};
 const storeTotal=state=>Object.entries(storeCart(state)).reduce((sum,[id,n])=>sum+(productById(id)?.price||0)*n,0);
 const storeCount=state=>Object.values(storeCart(state)).reduce((a,b)=>a+b,0);
+function normalizeStarterCart(state){const cart=storeCart(state);return !state.flags.starterBought&&Object.hasOwn(cart,'starter_set')&&cart.starter_set!==1?{...state,ui:{...state.ui,shopCart:{...cart,starter_set:1}}}:state;}
 const STORE_TABS=[['furniture','置くもの'],['play','おもちゃ'],['food','ごはん'],['care','そうじ'],['tools','どうぐ']];
 const storeCategory=p=>['groom_comb','groom_wipe'].includes(p.id)?'tools':p.category;
 const storeType=p=>TYPE_LABELS[getItem(p.id)?.affinityType||getFood(p.id)?.affinityType]||({care:'おそうじ',tools:p.id==='groom_comb'?'毛のお手入れ':'からだ拭き'}[storeCategory(p)]||'お世話');
 const cartIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3h3l3 12h11l3-9H6M8 18h11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="21" r="1.5" fill="currentColor"/><circle cx="18" cy="21" r="1.5" fill="currentColor"/></svg>';
 const storeCoin='<i class="store-coin" aria-label="コイン"></i>';
 const storeTabIcon=id=>id==='care'?'<svg viewBox="0 0 80 80" aria-hidden="true"><rect x="8" y="40" width="51" height="23" rx="7" fill="#a6b18c"/><path d="M59 51H70V32H43V14" fill="none" stroke="#657758" stroke-width="4"/><rect x="36" y="5" width="14" height="24" rx="5" fill="#6b805a"/></svg>':storeArt(productById({furniture:'box',play:'feather',food:'food_dry',tools:'groom_comb'}[id])||{id:'groom_comb',emoji:''});
-function storeAvailable(state,id){const p=productById(id);return !!p&&shopUnlocked(state,id)&&!(getItem(id)?.kind==='placed'&&owned(state,id)&&getDurability(state,id)>0);}
+function storeAvailable(state,id){const p=productById(id);return !!p&&!(id==='starter_set'&&state.flags.starterBought)&&shopUnlocked(state,id)&&!(getItem(id)?.kind==='placed'&&owned(state,id)&&getDurability(state,id)>0);}
 const storeReducer=reduceGameState;
 reduceGameState=function(state,action){
  if(action.type==='STORE_DETAIL')return {...state,ui:{...state.ui,storeDetail:action.id,storeDraftCount:1,storeCartOpen:false,storeConfirm:false,shopNotice:null}};
@@ -49,7 +50,7 @@ function storeArt(p){
  if(svg){const t=document.createElement('template');t.innerHTML=svg;const root=t.content.querySelector('svg');if(root){root.setAttribute('aria-hidden','true');root.removeAttribute('width');root.removeAttribute('height');return root.outerHTML;}}
  return p.emoji;
 }
-function storeQuantity(state,p){const n=storeCart(state)[p.id]||0;return `<div class="store-quantity"><button data-store="minus" data-id="${p.id}" aria-label="${p.label}を減らす" ${n?'':'disabled'}>−</button><span>${n}</span><button data-store="plus" data-id="${p.id}" aria-label="${p.label}をカートに追加" ${storeAvailable(state,p.id)&&!(getItem(p.id)?.kind==='placed'&&n)?'':'disabled'}>＋</button></div>`;}
+function storeQuantity(state,p){const n=storeCart(state)[p.id]||0;if(p.id==='starter_set')return '';return `<div class="store-quantity"><button data-store="minus" data-id="${p.id}" aria-label="${p.label}を減らす" ${n?'':'disabled'}>−</button><span>${n}</span><button data-store="plus" data-id="${p.id}" aria-label="${p.label}をカートに追加" ${storeAvailable(state,p.id)&&!(getItem(p.id)?.kind==='placed'&&n)?'':'disabled'}>＋</button></div>`;}
 function storeProducts(state){
  const products=SHOP_CATALOG.filter(p=>storeCategory(p)===(state.ui.shopTab||'furniture')).sort((a,b)=>Number(!shopUnlocked(state,a.id))-Number(!shopUnlocked(state,b.id)));
  let html='';for(let i=0;i<products.length;i+=2)html+=`<div class="store-shelf">${products.slice(i,i+2).map(p=>{const locked=!shopUnlocked(state,p.id),has=!storeAvailable(state,p.id)&&!locked;return `<button class="store-product ${locked?'is-locked':''}" data-store="detail" data-item="${p.id}" aria-label="${p.label}、${locked?'入荷待ち':has?'所持済み':p.price+'コイン'}、詳細を見る"><span class="store-art">${storeArt(p)}</span><span class="store-label"><strong class="store-product-name">${p.label}</strong><span class="store-price ${locked||has?'store-badge':''}">${locked?'入荷待ち':has?'所持済み':storeCoin+p.price}</span></span></button>`}).join('')}</div>`;
@@ -131,7 +132,10 @@ function fitStoreViewport(){
   }
   // Convert viewport pixels back to CSS coordinates, including scaled previews.
   const scale=box.height/screen.clientHeight||1;
-  scene.style.height=Math.max(0,(bottom-box.top)/scale)+'px';
+  const height=Math.max(0,(bottom-box.top)/scale);scene.style.height=height+'px';
+  const panel=scene.querySelector('.store-panel'),guided=typeof firstActive==='function'&&firstActive(gameState)&&!!gameState.onboarding.guide;
+  // Keep the category row/cart heading below the shared conversation, not behind it.
+  if(panel)panel.style.top=guided?Math.max(height*.31,(app.getBoundingClientRect().top-box.top)/scale+12+GUIDE_NOTE_HEIGHT+12)+'px':'';
  };
  storeBoundsObserver=new ResizeObserver(fit);storeBoundsObserver.observe(screen);storeBoundsObserver.observe(app);
  window.visualViewport?.addEventListener('resize',fit);window.addEventListener('resize',fit);

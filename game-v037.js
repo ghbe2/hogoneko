@@ -5,7 +5,7 @@ const ROOM_CONTROL_RESERVE=128;
 const ROOM_MENU_RESERVE=144;
 function layoutWallStart(height=app.clientHeight||window.innerHeight){return ROOM_MENU_RESERVE/height*100;}
 // The painted skirting is at y=429 in the 760-unit room artwork.
-function roomPlacementBounds(height=app.clientHeight||window.innerHeight){return {wallTop:ROOM_MENU_RESERVE,wallBottom:height*429/760-8,floorTop:height*429/760+8,floorBottom:height-ROOM_CONTROL_RESERVE};}
+function roomPlacementBounds(height=app.clientHeight||window.innerHeight,state=gameState){const intake=state.campaign.phase==='intake'&&state.onboarding?.status==='active'&&state.onboarding.flowVersion===1;return {wallTop:ROOM_MENU_RESERVE,wallBottom:height*429/760-8,floorTop:height*429/760+8,floorBottom:height-(intake?76:ROOM_CONTROL_RESERVE)};}
 function furnitureHeight(itemId){return itemId==='tower'?150:['bowl','water'].includes(itemId)?45:['shelf','decor_sun','litter'].includes(itemId)?65:84;}
 function constrainFurnitureY(itemId,y,height=app.clientHeight||window.innerHeight,itemHeight=furnitureHeight(itemId)){
  const b=roomPlacementBounds(height),wall=getItem(itemId)?.zone==='wall';
@@ -22,7 +22,14 @@ const dragBeforeControlZone=moveLayoutDrag;
 moveLayoutDrag=function(draft,x,y){dragBeforeControlZone(draft,x,y);if(draft.moved&&draft.ghost&&!draft.store){const r=draft.stageRect,b=roomPlacementBounds(r.height),wall=draft.zone==='wall',raw=y-r.top-draft.offsetY,bottom=raw+draft.height;
  draft.y=constrainFurnitureY(draft.itemId,raw/r.height*100,r.height,draft.height);draft.ghost.style.top=draft.y+'%';
  draft.valid=x>=r.left&&x<=r.right&&y>=r.top+b.wallTop&&y<=r.top+b.floorBottom&&(wall?bottom<=b.wallBottom:bottom>=b.floorTop);
- draft.ghost.classList.toggle('invalid',!draft.valid);draft.hint.textContent=draft.valid?'離してここに置く':wall?'壁の枠内に置く':'家具の足元を床の枠内に置く';}};
+ if(typeof guidedIntake==='function'&&guidedIntake(gameState)){
+  const frame=intakePlacementFrame(gameState,r.width,r.height),minY=Math.max(frame.top,frame.floor-draft.height);
+  draft.x=Math.max(12,Math.min(frame.width-12-draft.width,x-r.left-draft.offsetX))/frame.width*100;
+  draft.y=Math.max(minY,Math.min(frame.bottom-draft.height,raw))/frame.height*100;
+  draft.ghost.style.left=draft.x+'%';draft.ghost.style.top=draft.y+'%';
+  draft.valid=intakePositionClear({itemId:draft.itemId,x:draft.x,y:draft.y},getPlaced(getRoom(gameState)),frame);
+ }
+ draft.ghost.classList.toggle('invalid',!draft.valid);draft.hint.textContent=draft.valid?'離してここに置く':typeof guidedIntake==='function'&&guidedIntake(gameState)?'保護器や家具から少し離してね':wall?'壁の枠内に置く':'家具の足元を床の枠内に置く';}};
 function daylightAt(date=new Date(gameNow())){
  const hour=date.getHours()+date.getMinutes()/60;
  if(hour<6||hour>=19)return null;
@@ -35,7 +42,7 @@ getAvailableRoamPoints=function(state){const points=roamingBeforeSun(state),sun=
 const furnitureReducer=reduceGameState;
 reduceGameState=function(state,action){
  state=keepFurnitureAboveControls(state);
- if(action.type==='DROP_LAYOUT_ITEM'&&!action.store)action={...action,y:constrainFurnitureY(action.itemId,action.y)};
+ if(action.type==='DROP_LAYOUT_ITEM'&&!action.store){action={...action,y:constrainFurnitureY(action.itemId,action.y)};if(typeof guidedIntake==='function'&&guidedIntake(state)&&!intakePositionClear(action,getPlaced(getRoom(state)),intakePlacementFrame(state)))return state;}
  if(action.type==='ROAM_CAT'&&daylightAt()&&getAffinity(getCat(state),{affinityType:'sun'}).score>0&&Math.random()<.65)action={...action,index:990};
  if(action.type==='PICK_FURNITURE'){
   const item=getItem(action.itemId);if(!item||!owned(state,item.id)||getDurability(state,item.id)<=0)return state;
@@ -85,8 +92,11 @@ const roomInterfaceStyle=document.createElement('style');roomInterfaceStyle.text
 #app .layout-workbar button:disabled{opacity:.4}
 #app [data-layout-item].layout-selected{outline:2px dashed #637d59;outline-offset:5px}
 #app .intake-layout .layout-workbar{bottom:82px}
+#app .guided-intake .layout-workbar{bottom:18px}
 #app .layout-store-target{display:none;left:50%;right:auto;bottom:84px;transform:translateX(-50%);min-width:150px;min-height:52px;background:#fff8e9;z-index:28}
 #app .layout-dragging .layout-store-target{display:block}
+#app .guided-intake .layout-store-target{display:none}
+#app .guided-intake .wall-zone,#app .guided-intake .layout-zone span{display:none}
 #app .layout-dragging .layout-workbar{visibility:hidden}
 #app .layout-library{z-index:50;padding:110px 12px 16px;background:#65543c25}
 #app .furniture-sheet{display:flex;flex-direction:column;width:100%;height:100%;min-height:0;background:#fff9ed;border-radius:24px;padding:16px;box-shadow:0 10px 30px #604b3925}
@@ -146,11 +156,11 @@ renderDebugQuickbar=()=>'';renderDebugPanel=()=>'';renderIntakeDebug=()=>'';
 const fullFieldBackground=bookBackground;
 bookBackground=function(node,svg){if(node?.matches('.field-scene')&&svg)svg=svg.replace('<svg ','<svg preserveAspectRatio="xMidYMid slice" ');return fullFieldBackground(node,svg);};
 // Field selection and committed encounter rendering live in game-encounter.js.
-window.addEventListener('pointerdown',e=>{const svg=e.target.closest('.encounter-trap')?.querySelector('svg');if(svg&&fieldDragDraft?.ghost){fieldDragDraft.ghost.replaceChildren(svg.cloneNode(true));fieldDragDraft.ghost.style.width='160px';fieldDragDraft.ghost.style.height='100px';}});
+// Field drag artwork and geometry are owned by beginEncounterDrag.
 const fieldStyle=document.createElement('style');fieldStyle.textContent=`
 .screen-guide,.debug-quickbar,.debug-panel,.intake-debug-panel{display:none!important}.tutorial-focus{outline:none!important;animation:none!important}
 #app .field-scene .trap.ready{border-color:#70675f}
-#app .field-scene .illustrated-trap{width:160px;height:100px;transform:translate(-50%,-50%);border:0;border-radius:0;background:none;box-shadow:none;padding:0;opacity:1}#app .field-scene .illustrated-trap:after{display:none}#app .illustrated-trap>svg{width:100%;height:100%;pointer-events:none}
+#app .field-scene .illustrated-trap{width:110px;height:63px;transform:translate(-50%,-50%);border:0;border-radius:0;background:none;box-shadow:none;padding:0;opacity:1}#app .field-scene .illustrated-trap:after{display:none}#app .illustrated-trap>svg{width:100%;height:100%;pointer-events:none}
 #app .field-fullscreen .campaign-screen{position:relative;flex:1;min-height:0;padding:0}#app .field-fullscreen .campaign-scroll{position:relative;flex:1;height:100%;padding:0;display:block}#app .field-fullscreen .field-scene{position:absolute;inset:0;width:100%;height:100%;max-height:none;min-height:0;margin:0;border-radius:0;aspect-ratio:auto}#app .field-fullscreen .field-scene>svg{width:100%;height:100%}
 `;document.head.append(fieldStyle);
 // A reset must not be undone by pagehide/visibility/timer autosaves on reload.

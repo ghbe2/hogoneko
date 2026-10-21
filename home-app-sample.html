@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ホゴネコ｜おうち・アプリ試作</title><link rel="stylesheet" href="assets/home-app-sample.css"></head>
+<body><header class="sample-bar"><a href="check.html" aria-label="チェック一覧へ戻る">←</a><span>おうち・アプリ試作<small>セーブには影響しません</small></span><button id="intro-demo">初日の案内</button></header>
+<main id="sample" aria-label="おうち操作サンプル">
+ <section id="world" aria-label="こむぎのおうち">
+  <svg class="room-art" viewBox="0 0 375 720" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path fill="#e9e3cb" d="M0 0H375V720H0Z"/><path fill="#c4a574" d="M0 395H375V720H0Z"/><path fill="#a18459" d="M0 389H375V400H0Z"/><g stroke="#ad8e63" fill="none" opacity=".55"><path d="M0 470H375M0 552H375M0 636H375M105 400V470M282 470V552M133 552V636M305 636V720"/><path d="M25 490q25-8 50 0m150 89q33-8 60 0M130 442q20-8 41 0"/></g><path fill="#a38d63" d="M48 111L226 108 229 337 49 340Z"/><path fill="#f6eed9" d="M55 118H219V329H55Z"/><path fill="#c5d6ce" d="M62 125H212V320H62Z"/><path fill="#a4b995" d="M62 258Q129 223 212 268V320H62Z"/><circle cx="185" cy="161" r="20" fill="#f8e5a9"/><path d="M136 121V327M58 224H219" stroke="#f6eed9" stroke-width="8"/><path d="M39 106H236" stroke="#8a7956" stroke-width="6" stroke-linecap="round"/><path d="M41 111H83L65 255 70 345 36 345Z M235 111H201L217 255 211 345 242 345Z" fill="#bd977a"/><path d="M53 115L47 256 51 336M225 115L231 254 225 338" stroke="#dbc2a1" stroke-width="3" fill="none"/><path d="M45 333H234V344H45Z" fill="#a38d63"/></svg>
+  <div id="furniture"><div class="floor-box" data-floor-item="段ボール"><span></span></div><div class="floor-bowl" data-floor-item="ごはん皿"></div><div class="floor-bowl water" data-floor-item="水入れ"></div></div>
+  <div class="resident"><svg data-cat="sit" viewBox="200 55 320 340" aria-label="こむぎ"></svg></div>
+  <div class="room-top"><button id="travel" class="nav-button"></button><div class="room-top-right"><button id="layout" class="icon-button"></button><button id="open-app" class="icon-button"></button></div></div>
+  <p id="callout" role="status" hidden></p>
+  <aside class="preparation"><button id="prep-toggle" aria-expanded="false">準備 <span>⌃</span></button><div id="prep-content" hidden><button id="food-choice"></button><button id="tool-choice"></button></div></aside>
+  <nav class="care-actions" aria-label="お世話"><button data-care="play"></button><button data-care="clean"></button><button data-care="call"></button></nav>
+  <div id="layout-panel" hidden><p>家具を選んで、床をタップ</p><button data-place="段ボール">段ボール</button><button data-place="ごはん皿">ごはん皿</button><button id="layout-done">完了</button></div>
+  <div id="town" hidden><img src="assets/town-map.svg" alt="街のマップ"><p>移動ボタンの位置確認</p><button id="sample-shop">お店へ</button></div>
+ </section>
+ <section id="phone" role="dialog" aria-modal="true" aria-label="ネコのアプリ" hidden><div id="phone-content"></div><footer class="phone-footer"><button id="phone-close" aria-label="アプリを閉じておうちへ"><span></span></button></footer></section>
+ <section id="sheet" role="dialog" aria-modal="true" aria-label="選択" hidden></section>
+</main><script src="assets/cat-svg.js"></script><script src="assets/home-app-sample.js"></script></body></html>

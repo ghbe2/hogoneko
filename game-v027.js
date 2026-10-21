@@ -19,6 +19,7 @@ function advanceRealTicks(state,ticks,realtime=false){
   // Reuse meals, drinking, digestion and shedding in chronological order, one tick at a time.
   const from=(realtime?state.realClock.processedAt:(state.realClock.careSimulatedAt??state.realClock.processedAt))+i*REAL_TICK_MS;
   const careTicks=careSlotsBetween(realtime?Math.max(from,state.realClock.careProcessedAt??from):from,from+REAL_TICK_MS);
+  if(typeof applySurgeryFasting==='function')next=applySurgeryFasting(next,from+REAL_TICK_MS);
   if(careTicks)next=advanceCatLife(next,careTicks);
   let cat=getCat(next),body={...cat.body},ui={...next.ui},dayTicks=next.realClock.dayTicks+1;
   const missingFood=body.satiety<25,missingWater=body.hydration<25,dirty=body.litter>=3||body.vomit>0;
@@ -33,6 +34,8 @@ function advanceRealTicks(state,ticks,realtime=false){
   let week=next.week,durability=next.durability;
   if(dayTicks===8){
    dayTicks=0;body.days+=1;
+   cat.previousDayHeart=cat.heart;
+   if(cat.age==='kitten'&&cat.initialAge==='kitten'&&body.days<=7){body.weight+=120;if(body.days===7){cat.age='adult';cat.phenotype={...cat.phenotype,age:'adult'};}}
    body.weightHistory=[...(body.weightHistory||[]),body.weight];
    cat.heartCap=Math.min(CONFIG.week.heartCapMax,cat.heartCap+CONFIG.week.heartCapPerDay);
    const dayOfWeek=(week.dayOfWeek+1)%7;
@@ -57,7 +60,7 @@ function syncRealTime(state,now=gameNow()){
  let next=ticks?advanceRealTicks(state,ticks,true):state;
  const processedAt=state.realClock.processedAt+ticks*REAL_TICK_MS;
  const remaining=careSlotsBetween(Math.max(processedAt,state.realClock.careProcessedAt??processedAt),now);
- if(remaining)next=advanceCatLife(next,remaining);
+ if(remaining){if(typeof applySurgeryFasting==='function')next=applySurgeryFasting(next,now);next=advanceCatLife(next,remaining);}
  return reconcileVisit({...next,realClock:{...next.realClock,processedAt,careProcessedAt:now},lastSeenAt:now});
 }
 const beforeRealTimeReducer=reduceGameState;
