@@ -24,11 +24,11 @@ function stageCat(cat,area,random=Math.random,coatPool=stageCoats(area)){
   rescueProfile:{condition,heart},trustGainRate:condition ? .65 : 1,heart,body:{...cat.body,sick:!!condition,weight:age==='kitten'?(condition?650:680):(condition?2800:3100)}};
 }
 // Keep the water item for old saves and pouring animation, but never in food choices.
-if(gameState.ui.equippedFood==='water_refill')gameState.ui.equippedFood='starter_food';
+if(gameState.ui.equippedFood==='water_refill')gameState.ui.equippedFood='food_dry';
 SHOP_CATALOG.forEach(p=>p.shop='petshop');
 CONFIG.town.areas.find(a=>a.id==='a3').label='路地裏';
 const meetingInventory=renderInventory;
-renderInventory=function(state){const foods=CONFIG.stage1.foods;CONFIG.stage1.foods=foods.filter(f=>!f.water);try{return meetingInventory(state);}finally{CONFIG.stage1.foods=foods;}};
+renderInventory=function(state){const foods=CONFIG.stage1.foods;CONFIG.stage1.foods=foods.filter(f=>!f.water&&state.inventory[f.id]>=1);try{return meetingInventory(state);}finally{CONFIG.stage1.foods=foods;}};
 const meetingReducer=reduceGameState;
 reduceGameState=function(state,action){
  if(action.type==='EXECUTE_CONTACT'&&action.contact==='call'&&state.campaign.phase==='room'&&!state.ui.modal){
@@ -38,7 +38,7 @@ reduceGameState=function(state,action){
   const next=meetingReducer(named,action);
   return next;
  }
- if(state.ui.equippedFood==='water_refill')state={...state,ui:{...state.ui,equippedFood:'starter_food'}};
+ if(state.ui.equippedFood==='water_refill')state={...state,ui:{...state.ui,equippedFood:'food_dry'}};
  if(action.type==='OPEN_SUPPLIES')return meetingReducer({...state,campaign:{...state.campaign,phase:'shop',shopId:'petshop',shopReturnPhase:state.campaign.phase},ui:{...state.ui,modal:null,layoutMode:false,shopTab:action.tab||'food'}},{type:'CLEAR_MESSAGE'});
  if(action.type==='BACK_TO_TOWN'&&state.campaign.phase==='shop'&&['room','intake'].includes(state.campaign.shopReturnPhase))return {...state,campaign:{...state.campaign,phase:state.campaign.shopReturnPhase,shopReturnPhase:null},ui:{...state.ui,modal:null,layoutMode:false}};
  if(action.type==='OPEN_MAP_SHOP'){
@@ -52,7 +52,6 @@ reduceGameState=function(state,action){
  }
  if(action.type==='TREAT_CAT'){
   if(state.campaign.phase!=='shop'||state.campaign.shopId!=='clinic'||!getCat(state).body.sick)return state;
-  if(state.coins<CONFIG.care.clinic.cost)return {...state,ui:{...state.ui,modal:'wallet'}};
   const charged=spendCoins(state,CONFIG.care.clinic.cost,'診察・治療');return {...charged,cats:charged.cats.map((c,i)=>i?c:{...c,body:{...c.body,sick:false}})};
  }
  let next=meetingReducer(state,action);

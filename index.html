@@ -1333,7 +1333,7 @@
     .intake-ambient-heart { position:absolute; left:66%; top:34%; z-index:11; color:#d8667d; font-size:24px; opacity:0; filter:drop-shadow(0 3px 4px rgba(91,55,60,.2)); animation:intake-heart-glimpse 5.8s ease-in-out infinite; }
     .intake-ambient-heart.strong { font-size:31px; animation-delay:1.1s; }
     .intake-feedback { position:absolute; left:66%; top:34%; z-index:13; min-width:154px; transform:translateX(-50%); padding:8px 12px; border-radius:99px; background:#fffaf4f2; color:#815e61; font-size:10px; font-weight:900; text-align:center; box-shadow:0 5px 13px rgba(70,48,43,.14); animation:capture-note-in .25s ease-out; }
-    .intake-emerging-cat { position:absolute; left:66%; top:52%; z-index:9; width:119px; height:134px; transform:translate(-50%,-50%) scale(.62); animation:intake-emerge 1.25s ease-out both; }
+    .intake-emerging-cat { position:absolute; left:66%; top:52%; z-index:9; width:119px; height:134px; transform:translate(-50%,-50%) scale(var(--intake-cat-scale,1)); animation:intake-emerge 1.25s ease-out both; }
     .intake-emerging-cat .cat-fallback { inset:0; }
     .intake-footer { min-height:45px; display:grid; place-items:center; padding:7px 12px calc(7px + env(safe-area-inset-bottom)); background:#fffaf4; border-top:1px solid var(--line); color:var(--muted); font-size:9px; font-weight:800; text-align:center; }
     .intake-footer-call { width:100%; min-height:38px; border:0; border-radius:12px; background:#d87388; color:#fff; font-size:12px; font-weight:900; box-shadow:0 4px 0 #a85a69; }
@@ -1341,7 +1341,7 @@
     @keyframes heart-pulse { 50% { transform:scale(1.25); } }
     @keyframes carrier-uneasy { 0%,68%,82%,100% { transform:translate(-50%,-50%) rotate(0); } 71% { transform:translate(-53%,-50%) rotate(-1.5deg); } 74% { transform:translate(-47%,-50%) rotate(1.5deg); } 77% { transform:translate(-52%,-50%) rotate(-1deg); } 80% { transform:translate(-48%,-50%) rotate(1deg); } }
     @keyframes intake-heart-glimpse { 0%,56%,100% { opacity:0; transform:translate(-50%,6px) scale(.7); } 63% { opacity:1; transform:translate(-50%,-4px) scale(1); } 73% { opacity:0; transform:translate(-50%,-19px) scale(.9); } }
-    @keyframes intake-emerge { 0% { opacity:0; transform:translate(-50%,-50%) scale(.26); } 42% { opacity:1; transform:translate(-50%,-36%) scale(.47); } 100% { opacity:1; transform:translate(-64%,3%) scale(.62); } }
+    @keyframes intake-emerge { 0% { opacity:0; transform:translate(-50%,-50%) scale(var(--intake-cat-scale,1)); } 42% { opacity:1; transform:translate(-58%,-38%) scale(var(--intake-cat-scale,1)); } 100% { opacity:1; transform:translate(-64%,3%) scale(var(--intake-cat-scale,1)); } }
     .prep-object { position:absolute; display:grid; place-items:center; width:54px; height:54px; border-radius:15px; background:#fff9; font-size:28px; box-shadow:0 5px 12px #6443; animation:pop-in .2s ease-out; }
     .prep-object:nth-of-type(1) { left:20px; bottom:26px; }
     .prep-object:nth-of-type(2) { left:91px; bottom:35px; }
@@ -2608,8 +2608,8 @@ function reduceGameState(state, action) {
       return { ...state, campaign:{ ...state.campaign, clinicStep:"naming" } };
 
     case "START_INTAKE": {
-      const cost = CONFIG.stage1.campaign.clinicCost;
-      if (state.coins < cost) return state;
+      if (cat.status !== 'captured' || state.campaign.phase !== 'clinic') return state;
+      const cost = initialExamInvoice(cat).total;
       const name = String(action.name || "").trim().slice(0, 8);
       if (!name) return { ...state, ui:{ ...state.ui, message:"名前を入力してね" } };
       const resetCat = {
@@ -3033,7 +3033,7 @@ function reduceGameState(state, action) {
         favorite:isLikedAffinity(result.affinity) ? item.id : cat.notebook.favorite,
         disliked:isNegativeAffinity(result.affinity) ? item.id : cat.notebook.disliked,
       };
-      const worn = wearToy(state, item.id);
+      const worn = action.live&&Number.isFinite(action.playMilliseconds)?wearToyForTime(state,item.id,action.playMilliseconds):wearToy(state,item.id);
       const equippedHand = worn.inventory[item.id] > 0 ? item.id : null;
       const liveReaction = result.affinity === "superMatch" || result.affinity === "match"
         ? null
@@ -3046,6 +3046,7 @@ function reduceGameState(state, action) {
         ...state,
         inventory:worn.inventory,
         durability:worn.durability,
+        toyWearMs:worn.toyWearMs||state.toyWearMs,
         cats:[{ ...cat, heart:application.nextHeart, body:{ ...cat.body, weight:cat.body.weight + (bodyUsed ? 0 : 1) }, notebook }],
         ui:{ ...state.ui, modal:null, equippedHand, equippedContact:null, playMode:false, usedHandItems:{ ...state.ui.usedHandItems, [usedKey]:nextUsedValue, [bodyKey]:true, heart_overflow:state.ui.usedHandItems.heart_overflow || application.overflowUsed },
           roamIndex:action.anchorIndex ?? (result.referenceStage.id === "fear" ? state.ui.roamIndex : 4),
@@ -3141,7 +3142,7 @@ function reduceGameState(state, action) {
       const nextCleaner = inventory[cleaner.id] > 0 ? cleaner.id : CONFIG.stage1.cleaners.find(tool => inventory[tool.id] > 0)?.id || cleaner.id;
       const suffix = cleared
         ? `${getProblemLabel(problem)}がきれいになった${careBonus ? "・今日の世話が信頼になった" : ""}`
-        : `汚れが${oldLevel}→${nextLevel}。もう一度必要`;
+        : cleaner.id==='starter_clean'?'毛以外の汚れは、少しずつしか落とせません。':'少しずつきれいになっています。';
       return {
         ...state,
         inventory,
@@ -3385,7 +3386,7 @@ function renderCampaignProgress(step) {
 function renderTitle(state) {
   const continuing = state.onboarding.status !== "new";
   const titleCat = continuing && getCat(state).status === 'raising' ? getCat(state) : initialCat;
-  return `<section class="title-screen" aria-label="タイトル"><h1>ホゴネコ</h1><div class="intro-illustration">${renderCatArt(titleCat)}</div><div class="title-actions"><button class="opening-start" data-action="start-game"><span>${continuing ? "つづきから" : "はじめる"}</span><span aria-hidden="true">→</span></button></div></section>`;
+  return `<section class="title-screen" aria-label="タイトル"><h1>ホゴネコ</h1><div class="intro-illustration">${renderCatArt(titleCat)}</div><div class="title-actions"><button class="opening-start campaign-button" data-action="start-game"><span>${continuing ? "つづきから" : "はじめる"}</span></button></div></section>`;
 }
 
 function renderOpeningStory(state) {
@@ -4522,8 +4523,8 @@ function startCommandDrag(draft, clientX, clientY) {
   const emoji = draft.target.querySelector(".command-emoji, .big-emoji")?.textContent || "●";
   const ghost = document.createElement("div");
   ghost.className = "command-ghost";
-  const artwork=draft.target.querySelector('.command-emoji svg');
-  if(artwork){const copy=artwork.cloneNode(true);copy.style.width='64px';copy.style.height='64px';ghost.append(copy);}else ghost.textContent = emoji;
+  const artwork=draft.target.querySelector('.command-emoji img,.command-emoji svg,.big-emoji img,.big-emoji svg');
+  if(artwork){const copy=artwork.cloneNode(true);copy.style.width='56px';copy.style.height='56px';ghost.append(copy);}else ghost.textContent = emoji;
   ghost.style.left = `${clientX}px`;
   ghost.style.top = `${clientY}px`;
   document.body.appendChild(ghost);
@@ -4584,7 +4585,7 @@ function completeCommandDrag(draft, clientX, clientY) {
   const motionLabel = draft.fastMs > draft.slowMs * 1.2
     ? "速い動きを追いかけた"
     : draft.slowMs > draft.fastMs * 1.4 ? "ゆっくり揺れる玩具を見つめた" : "動きの変化に反応した";
-  dispatch({ type:"FINISH_PLAY", live:true, itemId:draft.itemId, anchorIndex:draft.liveAnchorIndex, motionLabel, liveHeartGain:draft.heartEarned,
+  dispatch({ type:"FINISH_PLAY", live:true, itemId:draft.itemId, anchorIndex:draft.liveAnchorIndex, motionLabel, liveHeartGain:draft.heartEarned,playMilliseconds:draft.activePlayMs||0,
     x:Math.max(5, Math.min(95, ((clientX - stageRect.left) / stageRect.width) * 100)),
     y:Math.max(12, Math.min(85, ((clientY - stageRect.top) / stageRect.height) * 100)),
   });
@@ -4697,6 +4698,7 @@ function updateLiveHeartMeter(draft, stage) {
 }
 
 function accrueLivePlayHeart(draft, catElement, result, segment, dt, speed) {
+  if(segment>=.15){const available=Math.max(0,toyPlayMillisecondsLeft(gameState,draft.itemId)-(draft.activePlayMs||0));dt=Math.min(Math.max(0,Math.min(100,dt)),available);draft.activePlayMs=(draft.activePlayMs||0)+dt;if(dt<=0)return;}
   if (result.baseHeart <= 0 || segment < .15) return;
   const usedKey = `play_${draft.itemId}`;
   const earnedToday = Number(gameState.ui.usedHandItems[usedKey]) || 0;
@@ -4867,6 +4869,8 @@ normalizeLoadedState=state=>migrateLifeState(normalizeBeforeV016(state));
 gameState=migrateLifeState(gameState);
 
 // One simulation tick is three in-game hours. Numbers are prototype tuning, not medical guidance.
+// Define before the saved-clock catch-up, so offline meals use the same affinity.
+function foodNutritionMultiplier(cat,id){const affinity=resolveInteraction(cat,'feed',getFood(id)).affinity;return ({superMatch:1.25,match:1.15,neutral:1,dislike:.9,superDislike:.8})[affinity]||1;}
 function advanceCatLife(state, ticks=1) {
   if(getCat(state).status!=="raising" && state.campaign.phase!=="room")return state;
   let body={...getCat(state).body,digestion:[...(getCat(state).body.digestion||[])],hair:[...(getCat(state).body.hair||[])]};
@@ -4881,9 +4885,11 @@ function advanceCatLife(state, ticks=1) {
     body.litter=Math.min(6,(Number(body.litter)||0)+digested);
     if(placed.has("bowl")&&body.foodLevel>0&&body.satiety<85){
       const portion=Math.min(50,body.foodLevel);body.foodLevel-=portion;body.satiety+=portion*.8;
-      body.digestion.push(body.lifeTicks+2);body.weight+=CONFIG.care.feed.body.weight*(portion/50);ate=true;
+      const nutrition={food_dry:18,food_wet:24,food_chicken:26,food_fish:28,food_soup:22};
+      body.digestion.push(body.lifeTicks+2);body.weight+=(nutrition[body.bowlFood]||18)*(portion/50)*foodNutritionMultiplier(getCat(state),body.bowlFood);ate=true;
       if(body.satiety>100){body.vomit=Math.min(6,(Number(body.vomit)||0)+1);body.satiety=Math.max(0,body.satiety-45);body.digestion.pop();threwUp=true;}
     }
+    if(body.surgeryFoodStored!==undefined&&getCat(state).age!=='kitten')body.weight=Math.max(1,body.weight-4);
     if(placed.has("water")&&body.waterLevel>0&&body.hydration<70){const sip=Math.min(50,body.waterLevel);body.waterLevel-=sip;body.hydration=Math.min(100,body.hydration+sip*.8);drank=true;}
     const groomed=body.groomedTicks>0;body.groomedTicks=Math.max(0,(body.groomedTicks||0)-1);body.looseCoat=Math.min(10,(body.looseCoat||0)+(groomed?.25:1.5));
     // Sparse, irregular shedding; grooming lowers the probability, not a fixed timer.
@@ -4975,14 +4981,14 @@ reduceGameState=function(state,action){
     if(state.ui.layoutMode||c.phase!=="room")return state;
     if(state.ui.careAnimation){
       const a=state.ui.careAnimation,level=water?cat.body.waterLevel:cat.body.foodLevel;
-      if((action.operation==="food"||water)&&a.operation===(water?"water":"food")&&!a.queuedFill&&level===0&&(water||state.inventory[a.foodId]>=1))return {...state,ui:{...state.ui,careAnimation:{...a,queuedFill:true}}};
+      if((action.operation==="food"||water)&&a.operation===(water?"water":"food")&&!a.queuedFill&&level===0&&(water||getFood(a.foodId)?.unlimited&&state.inventory[a.foodId]>=1||state.inventory[a.foodId]>=2))return {...state,ui:{...state.ui,careAnimation:{...a,queuedFill:true}}};
       return state;
     }
     if(action.operation==="food"||water){
       const itemId=water?"water":"bowl",level=water?cat.body.waterLevel:cat.body.foodLevel;
       if(!getPlaced(getRoom(state)).some(p=>p.itemId===itemId)||level>=100)return state;
       const food=water?getFood("water_refill"):getFood(action.foodId||state.ui.equippedFood);
-      if(!food||!water&&!(state.inventory[food.id]>=.5))return {...state,ui:{...state.ui,modal:"inventory",inventoryTab:"food"}};
+      if(!food||!water&&!(state.inventory[food.id]>=1))return {...state,ui:{...state.ui,modal:"inventory",inventoryTab:"food"}};
       const point=getPlacedPoint(state,itemId,{x:38,y:80});
       return {...state,ui:{...state.ui,modal:null,careAnimation:{id:Date.now()+Math.random(),operation:water?"water":"food",foodId:food.id,...point,emoji:water?"💧":food.emoji},reaction:null,catFocus:null}};
     }
@@ -4995,11 +5001,11 @@ reduceGameState=function(state,action){
   if(action.type==="FINISH_CARE"){
     const a=state.ui.careAnimation;if(!a||a.id!==action.id)return state;
     if(a.operation==="food"||a.operation==="water"){
-      const water=a.operation==="water",key=water?"waterLevel":"foodLevel",portion=a.queuedFill?100:50,cost=portion/100,body={...cat.body,[key]:Math.min(100,(cat.body[key]||0)+portion)};
-      if(!water&&!(state.inventory[a.foodId]>=cost))return {...state,ui:{...state.ui,careAnimation:null}};
+      const water=a.operation==="water",key=water?"waterLevel":"foodLevel",portion=a.queuedFill?100:50,cost=portion/50,unlimited=getFood(a.foodId)?.unlimited,body={...cat.body,[key]:Math.min(100,(cat.body[key]||0)+portion)};
+      if(!water&&!(state.inventory[a.foodId]>=(unlimited?1:cost)))return {...state,ui:{...state.ui,careAnimation:null}};
       if(!water)body.bowlFood=a.foodId;
       const bonus=state.ui.usedHandItems.care_trust?0:CONFIG.stage1.careTrust.dailyBonus;
-      return {...state,inventory:water?state.inventory:{...state.inventory,[a.foodId]:state.inventory[a.foodId]-cost},cats:[{...cat,body,heart:updateHeart(cat,bonus)}],ui:{...state.ui,careAnimation:null,usedHandItems:{...state.ui.usedHandItems,care_trust:true},reaction:bonus?makeReaction("match","♥","","clean"):null}};
+      return {...state,inventory:water||unlimited?state.inventory:{...state.inventory,[a.foodId]:state.inventory[a.foodId]-cost},cats:[{...cat,body,heart:updateHeart(cat,bonus)}],ui:{...state.ui,careAnimation:null,usedHandItems:{...state.ui.usedHandItems,care_trust:true},reaction:bonus?makeReaction("match","♥","","clean"):null}};
     }
     if(a.operation==="groom"){
       if(!state.inventory[a.stock])return {...state,ui:{...state.ui,careAnimation:null}};
@@ -5199,6 +5205,7 @@ triggerAutoEvent=function(){
 <link rel="stylesheet" href="assets/home-app.css">
 <script src="game-home-app.js"></script>
 <link rel="stylesheet" href="assets/room-ui.css">
+<script src="assets/room-corner-art.js"></script>
 <script src="game-room-ui.js"></script>
 <link rel="stylesheet" href="assets/center-household.css">
 <script src="game-rescue-center.js"></script>
@@ -5209,6 +5216,14 @@ triggerAutoEvent=function(){
 <link rel="stylesheet" href="assets/app-services.css">
 <script src="game-home-tour.js"></script>
 <link rel="stylesheet" href="assets/home-tour.css">
+<script src="game-economy-balance.js"></script>
+<script src="game-family-letter.js"></script>
+<link rel="stylesheet" href="assets/family-letter.css">
+<script src="game-release-return.js"></script>
+<link rel="stylesheet" href="assets/release-return.css">
+<script src="game-senior-rescue.js"></script>
+<link rel="stylesheet" href="assets/senior-rescue.css">
+<link rel="stylesheet" href="assets/action-buttons.css">
 <script>
 // Render only after every module has installed its current rules and artwork.
 document.addEventListener('DOMContentLoaded', () => render(gameState), {once:true});

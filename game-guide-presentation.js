@@ -3,7 +3,10 @@
 const guideSpeechCache=new Map();
 const guideFocusSeen=new Set();
 let guidePresentationFrame=0;
-function guideHand(kind='tap'){return `<span class="guide-gesture" data-kind="${kind}" aria-hidden="true"><svg viewBox="0 0 48 58"><path d="M15 31V9q0-7 6-7t6 7v15q3-5 7-1 4-2 7 2 5 0 5 6v11q0 12-12 12H25q-5 0-8-5L6 34q-3-5 2-7 3-1 7 4Z" fill="#fff8e9" stroke="#596f4d" stroke-width="2.5" stroke-linejoin="round"/><path d="M15 5L11 1M31 6l4-5M7 14H2" stroke="#596f4d" stroke-width="2" stroke-linecap="round"/></svg></span>`;}
+function guideHand(kind='tap'){
+ const tap=kind==='tap',vertical=['drag','swipe-down'].includes(kind),effect=tap?'M28 3V10M44 13L38 16M12 13L18 16':vertical?'M28 3V48':'M5 20H51';
+ return `<span class="guide-gesture" data-kind="${kind}" aria-hidden="true"><svg viewBox="0 0 64 80"><g class="guide-trace ${tap?'tap-rays':''}" fill="none" stroke-linecap="round"><path d="${effect}" stroke="#fffdf3" stroke-width="7"/><path d="${effect}" stroke="#584137" stroke-width="3"/></g><g class="guide-hand"><path d="M22 46V27q0-7 6-7t6 7v15q3-5 7-1 4-2 7 2 5 0 5 6v11q0 12-12 12H32q-5 0-8-5L13 49q-3-5 2-7 3-1 7 4Z" fill="#fff8e9" stroke="#584137" stroke-width="3" stroke-linejoin="round"/></g></svg></span>`;
+}
 // The same speaker, companion, typography and controls are used outside the tutorial too.
 function seniorDialogueContents(copy,controls){
  const portrait=seniorArt().replace('viewBox="0 0 220 270"','viewBox="45 5 135 190"');
@@ -17,10 +20,10 @@ function guidePresentation(state){
  layer.dataset.facility=state.campaign.shopId||'';
  const key=first?state.onboarding.guide:state.onboarding.townStep;
  const spec=(first?FIRST_GUIDES:TOWN_TUTORIAL)[key];if(!spec)return;
- const note=layer.querySelector('aside'),p=note.querySelector('p'),ring=layer.querySelector('.first-guide-ring,.tutorial-ring');
- const text=p.textContent;
- if(!note.querySelector('.first-senior'))note.insertAdjacentHTML('afterbegin',`<span class="first-senior">${seniorArt()}</span>`);
- note.querySelector('.first-senior svg')?.setAttribute('viewBox','45 5 135 190');
+ const note=layer.querySelector('aside'),ring=layer.querySelector('.first-guide-ring,.tutorial-ring');
+ const text=note.querySelector('p').textContent,controls=[...note.querySelectorAll('button')];
+ note.innerHTML=seniorDialogueContents(text,'');note.querySelector('nav').append(...controls);
+ const p=note.querySelector('p');
  note.classList.add('shared-guide-note');
  const speaker=note.querySelector('header strong,aside>strong');if(speaker){speaker.textContent='保護主のせんぱい';speaker.classList.add('senior-dialogue-name');}
  const advance=note.querySelector('button');if(advance)advance.textContent=advance.textContent.replace(/\s*[→›]\s*$/,'');
@@ -28,8 +31,8 @@ function guidePresentation(state){
  const id=(first?'first:':'town:')+key+':'+text;
  if(!guideSpeechCache.has(id))guideSpeechCache.set(id,performance.now());
  const start=guideSpeechCache.get(id),chars=Array.from(text),next=note.querySelector('button');
- const cue=key==='bait'?'swipe':key==='trap'?'drag':['rescue','trapReady','toClinic','clinicBuilding','firstCommand','receipt','pay','shopBuilding','tools','starter','addCart','purchase','homeBuilding','layout','addFurniture','chooseFurniture','addMore','cutCardboard','name','callFirst','callAgain'].includes(key)?'tap':null;
- const noFocus=!!cue||['area','fieldHello','captured','clinicHello','healthCommand','surgeryCommand','healthy','stats','shopHello','shopHelloDetail','homeHello','roomExplain','roomReady','farewell','lifeStarts','askSenior','goodLuck','essentials','cardboard','moveFurniture','callWait'].includes(key);
+ const cue=key==='bait'?(encounterFoods(state).length===1?'tap':'swipe'):key==='moveFurniture'?'swipe':['trap','swipe'].includes(key)?'drag':key==='clinicScroll'?'swipe-down':['rescue','trapReady','toClinic','clinicBuilding','firstCommand','receipt','pay','shopBuilding','tools','starter','addCart','purchase','homeBuilding','layout','addFurniture','chooseFurniture','addMore','cutCardboard','name','callFirst','callAgain'].includes(key)?'tap':null;
+ const noFocus=!!cue||['area','fieldHello','captured','clinicHello','healthy','stats','shopHello','shopHelloDetail','homeHello','roomExplain','roomReady','farewell','lifeStarts','askSenior','goodLuck','essentials','cardboard','callWait'].includes(key);
  if(cue)layer.insertAdjacentHTML('beforeend',guideHand(cue));
  const hand=layer.querySelector('.guide-gesture');
  if(noFocus)ring.hidden=true;
@@ -51,7 +54,7 @@ function guidePresentation(state){
    if(!guideFocusSeen.has(id)){guideFocusSeen.add(id);if(!matchMedia('(prefers-reduced-motion: reduce)').matches)ring.animate([{transform:'scale(1.65)',opacity:0},{transform:'scale(1)',opacity:1}],{duration:420,easing:'ease-out'});}
   }
   const a=app.getBoundingClientRect(),r=target?.getBoundingClientRect();
-  if(hand){hand.hidden=!ready||!r||target.disabled||getComputedStyle(target).visibility==='hidden';if(r)Object.assign(hand.style,{left:Math.max(cue==='swipe'?34:4,Math.min(a.width-(cue==='swipe'?82:52),(cue==='tap'?r.right-30:r.left+r.width*.65-15)-a.left))+'px',top:Math.max(cue==='drag'?44:4,Math.min(a.height-72,(cue==='swipe'?r.top+10:r.top+r.height*.5)-a.top))+'px'});}
+  if(hand){hand.hidden=!ready||!r||target.disabled||getComputedStyle(target).visibility==='hidden';if(r)Object.assign(hand.style,{left:Math.max(cue==='swipe'?34:4,Math.min(a.width-(cue==='swipe'?82:52),r.left+r.width*(cue==='tap'?.64:.5)-21-a.left))+'px',top:Math.max(cue==='drag'?44:4,Math.min(a.height-66,r.top+r.height*.5-15-a.top))+'px'});}
   note.style.top=r&&r.top+r.height/2>a.top+a.height/2?'12px':'auto';note.style.bottom=note.style.top==='auto'?'12px':'auto';
   if(['field','trapInspect','clinic'].includes(state.campaign.phase)){note.style.top='18px';note.style.bottom='auto';}
   if(state.campaign.phase==='shop'){note.style.top='12px';note.style.bottom='auto';}
@@ -60,13 +63,24 @@ function guidePresentation(state){
  };tick();
 }
 const guidePresentationRender=render;
-render=function(state){guidePresentationRender(state);guidePresentation(state);};
+let previousSceneKey=null;
+function navigationSceneKey(state){const c=state.campaign;return [titleScreenOpen?'title':c.phase,c.phase==='shop'?c.shopId:'',c.phase==='clinic'?c.clinicStep:'',c.phase==='result'&&c.tnrRelease?'release':''].join(':');}
+render=function(state){
+ const key=navigationSceneKey(state),fallback=previousSceneKey!==null&&previousSceneKey!==key&&!guideNavigationBusy&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const snapshot=fallback?app.cloneNode(true):null;previousSceneKey=key;
+ guidePresentationRender(state);guidePresentation(state);
+ if(snapshot){
+  snapshot.removeAttribute('id');snapshot.removeAttribute('aria-live');snapshot.className='navigation-snapshot';snapshot.setAttribute('aria-hidden','true');snapshot.inert=true;
+  const veil=document.createElement('div');veil.className='navigation-veil';app.append(snapshot,veil);guideNavigationBusy=true;
+  veil.animate([{opacity:0},{opacity:1}],{duration:180,fill:'forwards'}).finished.then(()=>{snapshot.remove();return veil.animate([{opacity:1},{opacity:0}],{duration:260,fill:'forwards'}).finished;}).finally(()=>{snapshot.remove();veil.remove();guideNavigationBusy=false;});
+ }
+};
 window.addEventListener('click',e=>{if(app.querySelector('[data-reading="true"]')){e.preventDefault();e.stopImmediatePropagation();}},true);
 window.addEventListener('pointerdown',e=>{if(app.querySelector('[data-reading="true"]')){e.preventDefault();e.stopImmediatePropagation();}},true);
 // Fade both sides of navigation, never re-enter the reducer while an exit is playing.
 const guideNavigationDispatch=dispatch;
 let guideNavigationBusy=false;
-const fadeActions=new Set(['START_GAME','GO_HOME','BACK_TO_TOWN','OPEN_MAP_SHOP','CHOOSE_AREA','GO_CLINIC','PAY_FIRST_EXAM','FIRST_EXAM','FIRST_FINISH','GO_EVENT','NEXT_RESCUE']);
+const fadeActions=new Set(['START_GAME','GO_HOME','OPEN_OUTING','BACK_TO_TOWN','OPEN_MAP_SHOP','OPEN_SUPPLIES','CHOOSE_AREA','GO_CLINIC','PAY_FIRST_EXAM','FIRST_EXAM','FIRST_FINISH','GO_EVENT','NEXT_RESCUE','HOME_FROM_ADOPTION','START_SURGERY','FINISH_SURGERY','FINISH_EXAM','GO_SURGERY']);
 dispatch=function(action){
  if(action.type==='START_GAME'){guideSpeechCache.clear();guideFocusSeen.clear();}
  const storyExit=action.type==='NEXT_STORY'&&gameState.onboarding.storyIndex===INTRODUCTION_PAGES.length-1;

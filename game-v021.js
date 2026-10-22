@@ -1,44 +1,49 @@
 'use strict';
 // Starter supplies use finite save values; unlimited use is a rule, not Infinity in JSON.
-const starterIDs=['starter_toy','starter_food','starter_clean','water_refill'];
+const starterIDs=['starter_toy','food_dry','starter_clean','water_refill'];
 CONFIG.items.push({id:'starter_toy',label:'布きれじゃらし',kind:'hand',affinityType:'chase',durability:1,playEfficiency:.5,body:{},unlimited:true});
 CONFIG.stage1.handItems.unshift('starter_toy');
-CONFIG.stage1.foods.unshift({id:'starter_food',label:'おすそわけカリカリ',emoji:'◉',affinityType:'food',unlimited:true});
-CONFIG.stage1.cleaners.unshift({id:'starter_clean',label:'コロコロ',emoji:'▱',power:.5,hairPickup:6,uses:1,unlimited:true});
+Object.assign(getFood('food_dry'),{unlimited:true});
+SHOP_CATALOG.splice(SHOP_CATALOG.findIndex(p=>p.id==='food_dry'),1);
+CONFIG.stage1.cleaners.unshift({id:'starter_clean',label:'コロコロ',emoji:'▱',power:.05,hairPickup:6,uses:1,unlimited:true});
 Object.assign(getFood('water_refill'),{label:'小さな水くみ',unlimited:true});
 bookIcons.starter_toy=bookSVG('<path d="M55 185Q95 118 144 42" fill="none" stroke="#927653" stroke-width="9" stroke-linecap="round"/><path d="M142 40Q178 66 170 110L208 138 161 149 150 105Q157 71 142 40" fill="#b98981"/>');
 bookIcons.starter_clean=bookSVG('<path d="M172 76h24v55h-66v40" fill="none" stroke="#8c9692" stroke-width="11" stroke-linejoin="round"/><rect x="114" y="158" width="32" height="65" rx="14" fill="#b98880"/><rect x="30" y="36" width="153" height="77" rx="20" fill="#faf3df" stroke="#b8ad96" stroke-width="5"/><path d="M58 42v65M151 42v65" stroke="#ded4bb" stroke-width="3"/><path d="M76 74q10-12 20 0m13 13q10-12 20 0" fill="none" stroke="#a5947c" stroke-width="3"/>');
-bookIcons.starter_food=bowlSVG(false,true);bookIcons.water_refill=bowlSVG(true,true);
-getFood('starter_food').emoji=bookImage(bookIcons.starter_food);
+bookIcons.food_dry=bowlSVG(false,true);bookIcons.water_refill=bowlSVG(true,true);
+getFood('food_dry').emoji=bookImage(bookIcons.food_dry);
 getFood('water_refill').emoji=bookImage(bookIcons.water_refill);
 getCleaner('starter_clean').emoji=bookImage(bookIcons.starter_clean);
 TOY_EMOJI.starter_toy=bookImage(bookIcons.starter_toy);
 TOOL_META.starter_toy={emoji:TOY_EMOJI.starter_toy,label:'布きれじゃらし',kind:'玩具'};
 function ensureStarterSupplies(state){
- return {...state,inventory:{...state.inventory,...Object.fromEntries(starterIDs.map(id=>[id,1]))},durability:{...state.durability,starter_toy:1}};
+ const inventory={...state.inventory};
+ for(const food of CONFIG.stage1.foods)if(!food.water&&Number.isFinite(inventory[food.id]))inventory[food.id]=Math.ceil(inventory[food.id]);
+ // Read legacy saves once; the old food is no longer a catalogue item.
+ const oldFood=Number(inventory.starter_food)||0;delete inventory.starter_food;
+ const unlocked=state.flags.starterBought||(state.onboarding?.flowVersion!==1&&(oldFood>0||['raising','intake'].includes(getCat(state).status)));
+ if(unlocked)for(const id of starterIDs)inventory[id]=1;
+ const foodId=id=>id==='starter_food'?'food_dry':id;
+ return {...state,inventory,ui:{...state.ui,equippedFood:foodId(state.ui.equippedFood)},campaign:{...state.campaign,fieldFood:foodId(state.campaign.fieldFood),bait:(state.campaign.bait||[]).map(foodId)},cats:state.cats.map(c=>({...c,body:{...c.body,bowlFood:foodId(c.body.bowlFood)}})),durability:{...state.durability,...(unlocked?{starter_toy:1}:{})}};
 }
 Object.assign(DEFAULT_GAME_STATE,ensureStarterSupplies(DEFAULT_GAME_STATE));
 const starterNormalize=normalizeLoadedState;
 normalizeLoadedState=function(...args){const state=starterNormalize(...args);return state?ensureStarterSupplies(state):state;};
 const starterWear=wearToy;
 wearToy=(state,id)=>id==='starter_toy'?{inventory:state.inventory,durability:state.durability,broken:false}:starterWear(state,id);
-// Keep the same SVG in the hand while dragging, instead of its empty textContent.
-const starterDrag=startCommandDrag;
-startCommandDrag=function(draft,...args){starterDrag(draft,...args);const icon=draft.target.querySelector('.command-emoji img,.big-emoji img');if(icon&&draft.ghost)draft.ghost.replaceChildren(icon.cloneNode(true));};
 const starterReduce=reduceGameState;
 reduceGameState=function(state,action){
  const care=state.ui.careAnimation;
  let next=starterReduce(ensureStarterSupplies(state),action);
  // The lint roller collects nearby fur efficiently, but keeps low power for other dirt.
- if(action.type==='FINISH_CARE'&&care?.id===action.id&&care.operation==='hair'&&care.cleanerId==='starter_clean'&&!next.ui.careAnimation){
+ if(action.type==='FINISH_CARE'&&care&&care.id===action.id&&care.operation==='hair'&&care.cleanerId==='starter_clean'&&!next.ui.careAnimation){
   const hair=getCat(state).body.hair,target=hair.find(h=>h.id===care.hairId)||hair[0];
   const nearest=[...hair].sort((a,b)=>target?Math.hypot(a.x-target.x,a.y-target.y)-Math.hypot(b.x-target.x,b.y-target.y):0);
   const removed=new Set(nearest.slice(0,getCleaner('starter_clean').hairPickup).map(h=>h.id));
   next={...next,cats:next.cats.map((cat,i)=>i?cat:{...cat,body:{...cat.body,hair:hair.filter(h=>!removed.has(h.id))}})};
  }
  // All bowls use the same half-fill gesture, including free starter supplies.
- if(action.type==='FINISH_CARE'&&care?.id===action.id&&!next.ui.careAnimation&&
-   (care.operation==='water'||care.operation==='food'&&care.foodId==='starter_food')){
+ if(action.type==='FINISH_CARE'&&care&&care.id===action.id&&!next.ui.careAnimation&&
+   (care.operation==='water'||care.operation==='food'&&care.foodId==='food_dry')){
   const key=care.operation==='water'?'waterLevel':'foodLevel';
   next={...next,cats:next.cats.map((cat,i)=>i?cat:{...cat,body:{...cat.body,[key]:Math.min(100,(getCat(state).body[key]||0)+(care.queuedFill?100:50))}})};
  }
@@ -76,7 +81,7 @@ render=function(state){starterRender(state);
   const id=cell.dataset.item||cell.dataset.food||cell.dataset.cleaner;if(!starterIDs.includes(id))return;
   const count=cell.querySelector('.stock,.cell-count');if(count)count.textContent='∞';
   const durability=cell.querySelector('.durability');if(durability)durability.remove();
-  const small=cell.querySelector('small');if(small)small.textContent=id==='starter_toy'?'∞・ゆっくり育つ':id==='starter_clean'?'∞・毛に強い／汚れに弱い':'∞・半分ずつ補充';
+  const small=cell.querySelector('small');if(small)small.textContent=id==='starter_toy'?'∞・ゆっくり育つ':id==='starter_clean'?'∞・毛に強い／汚れに弱い':'∞・1食ずつ補充';
  });
 };
 let charging=null;
@@ -105,6 +110,6 @@ const compactStyle=document.createElement('style');compactStyle.textContent=`
 .command-ghost .book-icon{width:42px;height:42px}
 `;document.head.appendChild(compactStyle);
 if(gameState.onboarding.status==='new'&&!gameState.flags.starterSuppliesV021){
- gameState={...gameState,ui:{...gameState.ui,equippedHand:'starter_toy',equippedFood:'starter_food',equippedCleaner:'starter_clean'}};
+ gameState={...gameState,ui:{...gameState.ui,equippedHand:'starter_toy',equippedFood:'food_dry',equippedCleaner:'starter_clean'}};
 }
 gameState={...ensureStarterSupplies(gameState),flags:{...gameState.flags,starterSuppliesV021:true}};saveGameState(gameState);

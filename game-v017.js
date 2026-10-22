@@ -6,9 +6,9 @@ try{if(DEBUG_CLOCK_ENABLED&&localStorage.getItem(SAVE_KEY))debugClockOffset=Math
 function gameNow(){return Date.now()+debugClockOffset;}
 if(DEBUG_CLOCK_ENABLED){
  const style=document.createElement('style');style.textContent='body:has(.clock-debug-bar){display:flex;flex-direction:column}body:has(.clock-debug-bar) #app{height:calc(100svh - 48px);flex:none}.clock-debug-bar{height:48px;flex:none;width:100%;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:#514940;color:#fff;font:12px system-ui}.clock-debug-bar button{min-height:40px;padding:0 16px;border:0;border-radius:8px;background:#fff5df;color:#514940;font-weight:700}';document.head.appendChild(style);
- const bar=document.createElement('nav');bar.className='clock-debug-bar';bar.setAttribute('aria-label','デバッグ時刻');bar.innerHTML='<span></span><button type="button">＋6時間</button>';document.body.prepend(bar);
+ const bar=document.createElement('nav');bar.className='clock-debug-bar';bar.setAttribute('aria-label','デバッグ時刻');bar.innerHTML='<span></span><div class="clock-debug-actions"><button type="button" data-hours="6">＋6時間</button><button type="button" data-hours="24">＋24時間</button></div>';document.body.prepend(bar);
  function updateDebugClock(){bar.querySelector('span').textContent=new Date(gameNow()).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});}
- bar.querySelector('button').addEventListener('click',()=>{debugClockOffset+=6*60*60*1000;try{localStorage.setItem(DEBUG_CLOCK_KEY,String(debugClockOffset));}catch{}dispatch({type:'SYNC_REAL_TIME',at:gameNow()});updateDebugClock();});
+ bar.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{debugClockOffset+=Number(button.dataset.hours)*60*60*1000;try{localStorage.setItem(DEBUG_CLOCK_KEY,String(debugClockOffset));}catch{}dispatch({type:'SYNC_REAL_TIME',at:gameNow()});updateDebugClock();}));
  updateDebugClock();setInterval(updateDebugClock,30000);
 }
 // Release-oriented prototype: persistent SVG phenotype and one authoritative shop catalogue.
@@ -34,9 +34,9 @@ const SHOP_CATALOG = [
     ['hammock','壁のハンモック','🛏️',12],
   ].map(([id,label,emoji,price])=>({id,label,emoji,price,shop:'petshop',category:'furniture',quantity:1,unit:'個'})),
 ];
-const RELEASE_ECONOMY = {start:50,ad:50,clinic:12,graduation:18};
-CONFIG.economy.startCoins=50;CONFIG.economy.adRewardCoins=50;CONFIG.economy.purchasePacks=[];
-CONFIG.intake.clinic.baseCost=7;CONFIG.intake.clinic.vaccine=5;
+const RELEASE_ECONOMY = {start:50,ad:4,clinic:10,graduation:0};
+CONFIG.economy.startCoins=50;CONFIG.economy.adRewardCoins=4;CONFIG.economy.purchasePacks=[];
+CONFIG.intake.clinic.baseCost=6;CONFIG.intake.clinic.vaccine=4;
 CONFIG.care.clinic.cost=12;
 CONFIG.intake.clinic.conditions.forEach((condition,i)=>condition.cost=[0,4,12,20][i]);
 CONFIG.economy.assoc={rental:{cost:5,days:7,tags:'any'},loanMax:50};
@@ -92,6 +92,15 @@ gameState=migrateReleaseState(gameState);
 const normalizeBeforeV017=normalizeLoadedState;
 normalizeLoadedState=function(state){const next=normalizeBeforeV017(state);return {...next,ui:{...next.ui,adStartedAt:null,adToken:null,shopNotice:null}};};
 function spendCoins(state,amount,label){return {...state,coins:state.coins-amount,economy:{...state.economy,spent:(state.economy?.spent||0)+amount,ledger:[...(state.economy?.ledger||[]),{label,amount,day:getCat(state).body.days+1}].slice(-100)}};}
+// Medical costs may overdraw the shared balance. Purchases still require funds.
+function initialExamInvoice(cat){
+  const rows=[{label:'血液検査',cost:3},{label:'ウイルス検査',cost:3},{label:'ワクチン',cost:4}];
+  const condition=CONFIG.intake.clinic.conditions.find(c=>c.id===cat.rescueProfile?.condition);
+  if(condition?.cost>0)rows.push({label:condition.label+'の治療',cost:condition.cost});
+  return {rows,total:rows.reduce((sum,row)=>sum+row.cost,0)};
+}
+function medicalPaymentLabel(state,cost){return state.coins<cost?`精算する（残高 ${state.coins-cost} コイン）`:`コイン${cost}枚を支払う`;}
+function rescueFundsNotice(state){return {...state,ui:{...state.ui,modal:'wallet',walletReturn:null,adNotice:'新しく保護に出るには、初診分の10コインが必要です。いまいるネコのお世話と病院は続けられます。'}};}
 const reduceBeforeV017=reduceGameState;
 reduceGameState=function(state,action){
   if(action.type==='ROAM_CAT'&&state.ui.careAnimation)return state;
@@ -116,12 +125,12 @@ reduceGameState=function(state,action){
   if(action.type==='OPEN_WALLET')return {...state,ui:{...state.ui,walletReturn:state.ui.modal,modal:'wallet'}};
   if(action.type==='CLOSE_WALLET')return {...state,ui:{...state.ui,modal:state.ui.walletReturn||null,walletReturn:null,adStartedAt:null,adToken:null}};
   if(action.type==='START_REWARD_AD'){
-    if(state.ui.adToken||state.ui.modal!=='wallet')return state;
+    if(state.ui.adToken||state.ui.modal!=='wallet'||state.ui.appRewardStarted||state.economy?.appRewardDay===appRewardDay())return {...state,ui:{...state.ui,adNotice:'本日の応援は受取済みです'}};
     return {...state,ui:{...state.ui,adToken:action.token,adStartedAt:Date.now(),adNotice:null}};
   }
   if(action.type==='COMPLETE_REWARD_AD'){
-    if(state.ui.modal!=='wallet'||!state.ui.adToken||state.ui.adToken!==action.token||Date.now()-state.ui.adStartedAt<3000)return state;
-    return {...state,coins:state.coins+50,economy:{...state.economy,adClaims:(state.economy?.adClaims||0)+1},ui:{...state.ui,adToken:null,adStartedAt:null,adNotice:'50コイン受け取りました'}};
+    if(state.economy?.appRewardDay===appRewardDay()||state.ui.modal!=='wallet'||!state.ui.adToken||state.ui.adToken!==action.token||Date.now()-state.ui.adStartedAt<3000)return state;
+    return {...state,coins:state.coins+CONFIG.economy.adRewardCoins,economy:{...state.economy,appRewardDay:appRewardDay(),adClaims:(state.economy?.adClaims||0)+1},ui:{...state.ui,adToken:null,adStartedAt:null,adNotice:CONFIG.economy.adRewardCoins+'コイン受け取りました'}};
   }
   if(action.type==='CANCEL_REWARD_AD')return {...state,ui:{...state.ui,adToken:null,adStartedAt:null,adNotice:'中止しました。コインは増えていません'}};
   if(action.type==='BUY_SHOP_ITEM'){
@@ -138,18 +147,17 @@ reduceGameState=function(state,action){
   if(['TOGGLE_PLACED_ITEM','DROP_LAYOUT_ITEM'].includes(action.type)&&!owned(state,action.itemId))return state;
   if(action.type==='SEND_EVENT'){
     if(state.campaign.phase!=='graduation'||!isGraduationReady(state))return state;
-    if(state.coins<RELEASE_ECONOMY.graduation)return {...state,ui:{...state.ui,modal:'wallet'}};
-    let next=reduceBeforeV017(spendCoins(state,RELEASE_ECONOMY.graduation,'卒業ケア'),action);
+    if(RELEASE_ECONOMY.graduation>0&&state.coins<RELEASE_ECONOMY.graduation)return {...state,ui:{...state.ui,modal:'wallet'}};
+    let next=reduceBeforeV017(RELEASE_ECONOMY.graduation?spendCoins(state,RELEASE_ECONOMY.graduation,'卒業ケア'):state,action);
     const cat=getCat(next),phenotype=phenotypeFor(cat);
     return {...next,cats:[{...cat,phenotype}],album:next.album.map((entry,i)=>i===next.album.length-1?{...entry,phenotype,age:cat.age,sex:cat.sex,coatLabel:cat.coatLabel}:entry)};
   }
-  if(action.type==='START_INTAKE'&&state.coins<12)return {...state,ui:{...state.ui,modal:'wallet'}};
   let next=reduceBeforeV017(state,action);
   if(next===state)return state;
   if(action.type==='OPEN_TRAP'&&state.campaign.phase==='field'&&next.campaign.phase==='trapInspect')next={...next,cats:[withPhenotype(getCat(next),true)]};
   if(action.type==='NEXT_RESCUE')next={...next,cats:[{...getCat(next),phenotype:null}]};
   if(action.type==='START_INTAKE'&&next.campaign.phase==='intake'){
-    const charged=spendCoins(state,12,'初診・ワクチン');
+    const charged=spendCoins(state,initialExamInvoice(getCat(state)).total,'初診・治療');
     next={...next,economy:charged.economy,cats:[{...getCat(next),body:{...getCat(next).body,weight:getCat(state).body.weight}}]};
   }
   return next;
@@ -168,11 +176,11 @@ function shopTabs(state){return `<nav class="release-shop-tabs">${[['furniture',
 function renderSupplies(state){return `<div class="release-overlay" role="dialog" aria-modal="true" aria-label="ショップ"><section class="release-sheet"><header><small>部屋に戻ると、買ったものが使えます</small><h2>買いそろえる</h2><button data-action="open-wallet">● ${state.coins} ＋</button></header>${shopTabs(state)}<p class="shop-notice" role="status">${state.ui.shopNotice||'気になるものを少しずつ。家具は繰り返し使えます。'}</p><div class="release-product-scroll"><div class="shop-products">${shopProducts(state,state.ui.shopTab||'furniture')}</div></div><button class="campaign-button secondary" data-action="close-modal">戻る</button></section></div>`;}
 renderMapShop=function(state){
   const id=state.campaign.shopId,clinic=id==='clinic',name=id==='super'?'スーパー':clinic?'動物病院':'ペットショップ';
-  return renderCampaignShell(state,name,`<section class="shop-sheet"><div class="release-shop-heading"><h1>${name}</h1><button data-action="open-wallet">● ${state.coins} ＋</button></div><p class="shop-notice" role="status">${state.ui.shopNotice||'買ったものは、かばん・押し入れへ。'}</p>${clinic?'<div class="clinic-price-list"><p>初診・ワクチン　<strong>12 コイン</strong></p><p>手術・卒業ケア　<strong>18 コイン</strong></p><small>保護・卒業の流れで利用します。ゲーム内の仮価格です。</small></div>':`<div class="shop-products">${shopProducts(state,null,id)}</div>`}</section>`,`<button class="campaign-button secondary" data-action="back-town">街へ戻る</button>`);
+  return renderCampaignShell(state,name,`<section class="shop-sheet"><div class="release-shop-heading"><h1>${name}</h1><button data-action="open-wallet">● ${state.coins} ＋</button></div><p class="shop-notice" role="status">${state.ui.shopNotice||'買ったものは、かばん・押し入れへ。'}</p>${clinic?'<div class="clinic-price-list"><p>初診・ワクチン　<strong>10 コイン</strong></p><p>手術　<strong>12 コイン</strong></p><small>保護・卒業の流れで利用します。ゲーム内の仮価格です。</small></div>':`<div class="shop-products">${shopProducts(state,null,id)}</div>`}</section>`,`<button class="campaign-button secondary" data-action="back-town">街へ戻る</button>`);
 };
 function renderWallet(state){
-  const busy=Boolean(state.ui.adToken);
-  return `<div class="release-overlay" role="dialog" aria-modal="true" aria-label="コイン"><section class="release-sheet wallet-sheet"><header><small>保護活動を応援</small><h2>コイン</h2></header><div class="coin-balance">● <strong>${state.coins}</strong><small>コイン</small></div><p>1匹の保護から卒業まで、<br>50〜100コインが目安。</p><div class="ad-preview ${busy?'playing':''}"><span>🐾</span><strong>${busy?'応援広告を再生中…':'小さな応援が、次の保護へ。'}</strong><small>広告のダミー · 通信・課金はありません</small>${busy?'<i class="ad-progress"></i>':''}</div><p class="shop-notice" role="status">${state.ui.adNotice||'家具は次の子にも使えます。'}</p>${busy?'<button class="campaign-button secondary" data-action="cancel-reward-ad">中止する</button>':'<button class="campaign-button" data-action="reward-ad">広告を見る（ダミー）＋50</button>'}<button class="campaign-button secondary" data-action="close-wallet">戻る</button></section></div>`;
+  const busy=Boolean(state.ui.adToken),viewed=state.economy?.appRewardDay===appRewardDay();
+  return `<div class="release-overlay" role="dialog" aria-modal="true" aria-label="コイン"><section class="release-sheet wallet-sheet"><header><small>ミャオペイ</small><h2>コイン</h2></header><div class="coin-balance">● <strong>${state.coins}</strong><small>コイン</small></div><p>${state.coins<0?'マイナス分は医療費の未払いです。<br>コインを受け取ると自動で精算されます。':'初診10・手術12コイン。<br>病気や怪我の治療費は別途かかります。'}</p><div class="ad-preview ${busy?'playing':''}"><span>🐾</span><strong>${busy?'広告を再生中…':'広告を見てコインを受け取る'}</strong><small>広告のダミー · 通信・課金はありません</small>${busy?'<i class="ad-progress"></i>':''}</div><p class="shop-notice" role="status">${state.ui.adNotice||'家具は次の子にも使えます。'}</p>${busy?'<button class="campaign-button secondary" data-action="cancel-reward-ad">中止する</button>':`<button class="campaign-button" data-action="reward-ad" ${viewed?'disabled':''}>${viewed?'本日は受取済み':`広告を見る（ダミー）＋${CONFIG.economy.adRewardCoins}`}</button>`}<button class="campaign-button secondary" data-action="close-wallet">戻る</button></section></div>`;
 }
 const paletteBeforeV017=renderLayoutPalette;
 renderLayoutPalette=function(state){
@@ -224,7 +232,7 @@ renderPlacedItem=function(placed,state,clue){
 const clinicBeforeV017=renderClinic;
 renderClinic=(state,cat)=>clinicBeforeV017(state,cat).replace('<strong>400</strong>','<strong>7</strong>').replace('<strong>300</strong>','<strong>5</strong>').replace('<strong>700</strong>','<strong>12 コイン</strong>');
 const graduationBeforeV017=renderGraduation;
-renderGraduation=(state,cat)=>graduationBeforeV017(state,cat).replace('譲渡会へ送り出す</button>',`卒業ケア ${RELEASE_ECONOMY.graduation}コインで送り出す</button>`);
+renderGraduation=(state,cat)=>graduationBeforeV017(state,cat).replace('譲渡会へ送り出す</button>','譲渡会をはじめる</button>');
 isGraduationReady=function(state){const cat=getCat(state);return cat.body.weight>=(cat.age==='kitten'?CONFIG.cat.weightGoal.kitten:CONFIG.stage1.campaign.bodyGoal)&&!cat.body.sick&&(cat.age!=='kitten'||cat.body.days>=5);};
 const guideBeforeV017=getScreenGuide;
 getScreenGuide=function(state){
@@ -279,6 +287,7 @@ function animateGameCats(now){
     svgLast=now;
     for(const [svg,entry] of svgRigs){
       if(!svg.isConnected){svgRigs.delete(svg);continue;}
+      if(svg.dataset.staticPhoto==='true')continue;
       let [pose,mood]=scenePose(svg),t=(now-entry.since)/1000;
       if(pose!==entry.pose){entry.previous=entry.lastModel||CatSVG.poseModel(entry.pose,t);entry.pose=pose;entry.since=now;entry.changed=now;t=0;}
       entry.rig.d.mood=mood;

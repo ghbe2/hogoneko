@@ -65,7 +65,7 @@ renderTown=function(state){
     <strong class="town-sign">${stageName(id)}</strong>
     <p>${AREA_COPY[id]}</p>
     ${access.unlocked?townProgressFaces(state,id):''}
-    <button class="town-area-go" data-action="choose-area" data-area="${id}" ${visit||!access.unlocked?'disabled':''}>${access.unlocked?'保護しに行く':'調査中'}</button>
+    <button class="town-area-go campaign-button" data-action="choose-area" data-area="${id}" ${visit||!access.unlocked?'disabled':''}>${access.unlocked?'保護しに行く':'調査中'}</button>
    </article></section>`;
  };
  const clinicAction=visit?.kind==='clinic'?'open-required-visit':'open-map-shop';

@@ -1,5 +1,5 @@
 'use strict';
-const STARTER_CONTENTS={food_dry:12,mouse:1,clean_paper:24,bowl:1,water:1,litter:1};
+const STARTER_CONTENTS={food_dry:1,starter_toy:1,starter_clean:1,water_refill:1,bowl:1,water:1,litter:1};
 const FIRST_FURNITURE=['bowl','water','litter','box'];
 const INTAKE_GUIDE_TOP=86;
 const GUIDE_NOTE_HEIGHT=210;
@@ -49,7 +49,7 @@ function repairIntakePlacement(state){
 SHOP_CATALOG.push({id:'starter_set',shop:'petshop',category:'tools',label:'初心者セット',price:10,quantity:1,unit:'セット',emoji:''});
 bookIcons.starter_set=`<svg viewBox="0 0 100 90"><path d="M14 28h72v48H14Z" fill="#b98b59"/><path d="M14 28L25 14h52l9 14-36 11Z" fill="#ddbe87"/><path d="M50 39v37" stroke="#91744e" stroke-width="2"/><path d="M30 47h40v20H30Z" fill="#f8eed5"/><path d="M42 58l-1-8 6 3 7-3 1 8q-6 8-13 0" fill="#7c926c"/></svg>`;
 const firstBenefit=productBenefit;
-productBenefit=id=>id==='starter_set'?'ごはん12食・おもちゃ・おそうじペーパー24回分と、ごはん皿・水入れ・トイレ・段ボール。':firstBenefit(id);
+productBenefit=id=>id==='starter_set'?'これがあれば初心者保護主デビュー！':firstBenefit(id);
 const firstActive=s=>s.onboarding?.flowVersion===1&&s.onboarding.status==='active';
 const guideTo=(s,guide)=>({...s,onboarding:{...s.onboarding,guide}});
 const hasFirstFurniture=s=>FIRST_FURNITURE.every(id=>getPlaced(getRoom(s)).some(p=>p.itemId===id));
@@ -58,6 +58,7 @@ getRoomComfortBreakdown=function(s){const r=firstComfort(s);return firstActive(s
 const firstReducer=reduceGameState;
 reduceGameState=function(state,action){
  const first=firstActive(state),g=state.onboarding.guide,c=state.campaign,cat=getCat(state);
+ if(['CHOOSE_AREA','ENTER_STAGE','ENTER_PARK','GO_RESCUE'].includes(action.type)&&state.coins<RELEASE_ECONOMY.clinic)return rescueFundsNotice(state);
  if(action.type==='START_INTAKE'&&state.onboarding.flowVersion===1)return state;
  if(action.type==='FINISH_EXAM'&&c.firstExamAt&&Date.now()-c.firstExamAt<3000)return state;
  if(action.type==='FIRST_GUIDE_NEXT'){
@@ -78,7 +79,6 @@ reduceGameState=function(state,action){
  }
  if(action.type==='PAY_FIRST_EXAM'){
   if(c.phase!=='clinic'||c.clinicStep==='exam'||cat.status!=='captured'||c.initialVisitPaidCatId===cat.id)return state;
-  if(state.coins<12)return {...state,ui:{...state.ui,modal:'wallet'}};
   let next=firstReducer(state,{type:'START_INTAKE',name:'ネコ'});
   if(next.campaign.phase!=='intake')return state;
   next={...next,cats:next.cats.map(n=>({...n,name:'',named:false})),campaign:{...next.campaign,phase:'town',initialVisitPaidCatId:cat.id},ui:{...next.ui,modal:null,layoutMode:false}};
@@ -126,7 +126,7 @@ reduceGameState=function(state,action){
  let next=firstReducer(state,action);
  if(action.type==='DROP_LAYOUT_ITEM'&&first&&g==='moveFurniture'&&!action.store){const before=getPlaced(getRoom(state)).find(p=>p.itemId===action.itemId),after=getPlaced(getRoom(next)).find(p=>p.itemId===action.itemId);if(before&&after&&(before.x!==after.x||before.y!==after.y))return guideTo({...next,ui:{...next.ui,layoutMode:false,layoutTrayOpen:false}},'roomReady');}
  if(action.type==='START_GAME'&&state.onboarding.status==='new'){
-  const inventory=Object.fromEntries(Object.keys(next.inventory).map(id=>[id,0]));inventory.food_dry=1;inventory.starter_food=99;
+  const inventory=Object.fromEntries(Object.keys(next.inventory).map(id=>[id,0]));inventory.food_wet=1;
   next={...next,inventory,rooms:next.rooms.map(r=>({...r,floor:[],wall:[]})),onboarding:{...next.onboarding,flowVersion:1,guide:null},cats:next.cats.map(n=>({...n,name:'',named:false}))};
  }
  if(action.type==='CHECKOUT_SHOP'&&!state.ui.storeThanks&&next.ui.storeThanks){
@@ -152,7 +152,7 @@ reduceGameState=function(state,action){
 };
 // Pointer release, snap alignment and a quiet interval must all be complete.
 let baitSettleTimer;
-function settleFirstBait(e){const rail=e.target;if(!rail.matches('.bait-carousel'))return;clearTimeout(baitSettleTimer);baitSettleTimer=setTimeout(()=>{if(!rail.isConnected||rail.classList.contains('dragging')||!firstActive(gameState)||gameState.onboarding.guide!=='bait'||gameState.campaign.fieldFood!=='food_dry')return;const r=rail.getBoundingClientRect(),o=rail.querySelector('.chosen').getBoundingClientRect();if(Math.abs(o.left+o.width/2-r.left-r.width/2)>2)return;gameState=guideTo(gameState,'trap');saveGameState(gameState);render(gameState);},450);}
+function settleFirstBait(e){const rail=e.target;if(!rail.matches('.bait-carousel'))return;clearTimeout(baitSettleTimer);baitSettleTimer=setTimeout(()=>{if(rail.dataset.baitInteracted!=='true'||!rail.isConnected||rail.classList.contains('dragging')||!firstActive(gameState)||gameState.onboarding.guide!=='bait'||gameState.campaign.fieldFood!=='food_wet')return;const r=rail.getBoundingClientRect(),o=rail.querySelector('.chosen').getBoundingClientRect();if(Math.abs(o.left+o.width/2-r.left-r.width/2)>2)return;gameState=guideTo(gameState,'trap');saveGameState(gameState);render(gameState);},450);}
 for(const event of ['scroll','scrollend','bait-released'])app.addEventListener(event,settleFirstBait,true);
 
 const firstTown=renderTown;
@@ -170,11 +170,11 @@ const firstClinic=renderClinic;
 function publicCoatLabel(cat){return (cat.coatLabel||'—').replace(/\s*[A-ZＡ-Ｚ](?=（|$)/g,'').replace(/（レア）/g,'').split(' / ')[0];}
 function firstExamArt(){const t=document.createElement('template');t.innerHTML=receptionArt('doctor');const staff=t.content.querySelector('.reception-staff');return `<svg viewBox="0 0 450 300" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><path fill="#d7ddcc" d="M0 0h450v300H0Z"/><path fill="#b5c9bf" stroke="#f5efd9" stroke-width="6" d="M25 50h130v130H25Z"/><path stroke="#f5efd9" stroke-width="5" d="M90 50v130M25 115h130"/>${staff.outerHTML}</svg>`;}
 renderClinic=function(state,cat){
- if(cat.status!=='captured')return firstClinic(state,cat);
  if(state.campaign.clinicStep==='exam')return renderCampaignShell(state,'動物病院',`<section class="first-exam"><div class="first-doctor">${firstExamArt()}</div><div class="first-exam-bed"></div><div class="first-exam-cat">${renderCatArt(cat).replace('200 55 320 320','190 245 310 160')}</div></section>`,'');
- const condition=cat.rescueProfile?.condition;
+ if(cat.status!=='captured')return renderMapShop({...state,campaign:{...state.campaign,shopId:'clinic',clinicReception:true,clinicExamined:true}});
+ const condition=cat.rescueProfile?.condition,invoice=initialExamInvoice(cat);
  const explaining=firstActive(state)&&['healthy','stats','receipt','pay'].includes(state.onboarding.guide),coat=publicCoatLabel(cat);
- return renderCampaignShell(state,'動物病院',`<section class="first-chart ${explaining?'explaining':''}"><header><small>初診カルテ</small><h1>診察結果</h1></header><div class="first-profile"><div class="first-chart-cat">${renderCatArt(cat)}</div><div><strong class="first-diagnosis">${condition?'必要な手当てをしました。':'異常はありません。'}</strong><dl class="first-chart-stats"><div><dt>毛柄</dt><dd>${coat}</dd></div><div><dt>体重</dt><dd>${cat.body.weight.toLocaleString()} g</dd></div><div><dt>性別</dt><dd>${cat.sex==='female'?'メス':'オス'}</dd></div></dl></div></div><section class="first-receipt"><h2>診療明細</h2><div><span>血液検査</span><b>4 枚</b></div><div><span>ウイルス検査</span><b>5 枚</b></div><div><span>ワクチン</span><b>3 枚</b></div><div class="receipt-total"><strong>合計</strong><b>12 コイン</b></div></section></section>`,`<button class="campaign-button" data-first="pay" ${explaining?'disabled':''}>コイン12枚を支払う <span aria-hidden="true">›</span></button>`);
+ return renderCampaignShell(state,'動物病院',`<section class="first-chart ${explaining?'explaining':''}"><header><h1>診察結果</h1></header><div class="first-profile"><div class="first-chart-cat">${renderCatArt(cat)}</div><div><strong class="first-diagnosis">${condition?'必要な手当てをしました。':'異常はありません。'}</strong><dl class="first-chart-stats"><div><dt>毛柄</dt><dd>${coat}</dd></div><div><dt>体重</dt><dd>${cat.body.weight.toLocaleString()} g</dd></div><div><dt>性別</dt><dd>${cat.sex==='female'?'メス':'オス'}</dd></div></dl></div></div><section class="first-receipt"><h2>診療明細</h2>${invoice.rows.map(row=>`<div><span>${row.label}</span><b>${row.cost} 枚</b></div>`).join('')}<div class="receipt-total"><strong>合計</strong><b>${invoice.total} コイン</b></div>${state.coins<invoice.total?'<small class="medical-debt-note">不足分は未払いになります。</small>':''}</section></section>`,`<button class="campaign-button" data-first="pay" ${explaining?'disabled':''}>${medicalPaymentLabel(state,invoice.total)} <span aria-hidden="true">›</span></button>`);
 };
 const firstIntake=renderIntake;
 renderIntake=function(state,cat){const t=document.createElement('template');t.innerHTML=firstIntake(state,cat);const call=t.content.querySelector('.intake-footer-call');if(call&&!cat.named){call.textContent='名前を決めて、呼ぶ';call.disabled=firstActive(state)&&!hasFirstFurniture(state);}return t.innerHTML;};
@@ -208,7 +208,8 @@ render=function(state){
  if(state.onboarding.guide==='callWait')firstTimer=setTimeout(()=>dispatch({type:'FIRST_CALL_PAUSE_DONE'}),Math.max(0,1800-(Date.now()-state.campaign.firstCalledAt)));
  if(firstActive(state)&&state.campaign.phase==='intake'&&state.campaign.intakeCalled&&!state.onboarding.farewellSeen)firstTimer=setTimeout(()=>dispatch({type:'ACCEPT_CAT'}),Math.max(0,1400-(Date.now()-(state.campaign.firstCalledAt||Date.now()))));
  const emerging=app.querySelector('.intake-emerging-cat');if(emerging&&state.campaign.firstCalledAt)emerging.getAnimations().forEach(a=>{a.currentTime=Math.min(1250,Date.now()-state.campaign.firstCalledAt)});
- app.querySelectorAll('.first-chart-cat .game-cat-svg,.intake-emerging-cat .game-cat-svg').forEach(fitFirstPortrait);
+ app.querySelectorAll('.first-chart-cat .game-cat-svg').forEach(fitFirstPortrait);
+ if(emerging){const scale=getCatPoint(state).scale||1;emerging.style.setProperty('--intake-cat-scale',scale);emerging.querySelector('svg').style.transform='scale(1.3)';}
  if(state.campaign.phase==='clinic'&&getCat(state).status==='captured'&&state.campaign.clinicStep==='exam')firstTimer=setTimeout(()=>dispatch({type:'FINISH_EXAM'}),Math.max(0,3000-(Date.now()-(state.campaign.firstExamAt||Date.now()))));
  if(state.ui.storeThanks&&state.campaign.phase==='shop')shopExitTimer=setTimeout(()=>dispatch({type:'BACK_TO_TOWN'}),Math.max(0,(state.ui.storeLeaveAt||Date.now()+3000)-Date.now()));
  if(state.ui.firstName){const panel=document.createElement('div');panel.className='first-name modal-layer';panel.innerHTML=`<section><div class="first-name-cat">${renderCatArt(getCat(state))}</div><h2>なまえ決まった？</h2><input maxlength="8" aria-label="ネコの名前"><button data-first="name">決定</button></section>`;panel.querySelector('input').value=state.campaign.nameDraft||'';app.append(panel);mountGameCats();return;}
@@ -217,7 +218,7 @@ render=function(state){
  const spec=FIRST_GUIDES[state.onboarding.guide];if(!spec)return;
  if(state.onboarding.guide==='chartReview'){const cue=document.createElement('div');cue.className='chart-pay-cue';cue.innerHTML=guideHand();app.querySelector('.campaign-actions')?.append(cue);return;}
  const selector=typeof spec.target==='function'?spec.target():spec.target,target=app.querySelector(selector)||app.querySelector('.stage');if(!target)return;
- const layer=document.createElement('section');layer.className='first-guide';layer.dataset.context=state.campaign.phase;layer.innerHTML=`<div class="first-guide-ring"></div><aside class="first-guide-note shared-guide-note"><header><span class="first-senior">${seniorArt().replace('viewBox="0 0 220 270"','viewBox="45 5 135 190"')}</span><strong class="senior-dialogue-name">保護主のせんぱい</strong></header><p></p>${spec.next||spec.finish?`<button data-first="${spec.finish?'finish':'next'}">${spec.finish?'生活をはじめる':'つぎへ'}</button>`:'<small></small>'}</aside>`;layer.querySelector('p').textContent=typeof spec.copy==='function'?spec.copy():spec.copy;app.append(layer);
+ const layer=document.createElement('section');layer.className='first-guide';layer.dataset.context=state.campaign.phase;layer.innerHTML=`<div class="first-guide-ring"></div><aside class="first-guide-note shared-guide-note"><header><span class="first-senior">${seniorArt().replace('viewBox="0 0 220 270"','viewBox="45 5 135 190"')}</span><strong class="senior-dialogue-name">保護主のせんぱい</strong></header><p></p>${spec.next||spec.finish?`<button data-first="${spec.finish?'finish':'next'}">${spec.finish?'はじめる':'つぎへ'}</button>`:'<small></small>'}</aside>`;layer.querySelector('p').textContent=typeof spec.copy==='function'?spec.copy():spec.copy;app.append(layer);
  const scroller=app.querySelector('.town-map-scroll');if(state.onboarding.guide==='clinicScroll'&&scroller&&firstMapGuide!=='clinicScroll')scroller.scrollTop=scroller.clientHeight*1.5;firstMapGuide=state.onboarding.guide;
  const watchScroll=()=>{if(!layer.isConnected)return;if(state.onboarding.guide==='clinicScroll'&&scroller&&scroller.scrollTop>=scroller.clientHeight*1.99){dispatch({type:'FIRST_SCROLL_DONE'});return;}firstFrame=requestAnimationFrame(watchScroll);};watchScroll();
 };

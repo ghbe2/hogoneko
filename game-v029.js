@@ -1,7 +1,7 @@
 'use strict';
 // A real milestone, with a single persistent charge and resumable presentation.
 RELEASE_ECONOMY.surgery=12;
-RELEASE_ECONOMY.graduation=6;
+RELEASE_ECONOMY.graduation=0;
 const SURGERY_MS=2200;
 const surgeryText=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function surgeryEligibility(state){
@@ -25,7 +25,6 @@ reduceGameState=function(state,action){
  if(action.type==='FINISH_SURGERY')return state;
  if(action.type==='START_SURGERY'){
   if(!atClinic||cat.status!=='raising'||cat.surgery?.status==='done'||!surgeryEligibility(state).ready)return state;
-  if(state.coins<RELEASE_ECONOMY.surgery)return {...state,ui:{...state.ui,modal:'wallet',walletReturn:null}};
   const charged=spendCoins(state,RELEASE_ECONOMY.surgery,'手術');
   return {...charged,cats:charged.cats.map(c=>c.id!==cat.id?c:{...c,surgery:{status:'in_progress',startedAt:gameNow(),startedDay:c.body.days+1,paid:RELEASE_ECONOMY.surgery}}),campaign:{...state.campaign,medicalStage:'procedure'},ui:{...state.ui,modal:null}};
  }
@@ -43,14 +42,16 @@ reduceGameState=function(state,action){
 const beforeSurgeryShop=renderMapShop;
 renderMapShop=function(state){
  const cat=getCat(state);
- if(state.campaign.shopId!=='clinic'||cat.status!=='raising')return beforeSurgeryShop(state).replace('手術・卒業ケア　<strong>18 コイン</strong>','手術 <strong>12</strong> ／ 卒業ケア <strong>6 コイン</strong>');
+ if(state.campaign.shopId!=='clinic'||cat.status!=='raising')return beforeSurgeryShop(state);
  const e=surgeryEligibility(state),medical=cat.surgery,done=medical?.status==='done',busy=medical?.status==='in_progress',poor=state.coins<RELEASE_ECONOMY.surgery;
  const title=busy?'耳に、小さな目印を':done?'避妊手術が終わりました':'TNRへ、避妊手術の準備';
- const hint=done?'記録を手帳と予定に残しました。':!e.dayReady?`手術の予定は${typeof carePlan==='function'?carePlan(cat).surgeryDay:5}日目。今はおうちで過ごそう。`:!e.weightReady?`あと${Math.ceil(e.goal-cat.body.weight).toLocaleString('ja-JP')}g。ごはんを食べて、もう少し育とう。`:!e.healthy?'体調が整ってから、もう一度相談しよう。':poor?'準備はできています。足りないコインは広告の支援で補えます。':'からだの準備が整いました。手術をお願いできます。';
+ const plan=carePlan(cat),booked=!!plan.surgeryDay;
+ const hint=done?`譲渡会は${medical.completedDay+2}日目。おうちでゆっくり過ごそう。`:!e.healthy?'体調が整ってから申し込みましょう。':!e.weightReady?`目標は2,000g。あと${Math.ceil(e.goal-cat.body.weight).toLocaleString('ja-JP')}gです。`:cat.age==='kitten'?'まずは最初の１週間、子猫の成長を見守りましょう。':e.dayReady?'今日は手術の日。ごはんをお休みして来院できました。':booked?`${plan.surgeryDay}日目の手術を予約しました。予約中は、ごはんをお休みします。`:e.day+1<e.minDay?`手術は最短${e.minDay}日目。おうちで落ち着く時間も必要です。`:'アプリから翌日の手術を予約できます。予約後はごはんを休み、当日も2,000g以上・体調良好が条件です。';
  const row=(label,value,ok)=>`<div class="surgery-check"><span class="medical-check ${ok?'ok':''}">${ok?'✓':'○'}</span><span>${label}</span><strong>${value}</strong></div>`;
-const body=`<section class="surgery-sheet ${done?'surgery-done':''} ${busy?'surgery-busy':''}"><div class="surgery-room"><div class="surgery-cat">${renderCatArt(cat)}</div>${busy?'<span class="surgery-snip" aria-hidden="true"><i></i><b>ぱっちん</b></span>':done?'<span class="surgery-stamp">手術済み ✓</span>':''}</div><header><small>${surgeryText(cat.name||'この子')}・保護生活${e.day}日目</small><h1>${title}</h1></header>${busy?'<p class="surgery-copy" role="status">避妊手術を終えた目印に、<br>耳に小さなカットを。</p>':done?`<div class="surgery-receipt"><span>手術の記録</span><strong>${medical.completedDay}日目</strong><span>お支払い済み</span><strong>${medical.paid} コイン</strong></div><p class="surgery-copy">${hint}<br>おうちでゆっくり過ごそう。</p>`:`<div class="surgery-checks">${row('体重',`${Math.round(cat.body.weight).toLocaleString('ja-JP')} / ${e.goal.toLocaleString('ja-JP')}g`,e.weightReady)}${row('体調',e.healthy?'落ち着いています':'準備中',e.healthy)}</div><p class="surgery-copy" role="status">${hint}</p><div class="surgery-price"><span>手術</span><strong>12 コイン</strong><small>所持 ${state.coins} コイン</small></div>`}<small class="medical-footnote">このゲーム内の目安です。現実の手術は獣医師が判断します。</small></section>`;
+const body=`<section class="surgery-sheet ${done?'surgery-done':''} ${busy?'surgery-busy':''}"><div class="surgery-room"><div class="surgery-cat">${renderCatArt(cat)}</div>${busy?'<span class="surgery-snip" aria-hidden="true"><i></i><b>ぱっちん</b></span>':done?'<span class="surgery-stamp">手術済み ✓</span>':''}</div><header><small>${surgeryText(cat.name||'この子')}・保護生活${e.day}日目</small><h1>${title}</h1></header>${busy?'<p class="surgery-copy" role="status">避妊手術を終えた目印に、<br>耳に小さなカットを。</p>':done?`<div class="surgery-receipt"><span>手術の記録</span><strong>${medical.completedDay}日目</strong><span>${state.coins<0?'医療費（未払いあり）':'お支払い済み'}</span><strong>${medical.paid} コイン</strong></div><p class="surgery-copy">${hint}</p>`:`<div class="surgery-checks">${row('体重',`${Math.round(cat.body.weight).toLocaleString('ja-JP')} / ${e.goal.toLocaleString('ja-JP')}g`,e.weightReady)}${row('体調',e.healthy?'落ち着いています':'準備中',e.healthy)}</div><p class="surgery-copy" role="status">${hint}</p><div class="surgery-price"><span>手術</span><strong>12 コイン</strong><small>所持 ${state.coins} コイン</small></div>`}<small class="medical-footnote">このゲーム内の目安です。現実の手術は獣医師が判断します。</small></section>`;
  const returnHome=state.campaign.requiredVisit||state.campaign.medicalStage;
- const actions=busy?'':done?`<button class="campaign-button" data-action="leave-surgery-clinic">${returnHome?'おうちへ帰ろう':'街へ戻る'}</button>`:`${e.ready?`<button class="campaign-button" data-action="${poor?'open-wallet':'start-surgery'}">${poor?'広告で支援を受け取る':'12コインで手術をお願いする'}</button>`:''}<button class="campaign-button secondary" data-action="leave-surgery-clinic">${!returnHome?'街へ戻る':e.ready?'今日は見送って、おうちへ':'おうちで準備を続ける'}</button>`;
+ const primary=e.canBook?'<button class="campaign-button" data-action="book-surgery">明日の手術を予約する</button>':e.dayReady?`<button class="campaign-button" data-action="start-surgery">${!e.ready?'今日は見合わせる':poor?'手術する（不足分は未払い）':'コイン12枚で手術する'}</button>`:'';
+ const actions=busy?'':done?'<button class="campaign-button" data-action="leave-surgery-clinic">おうちへ帰ろう</button>':primary+'<button class="campaign-button secondary" data-action="leave-surgery-clinic">おうちへ戻る</button>';
  const template=document.createElement('template');template.innerHTML=body;
  const sheet=template.content.firstElementChild,room=sheet.querySelector('.surgery-room');room.remove();
  const heading=sheet.querySelector('header');heading.remove();
@@ -82,7 +83,7 @@ renderNotebook=function(state,cat){
 };
 const beforeSurgeryGuide=getScreenGuide;
 getScreenGuide=function(state){
- if(state.campaign.phase==='shop'&&state.campaign.shopId==='clinic'&&getCat(state).status==='raising')return {title:'からだの準備を確認しよう',detail:`手術の予定は${typeof carePlan==='function'?carePlan(getCat(state)).surgeryDay:5}日目。条件が整えば手術をお願いできます。難しいときは、おうちへ戻って準備できます。`};
+ if(state.campaign.phase==='shop'&&state.campaign.shopId==='clinic'&&getCat(state).status==='raising')return {title:'からだの準備を確認しよう',detail:'体重2,000g以上・体調良好になったら、翌日の手術を申し込めます。'};
  return beforeSurgeryGuide(state);
 };
 let surgeryTimer=null,surgeryTimerKey=null;
@@ -133,8 +134,7 @@ const surgeryStyle=document.createElement('style');surgeryStyle.textContent=`
 .surgery-copy{font-size:12px;line-height:1.5;margin:0}
 .surgery-price{display:flex;align-items:center;gap:10px;font-size:13px}.surgery-price small{margin-left:auto;font-size:11px}
 .surgery-actions{display:flex;gap:8px;align-items:stretch}
-#app .surgery-actions>.campaign-button{flex:1;min-width:0;min-height:48px;height:48px;padding:5px 8px;font-size:13px;line-height:18px;background:#657e58;color:#fff;border:0}
-#app .surgery-actions>.campaign-button.secondary{background:#eee2ca;color:#6d5b43}
+#app .surgery-actions>.campaign-button{flex:1;min-width:0}
 .surgery-actions>p{width:100%;font-size:13px;text-align:center;margin:auto 0}
 .surgery-receipt{display:grid;grid-template-columns:1fr auto;gap:10px;padding:12px;background:#ecefdc;border-radius:12px;font-size:13px}
 .surgery-stamp{position:absolute;right:14px;top:14px;background:#fff8e9e8;padding:8px 14px;border:1px solid #829373;border-radius:18px;color:#526b46;font-size:12px}

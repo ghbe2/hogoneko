@@ -1,0 +1,34 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),{pathToFileURL}=require('node:url'),path=require('node:path');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{for(const [width,height]of [[320,568],[375,812]]){
+ const page=await browser.newPage({viewport:{width,height}}),errors=[];page.setDefaultTimeout(12000);page.on('pageerror',e=>errors.push(e.message));const url=pathToFileURL(path.resolve('index.html')).href;
+ await page.goto(url+'?check=1&scenario=room');await page.evaluate(()=>{titleScreenOpen=false;getCat(gameState).body.weight=1887;gameState.onboarding={...gameState.onboarding,status:'done',appIntro:null,homeTour:'done'};gameState.ui={...gameState.ui,modal:null,layoutMode:false,equippedHand:'starter_toy',equippedCleaner:'starter_clean'};render(gameState)});
+ await page.screenshot({path:`tests/screenshots/equipped-${width}-closed.png`});
+ assert.equal(await page.locator('[data-room-fold] span').textContent(),'収納棚');
+ const measure=()=>page.evaluate(()=>{const tray=app.querySelector('.room-preparation'),items=tray.querySelector('.room-preparation-items'),front=tray.querySelector('[data-room-fold]'),a=tray.getBoundingClientRect(),b=items.getBoundingClientRect(),c=front.getBoundingClientRect();return {x:a.x,width:a.width,height:a.height,frontHeight:c.height,frontOffset:c.x-a.x,itemsOffset:b.x-a.x,seam:c.x-b.right,bg:getComputedStyle(tray).backgroundColor};});
+ const closed=await measure();await page.click('[data-room-fold]');const frames=[];for(let i=0;i<5;i++){await page.waitForTimeout(55);frames.push(await measure());if(i===1){await page.screenshot({path:`tests/screenshots/equipped-${width}-opening.png`});const before=await measure();await page.evaluate(()=>render(gameState));const after=await measure();assert(Math.abs(after.x-before.x)<8,'redraw does not snap the drawer');}}
+ await page.waitForTimeout(350);const open=await measure();for(const f of [closed,...frames,open]){assert.equal(f.width,closed.width);assert.equal(f.height,closed.height);assert.equal(f.frontHeight,closed.frontHeight);assert(Math.abs(f.frontOffset-closed.frontOffset)<.1);assert(Math.abs(f.itemsOffset-closed.itemsOffset)<.1);assert(Math.abs(f.seam)<1);assert.equal(f.bg,closed.bg);}assert(open.x>closed.x+100,'drawer and front travel together');
+ await page.screenshot({path:`tests/screenshots/equipped-${width}-open.png`});await page.click('[data-room-fold]');await page.waitForTimeout(100);await page.screenshot({path:`tests/screenshots/equipped-${width}-closing.png`});await page.waitForTimeout(300);assert(Math.abs((await measure()).x-closed.x)<1);
+ for(const [tab,ids]of [['play',['starter_toy','mouse','ball','feather']],['clean',['starter_clean','clean_paper','clean_wipe','clean_spray']]]){
+  for(const id of ids){await page.evaluate(({tab,id})=>{gameState.inventory[id]=10;gameState.durability[id]=10;dispatch(tab==='play'?{type:'SELECT_HAND',itemId:id}:{type:'EQUIP_CLEANER',cleanerId:id});},{tab,id});
+   const control=page.locator(`.main-command-row [data-tab="${tab}"]`);assert.equal(await control.getAttribute('data-equipped'),id);
+   const src=await control.locator('.command-emoji img').getAttribute('src');assert(src?.startsWith('data:image/svg+xml'),'canonical item artwork');
+   const expected=await page.evaluate(({tab,id})=>{const t=document.createElement('template');t.innerHTML=tab==='play'?TOY_EMOJI[id]:getCleaner(id).emoji;return t.content.querySelector('img').src},{tab,id});assert.equal(src,expected);
+   const r=await control.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+35);await page.mouse.down();await page.mouse.move(r.x+r.width/2,r.y-60,{steps:8});
+   assert.equal(await page.locator('.command-ghost img').getAttribute('src'),src);assert.equal(await page.locator('.command-ghost .room-tool-well,.command-ghost .room-action-art,.command-ghost strong,.command-ghost small').count(),0,'only item goes with hand');
+   assert(await control.locator('.room-tool-well').count(),'background stays in dock');
+   const transparent=await page.locator('.command-ghost').evaluate(n=>getComputedStyle(n).backgroundColor==='rgba(0, 0, 0, 0)');assert(transparent);
+   if(['starter_toy','ball','starter_clean','clean_spray'].includes(id))await page.screenshot({path:`tests/screenshots/equipped-${width}-drag-${id}.png`});
+   await page.mouse.up();await page.waitForTimeout(300);assert.equal(await page.locator('.command-ghost').count(),0);
+  }
+ }
+ // Actual inventory selection, not only reducer fixtures.
+ await page.waitForFunction(()=>Date.now()>=suppressClickUntil);
+ await page.click('.main-command-row [data-tab="play"]');await page.click('[data-action="select-hand"][data-item="starter_toy"]');assert.equal(await page.locator('.main-command-row [data-tab="play"]').getAttribute('data-equipped'),'starter_toy');
+ await page.click('.main-command-row [data-tab="clean"]');await page.click('[data-action="equip-cleaner"][data-cleaner="starter_clean"]');assert.equal(await page.locator('.main-command-row [data-tab="clean"]').getAttribute('data-equipped'),'starter_clean');
+ await page.evaluate(()=>saveGameState(gameState));await page.reload();await page.evaluate(()=>{titleScreenOpen=false;render(gameState)});assert.equal(await page.locator('.main-command-row [data-tab="play"]').getAttribute('data-equipped'),'starter_toy');assert(await page.locator('.room-preparation.folded').count());
+ assert(await page.evaluate(()=>{const a=app.getBoundingClientRect();return [...app.querySelectorAll('.main-command-row button,.room-icon-menu button,.room-call-icon,[data-room-fold]')].every(e=>{const r=e.getBoundingClientRect();return r.top>=a.top&&r.bottom<=a.bottom&&r.left>=a.left&&r.right<=a.right})&&app.scrollHeight<=app.clientHeight+1}));
+ await page.click('[data-room-fold]');await page.waitForTimeout(45);await page.click('[data-room-fold]');await page.waitForTimeout(350);assert(Math.abs((await measure()).x-closed.x)<1,'rapid reversal returns the whole drawer');
+ await page.emulateMedia({reducedMotion:'reduce'});await page.click('[data-room-fold]');assert(Math.abs((await measure()).x-open.x)<1,'reduced-motion opening is immediate');await page.click('[data-room-fold]');assert(Math.abs((await measure()).x-closed.x)<1);
+ const cancelBox=await page.locator('.main-command-row [data-tab="clean"]').boundingBox();await page.mouse.move(cancelBox.x+30,cancelBox.y+30);await page.mouse.down();await page.mouse.move(cancelBox.x+30,cancelBox.y-50,{steps:4});await page.locator('#app').dispatchEvent('pointercancel');await page.mouse.up();await page.waitForTimeout(300);assert.equal(await page.locator('.command-ghost').count(),0);
+ assert.deepEqual(errors,[]);console.log('PASS',width,'8 equipped items, item-only drag/cancel, inventory swaps, rigid drawer/reversal/reduced-motion, redraw/reload and screen bounds');await page.close();
+ } }finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});

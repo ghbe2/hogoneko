@@ -1,26 +1,88 @@
-/* Approved cage scene; all selectors and motion names scoped to this feature. */
-.adoption-aside{display:none}
-.adoption-stage .adoption-neighbor{width:148px;height:121px;bottom:34%;z-index:1;opacity:.85}.adoption-stage .adoption-neighbor.is-left{left:1%}.adoption-stage .adoption-neighbor.is-right{left:99%}.adoption-neighbor .adoption-cat{left:29px;right:29px;bottom:24px;height:62px}.adoption-revealed .adoption-neighbor{opacity:.4}
+/* Community hall: the playfield never changes size between presentation phases. */
 #app .campaign-screen:has(.adoption-scene){position:relative;padding:0;min-height:0}
 #app .campaign-scroll:has(>.adoption-scene){position:absolute;inset:0;padding:0;display:block}
 #app .campaign-screen:has(.adoption-scene)>.campaign-actions{display:none}
-.adoption-scene{--card:178px;--paper:#fff8e8;--green:#667c57;color:#554e3e;position:absolute;inset:0;background:linear-gradient(#e3e2cf 0 57%,#cdb88d 57%);overflow:clip}.adoption-stage{position:absolute;inset:0 0 calc(var(--card) + 12px)}
-.adoption-windows{position:absolute;inset:12% 9% 57%;display:flex;justify-content:space-between}.adoption-window{width:22%;border:6px solid #aa9470;background:linear-gradient(90deg,transparent 46%,#f4ecd5 46% 53%,transparent 53%),linear-gradient(transparent 47%,#f4ecd5 47% 53%,transparent 53%),#b5cdcb;box-shadow:inset 0 0 0 2px #f4ecd5}.adoption-flags{position:absolute;top:2%;left:3%;width:94%;height:46px}.adoption-hall-name{position:absolute;top:8px;left:0;right:0;text-align:center;font-size:13px;color:#747b5e;letter-spacing:.25em}
-.adoption-walkway{position:absolute;left:0;right:0;bottom:12%;height:72%;pointer-events:none}.adoption-person{position:absolute;left:0;bottom:0;width:82px;height:100%;max-height:240px;visibility:hidden;will-change:transform;transform:translateX(-140px)}.adoption-person svg{height:100%;width:100%;overflow:visible}.adoption-person .adoption-leg-a{transform-origin:51px 163px;animation:adoption-stride 1.15s ease-in-out infinite}.adoption-person .adoption-leg-b{transform-origin:66px 163px;animation:adoption-stride 1.15s ease-in-out infinite reverse}.adoption-person .adoption-shin{transform-origin:0 39px;animation:adoption-knee 1.15s ease-in-out infinite}.adoption-person .adoption-leg-b .adoption-shin{animation-delay:-.575s}.adoption-person .adoption-arm{transform-origin:74px 106px;animation:adoption-swing 1.15s ease-in-out infinite}.adoption-person .adoption-torso{animation:adoption-breathe-step .575s ease-in-out infinite}.adoption-person .adoption-head{transform-origin:60px 94px;transition:rotate .5s}.adoption-face-front{opacity:0}.adoption-face-profile{opacity:1}.adoption-person.adoption-stopped .adoption-leg-a,.adoption-person.adoption-stopped .adoption-leg-b,.adoption-person.adoption-stopped .adoption-arm,.adoption-person.adoption-stopped .adoption-shin,.adoption-person.adoption-stopped .adoption-torso{animation:none}.adoption-person.adoption-stopped .adoption-head{rotate:8deg}.adoption-person.adoption-stopped .adoption-face-front{opacity:1}.adoption-person.adoption-stopped .adoption-face-profile{opacity:0}.adoption-person.adoption-stopped .adoption-arm{transform:rotate(7deg)}
-.adoption-basket{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);width:212px;height:174px;z-index:3}.adoption-basket:after{content:'';position:absolute;left:6%;right:6%;bottom:-7px;height:15px;border-radius:50%;background:#9a835a40;z-index:-1}.adoption-basket-back,.adoption-basket-front{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.adoption-basket-front{z-index:4}.adoption-cat{position:absolute;left:43px;right:43px;bottom:34px;height:88px;z-index:2}.adoption-cat svg{width:100%;height:100%;overflow:visible}.adoption-basket-tag{position:absolute;left:79px;bottom:4px;z-index:5;background:#fff4d8;padding:3px 9px;font-size:11px;border-radius:3px;box-shadow:0 1px 2px #856c4440}
-.adoption-aside{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:11px;letter-spacing:.08em;color:#76684e}
-.adoption-result-title{position:absolute;top:14%;left:10%;right:10%;text-align:center;opacity:0;transform:translateY(8px);transition:opacity .8s,transform .8s;z-index:6;pointer-events:none}.adoption-result-title small{display:block;font-size:11px;letter-spacing:.18em;color:#9d7d3c}.adoption-result-title strong{display:block;font-size:32px;font-weight:500;letter-spacing:.16em;line-height:1.7;color:#977136}.adoption-result-title:after{content:'✦';display:block;font-size:19px;color:#bda060}.adoption-revealed .adoption-result-title{opacity:1;transform:none}.adoption-revealed .adoption-hall-name,.adoption-revealed .adoption-flags{opacity:.25}.adoption-tnr .adoption-result-title strong{color:#647451}.adoption-tnr .adoption-result-title:after{content:'—';color:#80916b}.adoption-suspense .adoption-stage{filter:brightness(.91);transition:filter 1.5s}.adoption-revealed .adoption-basket:before{content:'';position:absolute;inset:-25%;z-index:-1;background:radial-gradient(ellipse,#fff3baaa,transparent 65%)}.adoption-tnr .adoption-basket:before{background:none}
-.adoption-panel{position:absolute;left:10px;right:10px;bottom:12px;height:var(--card);border-radius:20px;background:var(--paper);box-shadow:0 3px 0 #a78c6033;padding:13px 15px;display:grid;grid-template-rows:14px 28px 46px 44px;gap:6px;z-index:7}.adoption-eyebrow{font-size:10px;letter-spacing:.14em;color:#938569}.adoption-panel h1{margin:0;font-weight:500;font-size:19px;line-height:28px;white-space:nowrap}.adoption-panel p{margin:0;font-size:13px;line-height:22px}.adoption-panel button{height:44px;width:100%;border:0;border-radius:25px;background:var(--green);color:#fff8e9;font-size:14px}.adoption-panel button:disabled{background:#eee6d2;color:#8c7f63;cursor:default}.adoption-record .adoption-basket{filter:drop-shadow(0 0 8px #fff9e7)}
-.adoption-eyebrow{line-height:14px}
-.adoption-request-speech{position:absolute;top:19%;left:15%;right:15%;margin:0;padding:12px 15px;border:1px solid #d7ccb0;border-radius:18px 18px 4px 18px;background:#fff8e8;color:#667251;text-align:center;font-size:15px;line-height:24px;z-index:6;opacity:0;transition:opacity .7s;pointer-events:none}.adoption-request-speech:after{content:'';position:absolute;right:13px;bottom:-11px;width:17px;height:12px;background:#fff8e8;clip-path:polygon(0 0,100% 0,100% 100%)}.adoption-requesting .adoption-request-speech{opacity:1}.adoption-requesting .adoption-flags,.adoption-requesting .adoption-hall-name{opacity:.3}
-@keyframes adoption-stride{0%,100%{rotate:-11deg}50%{rotate:11deg}}@keyframes adoption-knee{0%,50%,100%{rotate:0deg}75%{rotate:16deg}}@keyframes adoption-swing{0%,100%{rotate:8deg}50%{rotate:-8deg}}@keyframes adoption-breathe-step{0%,100%{translate:0 0}50%{translate:0 -1.5px}}
-@media(max-height:650px){.adoption-basket{width:184px;height:149px;bottom:6%}.adoption-cat{left:37px;right:37px;bottom:29px;height:75px}.adoption-basket-tag{left:66px;font-size:10px}.adoption-person{width:72px;max-height:190px}.adoption-result-title{top:9%}.adoption-result-title strong{font-size:26px}.adoption-result-title small{font-size:10px}.adoption-request-speech{top:6%;font-size:14px;padding:9px 12px}.adoption-panel h1{font-size:18px}.adoption-aside{font-size:10px}.adoption-preview small{display:none}}
-@media(prefers-reduced-motion:reduce){*,*:before{animation:none!important;transition:none!important}}
-
-.adoption-actions{display:flex;flex-direction:column;gap:8px}
-.adoption-scene>.adoption-secondary{position:absolute;top:8px;left:10px;z-index:8;min-height:40px;padding:8px 12px;border:1px solid #e5d8bb;border-radius:12px;background:#fff8e8;color:#746349;font-size:12px}
+#app .campaign-frame:has(.adoption-scene)>.campaign-hud{display:none}
+#app .campaign-frame:has(.adoption-scene){grid-template-rows:minmax(0,1fr)}
+#app .campaign-frame:has(.adoption-scene)>.debug-quickbar{display:none}
+.adoption-scene{--paper:#fff8e8;--green:#667c57;--ink:#554e3e;--display-y:52%;--basket-w:200px;--person-h:248px;color:var(--ink);position:absolute;inset:0;background:#e9e5d5;overflow:clip}
+.adoption-stage{position:absolute;inset:0}
+.adoption-wall{position:absolute;inset:0 0 56%;border-bottom:6px solid #a89775;background:linear-gradient(90deg,#f2eddd88,transparent 62%),#e2e3d3}
+.adoption-window{position:absolute;left:8%;top:12%;width:56px;height:78px;border:5px solid #b3a17d;background:linear-gradient(90deg,transparent 46%,#f2eddb 46% 53%,transparent 53%),linear-gradient(transparent 48%,#f2eddb 48% 53%,transparent 53%),#b9cdca;box-shadow:inset 0 0 0 2px #f2eddb}
+.adoption-window:after{content:'';position:absolute;left:-8px;right:-8px;height:5px;bottom:-8px;background:#a99773}
+.adoption-hall-sign{position:absolute;left:34%;right:7%;top:21%;text-align:center;color:#68745d}
+.adoption-hall-sign small{display:block;font-size:10px;letter-spacing:.16em;margin-bottom:5px}
+.adoption-hall-sign span{display:block;font-size:22px;letter-spacing:.15em}
+.adoption-hall-sign i{display:block;font-style:normal;font-size:10px;margin-top:7px;letter-spacing:.04em}
+.adoption-garland{position:absolute;left:17%;top:3%;width:78%;height:29px}
+.adoption-noticeboard{position:absolute;left:10%;bottom:13%;width:56px;height:38px;background:#bcad8c;border:3px solid #aa9876;display:flex;align-items:center;gap:3px;padding:4px;rotate:-1deg}
+.adoption-noticeboard i{width:13px;height:23px;background:linear-gradient(#ebe3cb 50%,#b4c2b0 50%);border-top:3px solid #efe8d5}
+.adoption-floor{position:absolute;inset:44% 0 0;background:repeating-linear-gradient(0deg,transparent 0 67px,#ae95611c 68px 69px),linear-gradient(#d4c4a1,#c5ae81)}
+.adoption-floor:after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 12%,#f7ecd726 12% 43%,transparent 43%)}
+.adoption-walkway{position:absolute;inset:0;pointer-events:none;z-index:2}
+.adoption-person{position:absolute;left:0;top:calc(var(--display-y) + 98px - var(--person-h));width:calc(var(--person-h)*120/248);height:var(--person-h);visibility:hidden;will-change:transform}
+.adoption-person>svg{height:100%;width:100%;overflow:visible}
+.adoption-face-front{opacity:0}.adoption-face-profile{opacity:1}
+.adoption-head{transform-origin:60px 84px;transition:rotate .5s}
+.adoption-stopped .adoption-head{rotate:5deg}
+.adoption-stopped .adoption-face-front{opacity:1}.adoption-stopped .adoption-face-profile{opacity:0}
+.adoption-display{position:absolute;left:50%;top:var(--display-y);width:274px;height:130px;transform:translateX(-50%);z-index:4}
+.adoption-display:after{content:'';position:absolute;left:-8px;right:-8px;bottom:-6px;height:16px;border-radius:50%;background:#695e4020;z-index:-1}
+.adoption-table-top{position:absolute;left:-4px;right:-4px;top:0;height:9px;border-radius:3px;background:#ab875e;box-shadow:0 2px 1px #66543d22}
+.adoption-table-cloth{position:absolute;left:0;right:0;top:5px;height:75px;border-radius:0 0 3px 5px;background:linear-gradient(90deg,#e3dcc3 0 6%,#f3ecd7 7% 92%,#e5ddc1 94%);clip-path:polygon(0 0,100% 0,99% 94%,76% 100%,51% 95%,25% 99%,1% 94%);border-top:2px solid #fff6df}
+.adoption-table-cloth span{display:block;margin:23px auto 0;width:max-content;padding:5px 10px;border:1px solid #b9baa1;color:#78816a;font-size:11px;letter-spacing:.06em;background:#f6f0db}
+.adoption-table-leg{position:absolute;top:8px;bottom:0;width:9px;background:#8b7555;border-radius:0 0 3px 3px}.adoption-table-leg.left{left:15px;rotate:2deg}.adoption-table-leg.right{right:15px;rotate:-2deg}
+.adoption-basket{position:absolute;left:50%;bottom:calc(100% - var(--display-y) - 8px);transform:translateX(-50%);width:var(--basket-w);height:calc(var(--basket-w)*174/212);z-index:5}
+.adoption-basket:after{content:'';position:absolute;left:7%;right:7%;bottom:5px;height:7px;border-radius:50%;background:#66573e25;z-index:-1}
+.adoption-basket-back,.adoption-basket-front{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.adoption-basket-front{z-index:4}
+.adoption-cat{position:absolute;left:17%;right:17%;bottom:19.5%;height:57%;z-index:2}
+.adoption-cat svg{display:block;width:100%;height:100%;overflow:visible}
+.adoption-basket-tag{position:absolute;left:50%;transform:translateX(-50%);bottom:1px;z-index:5;background:#fff4db;padding:3px 9px;font-size:11px;border:1px solid #cbb58d;border-radius:3px;max-width:100px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.adoption-stage .adoption-neighbor{--basket-w:128px;bottom:calc(100% - var(--display-y) + 56px);z-index:1}
+.adoption-neighbor.is-left{left:4%}.adoption-neighbor.is-right{left:96%}
+.adoption-display.is-neighbor{top:calc(var(--display-y) - 64px);width:182px;height:105px;z-index:1}
+.adoption-display.is-neighbor.is-left{left:4%}.adoption-display.is-neighbor.is-right{left:96%}
+.adoption-display.is-neighbor .adoption-table-cloth span{display:none}
+.adoption-aside{display:none}
+.adoption-panel{box-sizing:border-box;position:absolute;left:10px;right:10px;bottom:12px;height:178px;border:1px solid #e7dac0;border-radius:20px;background:var(--paper);box-shadow:0 3px 0 #a78c6020;padding:13px 15px;display:grid;grid-template-rows:14px 28px 44px 44px;gap:6px;z-index:7}
+.adoption-eyebrow{font-size:10px;line-height:14px;letter-spacing:.14em;color:#8a7b60}
+.adoption-panel h1{margin:0;font-weight:500;font-size:18px;line-height:28px;white-space:nowrap}
+.adoption-panel p{margin:0;font-size:13px;line-height:22px;overflow-wrap:anywhere}
+.adoption-panel button{height:44px;width:100%;border:0;border-radius:25px;background:var(--green);color:#fff8e9;font-size:14px}
+.adoption-panel button:disabled{background:#eee6d2;color:#8c7f63;cursor:default}
+.adoption-actions{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px}
+#adoption-next{grid-column:2;grid-row:1}
+.adoption-panel .adoption-secondary{grid-column:1;grid-row:1;height:44px;padding:0;border:1px solid #e5d8bb;border-radius:50%;background:#f0e6cc;color:#746349;font-size:13px}
 .adoption-secondary[hidden]{display:none}
-.adoption-basket-tag{max-width:90px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
-.adoption-cat>svg{display:block}
-.adoption-panel p{overflow-wrap:anywhere}
+.adoption-scene[data-phase="walking"] .adoption-panel,.adoption-scene[data-phase="suspense"] .adoption-panel,.adoption-scene[data-phase="approach"] .adoption-panel,.adoption-scene[data-phase="request"] .adoption-panel{display:none}
+.adoption-scene[data-phase="handover"] .adoption-panel,.adoption-scene[data-phase="thanks"] .adoption-panel,.adoption-scene[data-phase="departure"] .adoption-panel{display:none}
+.adoption-held{opacity:0;pointer-events:none}.adoption-carrying .adoption-held{opacity:1}.adoption-carrying .adoption-arm{visibility:hidden}
+.adoption-handover .adoption-basket:not(.adoption-neighbor) .adoption-basket-front{transform:scaleX(.12);transform-origin:7% center;transition:transform .7s}
+.adoption-scene[data-phase="handover"] .adoption-basket:not(.adoption-neighbor){z-index:6}
+.adoption-cat{transform-origin:center}
+.adoption-result-title{position:absolute;top:8%;left:6%;right:6%;text-align:center;opacity:0;transform:translateY(8px);transition:opacity .8s,transform .8s;z-index:6;pointer-events:none;padding:12px 0;background:radial-gradient(ellipse,#f9f3d9f5,transparent 72%)}
+.adoption-result-title small{display:block;font-size:11px;letter-spacing:.08em;color:#817651}
+.adoption-result-title strong{display:block;font-size:30px;font-weight:500;letter-spacing:.16em;line-height:1.7;color:#8b7042}
+.adoption-revealed .adoption-result-title{opacity:1;transform:none}
+.adoption-revealed .adoption-panel{animation:adoption-result-panel .65s .3s both}
+@keyframes adoption-result-panel{from{opacity:0;translate:0 6px}to{opacity:1;translate:0 0}}
+.adoption-revealed .adoption-hall-sign{visibility:hidden}
+.adoption-tnr .adoption-result-title strong{color:#647451}
+.adoption-suspense .adoption-stage{filter:brightness(.96);transition:filter 1.5s}
+.adoption-request-speech,.adoption-visitor-comment{box-sizing:border-box;position:absolute;margin:0;padding:10px 14px;border:1px solid #d7ccb0;border-radius:16px;background:var(--paper);color:#52634c;text-align:left;font-size:14px;line-height:22px;z-index:6;opacity:0;pointer-events:none;transition:opacity .35s,translate .35s;translate:0 3px}
+.adoption-request-speech{left:9%;right:9%;font-size:16px;line-height:26px;transition-duration:.7s}
+.adoption-request-speech:after,.adoption-visitor-comment:after{content:'';position:absolute;left:var(--tail,75%);bottom:-9px;width:14px;height:10px;background:var(--paper);clip-path:polygon(0 0,100% 0,0 100%)}
+.adoption-requesting .adoption-request-speech,.adoption-visitor-comment.is-visible{opacity:1;translate:0 0}
+.adoption-visitor-comment{max-width:210px;width:max-content}
+@media(max-height:650px){
+ .adoption-scene{--display-y:49%;--basket-w:160px;--person-h:210px}
+ .adoption-person{top:calc(var(--display-y) + 86px - var(--person-h))}
+ .adoption-display{width:224px;height:101px}.adoption-table-cloth{height:66px}.adoption-table-cloth span{margin-top:17px}
+ .adoption-window{width:42px;height:57px;top:14%;left:7%}
+ .adoption-hall-sign{top:30%}.adoption-hall-sign span{font-size:19px}.adoption-hall-sign i{display:none}
+ .adoption-noticeboard{display:none}.adoption-garland{height:23px}
+ .adoption-stage .adoption-neighbor{--basket-w:116px}
+ .adoption-result-title{top:5%;padding:7px 0}.adoption-result-title strong{font-size:26px}
+}
+@media(prefers-reduced-motion:reduce){.adoption-scene *{animation:none!important;transition:none!important}}
 

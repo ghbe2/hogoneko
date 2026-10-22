@@ -22,7 +22,7 @@ function advanceRealTicks(state,ticks,realtime=false){
   if(typeof applySurgeryFasting==='function')next=applySurgeryFasting(next,from+REAL_TICK_MS);
   if(careTicks)next=advanceCatLife(next,careTicks);
   let cat=getCat(next),body={...cat.body},ui={...next.ui},dayTicks=next.realClock.dayTicks+1;
-  const missingFood=body.satiety<25,missingWater=body.hydration<25,dirty=body.litter>=3||body.vomit>0;
+  const missingFood=body.satiety<25&&body.surgeryFoodStored===undefined,missingWater=body.hydration<25,dirty=body.litter>=3||body.vomit>0;
   const neglect={...(body.realNeglectTicks||{})};
   for(const [key,bad] of Object.entries({food:missingFood,water:missingWater,dirty}))neglect[key]=bad?(neglect[key]||0)+1:0;
   body.realNeglectTicks=neglect;

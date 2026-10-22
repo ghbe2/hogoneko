@@ -6,7 +6,7 @@ const storeCount=state=>Object.values(storeCart(state)).reduce((a,b)=>a+b,0);
 function normalizeStarterCart(state){const cart=storeCart(state);return !state.flags.starterBought&&Object.hasOwn(cart,'starter_set')&&cart.starter_set!==1?{...state,ui:{...state.ui,shopCart:{...cart,starter_set:1}}}:state;}
 const STORE_TABS=[['furniture','置くもの'],['play','おもちゃ'],['food','ごはん'],['care','そうじ'],['tools','どうぐ']];
 const storeCategory=p=>['groom_comb','groom_wipe'].includes(p.id)?'tools':p.category;
-const storeType=p=>TYPE_LABELS[getItem(p.id)?.affinityType||getFood(p.id)?.affinityType]||({care:'おそうじ',tools:p.id==='groom_comb'?'毛のお手入れ':'からだ拭き'}[storeCategory(p)]||'お世話');
+const storeType=p=>p.id==='starter_set'?'はじめてのお世話':TYPE_LABELS[getItem(p.id)?.affinityType||getFood(p.id)?.affinityType]||({care:'おそうじ',tools:p.id==='groom_comb'?'毛のお手入れ':'からだ拭き'}[storeCategory(p)]||'お世話');
 const cartIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3h3l3 12h11l3-9H6M8 18h11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="21" r="1.5" fill="currentColor"/><circle cx="18" cy="21" r="1.5" fill="currentColor"/></svg>';
 const storeCoin='<i class="store-coin" aria-label="コイン"></i>';
 const storeTabIcon=id=>id==='care'?'<svg viewBox="0 0 80 80" aria-hidden="true"><rect x="8" y="40" width="51" height="23" rx="7" fill="#a6b18c"/><path d="M59 51H70V32H43V14" fill="none" stroke="#657758" stroke-width="4"/><rect x="36" y="5" width="14" height="24" rx="5" fill="#6b805a"/></svg>':storeArt(productById({furniture:'box',play:'feather',food:'food_dry',tools:'groom_comb'}[id])||{id:'groom_comb',emoji:''});
@@ -35,7 +35,7 @@ reduceGameState=function(state,action){
   // Zero-count rows stay visible for easy restoration, but are not purchases.
   const entries=Object.entries(storeCart(state)).filter(([,n])=>n!==0);if(!entries.length)return state;
   if(entries.some(([id,n])=>!storeAvailable(state,id)||!Number.isInteger(n)||n<1||n>99||(getItem(id)?.kind==='placed'&&n!==1)))return {...state,ui:{...state.ui,shopNotice:'購入できない商品があります。カートから外してください。'}};
-  if(storeTotal(state)>state.coins)return {...state,ui:{...state.ui,shopNotice:'コインが足りません。数量を調整してください。'}};
+  if(storeTotal(state)>state.coins)return {...state,ui:{...state.ui,shopNotice:state.coins<0?'医療費の未払いがあります。残高が足りるまで購入できません。':'コインが足りません。数量を調整してください。'}};
   let next=state;for(const [id,n]of entries)for(let i=0;i<n;i++)next=storeReducer(next,{type:'BUY_SHOP_ITEM',itemId:id});
   return {...next,ui:{...next.ui,storePaidTotal:storeTotal(state),shopCart:{},storeDetail:null,storeCartOpen:false,storeConfirm:false,storeThanks:true,shopNotice:null}};
  }
@@ -105,7 +105,8 @@ function storeBackground(state){
  </g><path d="M32 24L31 29 27 29M39 25L39 30 35 30" fill="none" stroke="#8f7954" stroke-width="1.6" stroke-linecap="round"/></g>`;
  const hand=group('store-clerk-hand');hand.innerHTML='<path d="M-25 88Q-44 87 -49 105L-30 105 -10 90" fill="#9eae95"/><path d="M-49 104Q-42 96 -31 102L-17 106Q-12 112 -22 115L-46 114Z" fill="#bd916d"/>';clerk.append(hand);}
  const register=svg.querySelector('.register');if(register){const hand=clerk?.querySelector('.store-clerk-hand');if(hand){const arm=group('store-counter-arm');arm.setAttribute('transform','translate(339 322)');arm.append(hand);register.before(arm);}register.querySelectorAll('text').forEach(n=>n.remove());const face=group('store-register-face');face.innerHTML='<circle cx="-19" cy="-44" r="5" fill="#edd083" stroke="#b48b40" stroke-width="1.5"/><text class="store-register-total" x="5" y="-40" text-anchor="middle" font-family="Meiryo,sans-serif" font-size="10" fill="#40513a">—</text><path class="store-register-receipt" d="M13 5V-11L16-9 19-11 22-9 25-11 28-9V5Z" fill="#fff3d7"/><g class="store-register-drawer"><path d="M-35 14L30 12 32 20 -36 22Z" fill="#55614e"/><path d="M-11 17L7 16" stroke="#c6d1b8" stroke-width="2"/></g>';register.append(face);}
- svg.setAttribute('viewBox','0 220 450 760');svg.setAttribute('preserveAspectRatio','xMidYMin slice');return svg.outerHTML;
+ // The authored shop ends at y=760. Do not include empty coordinates below its floor.
+ svg.setAttribute('viewBox','0 200 450 560');svg.setAttribute('preserveAspectRatio','xMidYMin slice');return svg.outerHTML;
 }
 renderMapShop=function(state){
  if(!['petshop','super'].includes(state.campaign.shopId))return storeMapShop(state);
@@ -173,7 +174,7 @@ render=function(state){
  storeRender(state);const list=app.querySelector('.store-list');if(list)list.scrollTop=storeListPositions.get(key)||0;
  storeViewKey=key;fitStoreViewport();storePresentation(state,key,previousBackground);storeRestoreMotion(motion);
  if(!key)storeListPositions.clear();
- if(state.ui.storeCartOpen&&storeTotal(state)>state.coins&&!app.querySelector('.store-notice')){const note=document.createElement('p');note.className='store-notice';note.textContent=`あと ${storeTotal(state)-state.coins} コイン足りません`;app.querySelector('.store-footer')?.before(note);}
+ if(state.ui.storeCartOpen&&storeTotal(state)>state.coins&&!app.querySelector('.store-notice')){const note=document.createElement('p');note.className='store-notice';note.textContent=state.coins<0?`医療費の未払い ${-state.coins} コイン。購入にはあと ${storeTotal(state)-state.coins} コイン必要です`:`あと ${storeTotal(state)-state.coins} コイン足りません`;app.querySelector('.store-footer')?.before(note);}
 };
 const storeStyle=document.createElement('style');storeStyle.textContent=`
 #app .campaign-screen:has(.store-scene){position:relative;padding:0;min-height:0}#app .campaign-scroll:has(>.store-scene){position:absolute;inset:0;display:block;padding:0}#app .campaign-screen:has(.store-scene)>.campaign-actions{display:none}

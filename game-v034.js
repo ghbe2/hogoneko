@@ -19,6 +19,7 @@ parkUnlocked=state=>stageAccess(state,'a2').unlocked;
 function canStartStage(state,id){return getCat(state).status==='candidate'&&!state.campaign.requiredVisit&&stageAccess(state,id).unlocked&&stageProgress(state,id)?.remaining!==0;}
 const beforeStageReducer=reduceGameState;
 reduceGameState=function(state,action){
+ if(['CHOOSE_AREA','ENTER_STAGE','ENTER_PARK','GO_RESCUE'].includes(action.type)&&state.coins<RELEASE_ECONOMY.clinic)return rescueFundsNotice(state);
  if(action.type==='CHOOSE_AREA')return !STAGE_RULES[action.area]||state.campaign.requiredVisit?state:{...state,ui:{...state.ui,modal:'stageGate',stageChoice:action.area}};
  if(['ENTER_STAGE','ENTER_PARK'].includes(action.type)){
   const id=action.type==='ENTER_PARK'?'a2':state.ui.stageChoice;

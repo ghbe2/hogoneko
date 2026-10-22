@@ -1,7 +1,7 @@
 'use strict';
 function householdCapacity(state){return state.flags.returnedCat?2+(state.household?.renovation||0):1;}
 function residentCats(state){return state.cats.filter(c=>['raising','intake','captured'].includes(c.status));}
-function resetHouseholdCandidate(cat){const next={...cat};for(const key of ['carePlan','initialAge','permanentResident','returnTutorial','previousDayHeart'])delete next[key];return next;}
+function resetHouseholdCandidate(cat){const next={...cat};for(const key of ['carePlan','initialAge','permanentResident','returnTutorial','previousDayHeart','seniorGift','seniorHelpUnlocked','seniorPromptDismissed'])delete next[key];return next;}
 const householdRoll=rollEncounter;
 rollEncounter=function(state,food,random=Math.random){let e=householdRoll(state,food,random);if(e.cat.age==='adult'&&!isFirstActivity(state)){const base=['slim','skinny'].includes(e.cat.phenotype?.body)?1780:e.cat.phenotype?.body==='round'?1900:1840,sampled=base+Math.floor(random()*80);e={...e,cat:{...e.cat,body:{...e.cat.body,weight:sampled%10?sampled:sampled+3}}};}if(state.campaign.area==='a2'&&!state.flags.parkFirstRescue)e={...e,cat:{...e.cat,age:'kitten',initialAge:'kitten',returnTutorial:true,estimatedAgeMonths:3,phenotype:{...e.cat.phenotype,age:'kitten'},body:{...e.cat.body,weight:883+Math.floor(random()*70)}}};return e;};
 function returnChance(cat){return cat.returnTutorial?1:cat.heart>=90?Math.min(.55,(Math.floor(cat.heart)-89)*.05):0;}
@@ -24,6 +24,7 @@ reduceGameState=function(state,action){
  }
  if(['GO_EVENT','BEGIN_ADOPTION','SEND_EVENT'].includes(action.type)&&cat.permanentResident)return state;
  if(action.type==='CHOOSE_AREA'&&cat.status==='raising'&&residentCats(state).length<householdCapacity(state)){
+  if(state.coins<RELEASE_ECONOMY.clinic)return rescueFundsNotice(state);
   let prepared=householdReduce({...state,campaign:{...state.campaign,phase:'result',requiredVisit:null}},{type:'NEXT_RESCUE'});prepared={...prepared,cats:[resetHouseholdCandidate(getCat(prepared))]};
   const next=householdReduce({...prepared,cats:[getCat(prepared),...residentCats(state)],campaign:{...prepared.campaign,phase:'town'}},action);
   return {...next,cats:[getCat(next),...residentCats(state)]};
@@ -43,10 +44,11 @@ reduceGameState=function(state,action){
 };
 const householdRender=render;
 render=function(state){const oldResidents=new Map([...app.querySelectorAll('.resident-cat svg')].map(svg=>[svg.dataset.catId,{svg,entry:svgRigs.get(svg)}]));householdRender(state);const cat=getCat(state);
+ // Keep the room empty underneath every overlay, including the app and layout.
+ if(state.campaign.phase==='room'&&cat.status==='candidate')app.querySelectorAll('.cat-object,.room-preparation,.command-dock,.room-call-icon,.room-call-feedback').forEach(n=>n.remove());
  if(state.campaign.phase==='room'&&!state.ui.modal){
   if(state.household?.renovation&&!app.querySelector('.pan-guide')){const nav=document.createElement('nav');nav.className='household-pan';nav.setAttribute('aria-label','広くなった部屋の移動');nav.innerHTML=`<button data-action="pan-room" data-pan="0" aria-label="部屋の左へ">‹</button><button data-action="pan-room" data-pan="${getMaxPan(state)}" aria-label="部屋の右へ">›</button>`;app.querySelector('.stage')?.append(nav);}
   if(cat.status==='candidate'){
-   app.querySelectorAll('.cat-object,.room-preparation,.command-dock,.room-call-icon,[data-action="open-notebook"]').forEach(n=>n.remove());
    if(state.household?.pendingReturn){const b=document.createElement('button');b.className='return-window';b.dataset.household='return';b.textContent='窓が、カタカタ……';app.querySelector('.stage')?.append(b);}
   }
   if(state.cats.length>1){const nav=document.createElement('nav');nav.className='resident-selector';nav.innerHTML=residentCats(state).map(c=>`<button data-resident="${surgeryText(c.id)}" aria-pressed="${c.id===cat.id}">${surgeryText(c.name||'保護したネコ')}</button>`).join('');app.querySelector('.stage')?.append(nav);residentCats(state).filter(c=>c.id!==cat.id).forEach((c,i)=>{const n=document.createElement('button');n.className='resident-cat';n.dataset.resident=c.id;n.setAttribute('aria-label',c.name+'のお世話に切り替える');n.style.left=(12+i*24)+'%';n.innerHTML=renderCatArt(c);app.querySelector('[data-room-world]')?.append(n);const prior=oldResidents.get(c.id.replace(/[^a-zA-Z0-9_-]/g,''));if(prior){n.querySelector('svg').replaceWith(prior.svg);if(prior.entry)svgRigs.set(prior.svg,prior.entry);}});mountGameCats();}

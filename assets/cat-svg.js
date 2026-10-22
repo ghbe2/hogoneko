@@ -161,7 +161,8 @@ function eyeShape(kind,mood,x,y,side){
 }
 function paintFace(r,t,sleep){
  const d=r.d,eye=d.eyeColor==='green'?'#a9c06a':d.eyeColor==='blue'?'#72b9c8':'#e7c855';
- const blink=sleep||Math.sin(t*.72)>0.997,mood=d.mood;
+ const cycle=(t+(d.seed%101)*.071)%8.7;
+ const blink=sleep||(cycle>3.3&&cycle<3.45)||(cycle>7.6&&cycle<7.76),mood=d.mood;
  const spacing=d.head==='oval'?29:27;
  const muzzleColor={cream:'#e8c78a',white:'#f6f2e8',black:'#292d2d',split:'#f6f2e8'}[d.muzzle];
  let face=muzzleColor?path('M0 13C-13 8 -28 19 -19 28Q-7 33 0 26Q11 34 22 27C30 17 12 9 0 13Z',muzzleColor):'';
@@ -186,7 +187,12 @@ function paintFace(r,t,sleep){
 }
 function poseModel(p,t){
  const sit={bx:0,by:-87,br:0,bw:1,bh:1,hx:0,hy:-195,hr:0,hs:1,tx:39,ty:-25,tr:0,headTurn:1,lift:0,stretch:1,bend:0,yaw:0,frontBend:0,rumpRaise:0,legs:[[-31,-44,-37,0],[-19,-110,-19,0],[32,-42,40,0],[18,-108,18,0]],sleep:0};
- if(p==='sit'){sit.hy+=Math.sin(t*1.4)*1.1;sit.tr=Math.sin(t*1.1)*5;return sit;}
+ if(p==='sit'){
+  const breath=Math.sin(t*1.55),look=Math.sin(t*.43)*Math.sin(t*.17);
+  sit.bw=1+breath*.009;sit.by-=breath*.65;
+  sit.hy+=breath*.8;sit.hx=look*3;sit.hr=look*2;sit.headTurn=1-Math.abs(look)*.035;
+  sit.tr=Math.sin(t*.78)*4+Math.sin(t*.29)*2;return sit;
+ }
  if(p==='cower')return {...sit,by:-64,bh:.78,hy:-145+Math.sin(t*.9)*1.5,hx:Math.sin(t*.55)*3,hr:Math.sin(t*.6)*4,headTurn:.84+.07*Math.sin(t*.55),tr:8+Math.sin(t*.8)*3,legs:[[-31,-36,-37,0],[-19,-80,-22,0],[32,-34,40,0],[18,-79,21,0]]};
  if(p==='alert')return {...sit,hy:-199+Math.sin(t*1.7)*2,hx:Math.sin(t*.8)*8,hr:Math.sin(t*.8)*5,headTurn:.85+.15*Math.cos(t*.8),tr:Math.sin(t*3)*18};
  if(p==='sleep'||p==='rest')return{...sit,bx:4,by:-53+(p==='rest'?Math.sin(t*1.2)*.8:0),br:-82,bw:.86,bh:1,hx:-47,hy:p==='rest'?-52:-37,hr:-19,hs:.89,tx:p==='rest'?42:60,ty:-25,tr:p==='rest'?-12+Math.sin(t*.6)*2:112,yaw:108,legs:[[-20,-12,-33,-3],[0,-15,2,-3],[27,-12,39,-3],[-12,-16,-25,-3]],sleep:1};
@@ -281,8 +287,9 @@ function applyPose(r,m,t,p='sit'){
  tf('tail',`translate(${m.tx} ${m.ty}) rotate(${m.tr}) scale(${young?.85:1})`);
  tf('headRig',`translate(${m.hx} ${m.hy*(young?.88:1)}) rotate(${m.hr}) scale(${m.hs*(young?1.15:1)*m.headTurn*(rear>.5?-1:1)} ${m.hs*(young?1.15:1)})`);
  const earScale=d.ears==='small'?.76:1,angle=d.ears==='tilted'?23:0,alert=d.mood==='angry'?58:d.mood==='wary'?19:0;
- tf('earL',`translate(-30 -10) rotate(${-alert}) scale(${earScale}) translate(30 10)`);tf('innerL',n.earL.getAttribute('transform'));
- tf('earR',`translate(30 -10) rotate(${angle+alert+Math.sin(t*1.5)*1.3}) scale(${earScale}) translate(-30 10)`);tf('innerR',n.earR.getAttribute('transform'));
+ const earTime=(t+(d.seed%79)*.13)%11,twitch=earTime<.55?Math.sin(earTime/.55*Math.PI)*7:0;
+ tf('earL',`translate(-30 -10) rotate(${-alert-twitch*.35}) scale(${earScale}) translate(30 10)`);tf('innerL',n.earL.getAttribute('transform'));
+ tf('earR',`translate(30 -10) rotate(${angle+alert+twitch+Math.sin(t*1.5)*1.3}) scale(${earScale}) translate(-30 10)`);tf('innerR',n.earR.getAttribute('transform'));
  r.svg.querySelector('[data-clip-ear="L"]').setAttribute('transform',n.earL.getAttribute('transform'));
  r.svg.querySelector('[data-clip-ear="R"]').setAttribute('transform',n.earR.getAttribute('transform'));
  r.svg.querySelectorAll('.part-outline').forEach(p=>p.style.display=showParts?'':'none');

@@ -10,7 +10,7 @@ const TOWN_TUTORIAL={
 
 const FIRST_GUIDES={
  fieldHello:{target:'.encounter-trap',copy:'ネコの気配がありますね。保護器を置いて捕獲をしてみましょう。',next:'bait'},
- bait:{target:'.bait-carousel',copy:'保護器に餌を入れておびき寄せます。私が用意した「いつものカリカリ」を選んでください。',hint:'餌を横にスワイプ'},
+ bait:{target:'.bait-carousel',copy:'保護器に餌を入れておびき寄せます。私が用意した「ウェットフード」を選んでください。',hint:'餌を横にスワイプ'},
  trap:{target:'.encounter-trap',copy:'餌を選びましたね。保護器を持ち上げて、ネコがいそうなところに置いてみましょう。'},
  trapReady:{target:'.illustrated-trap',copy:'保護器が揺れています！ネコが入ったようです。見に行ってみましょう。',hint:'保護器をタップ'},
  captured:{target:'.capture-message',copy:'保護器にネコが入りました。',next:'toClinic'},
@@ -47,7 +47,7 @@ const FIRST_GUIDES={
  essentials:{target:'[data-action="toggle-layout-tray"]',copy:'エサ入れ、水入れ、トイレ。この３つは絶対に必要です。',next:'cardboard'},
  cardboard:{target:'[data-action="toggle-layout-tray"]',copy:'あ、そうだ。初心者セットが入っていた段ボールもネコは好きかもしれませんね。置いてみましょう。',next:'cutCardboard'},
  cutCardboard:{target:'[data-action="toggle-layout-tray"]',copy:'チョキチョキ……入口をつくってみました。できました。置いてみましょう。'},
- moveFurniture:{target:'[data-room-world]',copy:'設置した家具は掴んで好きな場所に置けます。ひとつ動かして、置き場所を試してみましょう。'},
+ moveFurniture:{target:'.placed-item.item-box',copy:'設置した家具は掴んで好きな場所に置けます。ひとつ動かして、置き場所を試してみましょう。'},
  callFirst:{target:'.intake-footer-call',copy:'決まった名前で、呼んでみましょう。'},
  callWait:{target:'.room-carrier',copy:'……'},
  callAgain:{target:'.intake-footer-call',copy:'顔を出すまで、もう何度か呼んでみましょう。'},
@@ -64,14 +64,17 @@ const INTRODUCTION_PAGES=[
 ];
 
 const ACTIVITY_DIALOGUE={
- firstScheduleSurgery:{copy:'５日目に手術ができます。しっかりごはんをあげて体重を維持しましょう。'},
- firstScheduleEvent:{copy:'７日目に譲渡会があります。たくさん遊んで人馴れさせれば、いい里親さんに巡り合えるかも。'},
+ firstScheduleSurgery:{copy:'体重2,000g以上で体調が整い、おうちに慣れたらアプリで手術を予約できます。ごはんをあげて育てましょう。'},
+ firstScheduleEvent:{copy:'手術を終えた２日後が譲渡会です。たくさん遊んで人馴れさせれば、いい里親さんに巡り合えるかも。'},
+ careNotice_ready:{copy:'目標の2,000gに届きましたね！アプリで手術の予定を確認しましょう。'},
+ careNotice_surgery:{copy:'今日は予約した手術の日です。ごはんはお休み中。「街へ」から動物病院へ行きましょう。'},
+ careNotice_event:{copy:'譲渡会に参加できる日になりました。「街へ」から保護センターを訪ねましょう。'},
  centerHello:{copy:'こんにちは。活動の相談に来てくれたんですね。'},
  centerHappy:{copy:'すっごい幸せそうだね。'},
- centerRescue:{copy:'保護したら、まずは病院へ。性別や体重、体調を確認してもらいましょう。'},
- centerRoom:{copy:'ごはん皿・水入れ・トイレは必ず用意して、ネコのペースで仲良くなっていきましょう。'},
- centerSurgery:{copy:'手術前は体重と体調を確認。予定を変更すると、手術と譲渡会が２日ずつ先になります。'},
- centerHeart:{copy:'一緒に遊ぶ時間は、人馴れにつながります。お世話を重ねて、この子のペースを知っていきましょう。'},
+ centerRescue:{copy:'保護には初診の10コインを用意しましょう。病気やケガがあると、治療費が追加になることもあります。足りない分は未払いになりますが、治療とお世話は続けられます。'},
+ centerRoom:{copy:'ごはん皿・水入れ・トイレは暮らしの基本です。収納棚からごはんや道具を選べます。いつものカリカリと基本の道具は、何度でも使えますよ。'},
+ centerSurgery:{copy:'大人は５日目、子猫は12日目から手術できます。体重2,000gと体調を整え、前日にアプリで予約しましょう。予約するとごはんはお休み。体重ぎりぎりなら、もう１日育てても大丈夫です。手術の２日後から譲渡会に参加できます。'},
+ centerHeart:{copy:'玩具への反応を見て、好きな遊びを探しましょう。得意な玩具なら、短い時間でも仲良くなれます。苦手そうなときは、無理せず持ち替えてみてくださいね。'},
  centerMultiple:{copy:'戻ってきた子と暮らしながら、もう１匹を保護できます。それぞれのごはんと体調を見てあげてくださいね。'},
  centerRenovation:{copy:'部屋が手狭になったら、スーパーホームセンターで改装の相談ができます。１回の改装で、もう１匹を迎えられますよ。'}
 };
@@ -85,6 +88,13 @@ const HOME_TOUR=[
  ['play','.main-command-row [data-tab="play"]','あそぶ','おもちゃをネコの近くへドラッグして、一緒に遊びましょう。'],
  ['clean','.main-command-row [data-tab="clean"]','そうじ','掃除道具を汚れのところへドラッグ。お部屋をきれいに保ちましょう。'],
  ['food','.room-preparation [data-tab="food"]','ごはん','ごはんを選んで、お皿へドラッグして用意します。'],
- ['items','.room-preparation [data-tab="touch"]','もちもの','使いたいケア用品を選んで持ち替えられます。準備の引き出しは、必要なときに開きましょう。']
+ ['items','.room-preparation [data-tab="touch"]','もちもの','使いたいケア用品を選んで持ち替えられます。収納棚は、必要なときに開きましょう。']
 ];
 for(const [key,,title,copy]of HOME_TOUR)ACTIVITY_DIALOGUE['homeTour_'+key]={title,copy};
+Object.assign(ACTIVITY_DIALOGUE,{
+ seniorGiftOffer:{title:'受け入れの相談・おさがり',copy:'この子が安心できる、おさがりのマットをあげますね。古くて傷みやすいけれど、受け入れには使えますよ。'},
+ seniorGiftPlace:{title:'おさがりを置く',copy:'「家具を追加」からマットを置いてね。必需品も揃っていれば、安心して出てこられますよ。'},
+ seniorTasteEmpty:{title:'好みの相談・ネコがいない',copy:'次の子を迎えたら、いっしょに好みを探してみましょう。'},
+ seniorTaste:{title:'好みの候補（差し込み）',copy:'{分野}なら、{候補}あたりが気になるみたい。どれが好きか、反応を見ながら試してみてね。'},
+ seniorMissing:{title:'生活必需品（差し込み）',copy:'{家具}は必要です。持っている家具から置いてみましょう。'}
+});

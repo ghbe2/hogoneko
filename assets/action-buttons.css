@@ -1,0 +1,22 @@
+/* Shared text-action contract. Cards, tabs, +/- and pictorial controls are not CTAs.
+   Loaded before the first render; no runtime restyling or size changes on load. */
+:root{--action-green:#637b55;--action-ink:#fff8e9;--action-height:48px;--dialogue-action-height:44px;--action-radius:24px}
+:where(.campaign-button,.intake-footer-call:not(:where(.room-call-icon)),.store-primary,.store-heading button,.store-add,.family-letter-actions button,.tnr-note button,.adoption-panel button,.surgery-actions button,[data-care-booking],.first-name button,.furniture-close,.album-return,.photo-phone>button,.bag-shop,.palette-shop,.app-cancel,.app-pay button,.modal-card>button,.shared-guide-note button){position:relative}
+#app :is(.campaign-button,.intake-footer-call:not(:where(.room-call-icon)),.senior-help-trigger,.store-primary,.store-heading button,.store-exit,.store-add,.family-letter-actions button,.tnr-note button,.adoption-panel button,.surgery-actions button,[data-care-booking],.first-name button,.furniture-close,.album-return,.photo-phone>button,.bag-shop,.palette-shop,.app-cancel,.app-pay button,.modal-card>button,.shared-guide-note button){
+ box-sizing:border-box;min-height:var(--action-height);height:var(--action-height);border:0;border-radius:var(--action-radius);background:var(--action-green);color:var(--action-ink);box-shadow:none;font-size:14px;font-weight:600;line-height:18px;padding:5px 36px;letter-spacing:0;display:block;align-content:center;text-align:center;cursor:pointer;
+}
+/* Arrow lives in the reserved trailing space, not attached to the label. */
+#app :is(.campaign-button,.intake-footer-call:not(:where(.room-call-icon)),.senior-help-trigger,.store-primary,.store-heading button,.store-exit,.store-add,.family-letter-actions button,.tnr-note button,.adoption-panel button,.surgery-actions button,[data-care-booking],.first-name button,.furniture-close,.album-return,.photo-phone>button,.bag-shop,.palette-shop,.app-cancel,.app-pay button,.modal-card>button,.shared-guide-note button)::after{
+ content:'›';position:absolute;right:20px;top:50%;margin-top:-10px;display:block;font-size:19px;line-height:20px;animation:none;
+}
+#app :is(.campaign-button,.intake-footer-call:not(:where(.room-call-icon)),.senior-help-trigger,.store-primary,.store-heading button,.store-exit,.store-add,.family-letter-actions button,.tnr-note button,.adoption-panel button,.surgery-actions button,[data-care-booking],.first-name button,.furniture-close,.album-return,.photo-phone>button,.bag-shop,.palette-shop,.app-cancel,.app-pay button,.modal-card>button,.shared-guide-note button):disabled{background:var(--action-green);color:var(--action-ink);opacity:.45;cursor:default}
+#app .shared-guide-note button{height:var(--dialogue-action-height);min-height:var(--dialogue-action-height);padding:4px 26px;gap:0;white-space:normal}
+#app .shared-guide-note button::after{right:12px}
+#app .shared-guide-note [data-center-back]::after{content:none}
+#app .shared-guide-note .guide-next-ready::after{animation:guide-next 1.25s ease-in-out infinite}
+#app :is(.campaign-button,.intake-footer-call:not(:where(.room-call-icon)),.shared-guide-note button)>span[aria-hidden=true]{display:none}
+#app .shared-guide-note .introduction-back::after{content:none}
+#app .app-pay button{font-size:11px;min-width:0;padding:4px 24px;gap:0;flex-shrink:0}
+#app .app-pay button::after{right:10px}
+#app .first-name>section{grid-template-rows:160px 28px 46px var(--action-height)}
+@media(prefers-reduced-motion:reduce){#app .shared-guide-note .guide-next-ready::after{animation:none}}

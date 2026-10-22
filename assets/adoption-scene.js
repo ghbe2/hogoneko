@@ -1,12 +1,52 @@
 'use strict';
-const ADOPTION_COLORS=['#889b7d','#bc8f78','#9d9c7a','#879da1','#a999b4','#b39d6f'];
-const ADOPTION_MARKUP="<div class=\"adoption-scene\" id=\"adoption-scene\"><div class=\"adoption-stage\"><div class=\"adoption-windows\" aria-hidden=\"true\"><i class=\"adoption-window\"></i><i class=\"adoption-window\"></i></div><svg class=\"adoption-flags\" viewBox=\"0 0 400 55\" preserveAspectRatio=\"none\" aria-hidden=\"true\"><path d=\"M0 3Q200 70 400 3\" fill=\"none\" stroke=\"#907959\" stroke-width=\"2\"/><path d=\"M30 12L62 21 41 41Z M244 31L276 25 264 49Z\" fill=\"#bf8b6f\"/><path d=\"M98 28L130 34 109 54Z M333 19L366 10 357 39Z\" fill=\"#99aa83\"/><path d=\"M173 36L206 36 189 55Z\" fill=\"#cdb67c\"/></svg><span class=\"adoption-hall-name\">譲渡会</span><div class=\"adoption-walkway\" id=\"adoption-walkway\" aria-label=\"会場を歩く来場者\"></div>\n<div class=\"adoption-basket\" aria-label=\"かごの中のこむぎ\"><svg class=\"adoption-basket-back\" viewBox=\"0 0 212 174\" aria-hidden=\"true\"><path d=\"M78 34V20Q106 3 134 20V34\" fill=\"none\" stroke=\"#967b53\" stroke-width=\"6\"/><path d=\"M13 57Q13 32 39 32H173Q199 32 199 57V150H13Z\" fill=\"#c5b086\"/><path d=\"M23 58Q23 43 40 43H172Q189 43 189 58V140H23Z\" fill=\"#e8ddbf\"/></svg><div class=\"adoption-cat\"><svg id=\"adoption-cat\" viewBox=\"200 55 320 320\" preserveAspectRatio=\"xMidYMax meet\" role=\"img\" aria-label=\"こむぎ\"></svg></div><svg class=\"adoption-basket-front\" viewBox=\"0 0 212 174\" aria-hidden=\"true\"><path d=\"M13 58V145Q13 162 30 162H182Q199 162 199 145V58\" fill=\"none\" stroke=\"#a88c5e\" stroke-width=\"8\"/><path d=\"M15 135H197V153Q197 164 183 164H29Q15 164 15 153Z\" fill=\"#bba172\"/><path d=\"M22 142H190M26 154H186\" stroke=\"#dfc797\" stroke-width=\"3\"/><path d=\"M40 49V135M77 43V135M135 43V135M172 49V135\" stroke=\"#af9a7166\" stroke-width=\"3\"/><path d=\"M16 66H196\" stroke=\"#d0b98a\" stroke-width=\"5\"/></svg><span class=\"adoption-basket-tag\">こむぎ</span></div>\n<div class=\"adoption-result-title\" id=\"adoption-result-title\"><small id=\"adoption-result-kicker\"></small><strong id=\"adoption-result-word\"></strong></div><div class=\"adoption-aside\" id=\"adoption-aside\">育ててきた日々を、この出会いへ。</div></div>\n<section class=\"adoption-panel\" aria-live=\"polite\"><div class=\"adoption-eyebrow\" id=\"adoption-step\"></div><h1 id=\"adoption-heading\"></h1><p id=\"adoption-copy\"></p><div class=\"adoption-actions\"><button id=\"adoption-next\"></button><button id=\"adoption-secondary\" class=\"adoption-secondary\"></button></div></section></div>";
+const ADOPTION_COLORS=['#7f927f','#b99179','#9e9b7e','#7e9699','#9c879a','#b49b72'];
+// A quiet community hall. All figures share one floor and tabletop baseline.
+const ADOPTION_MARKUP=`<div class="adoption-scene" id="adoption-scene">
+ <div class="adoption-stage">
+  <div class="adoption-wall" aria-hidden="true">
+   <div class="adoption-window"><i></i></div>
+   <div class="adoption-hall-sign"><small>保護センター</small><span>ネコの譲渡会</span><i>あたらしい家族との出会い</i></div>
+   <div class="adoption-noticeboard"><i></i><i></i><i></i></div>
+   <svg class="adoption-garland" viewBox="0 0 300 35"><path d="M0 3Q150 38 300 3" fill="none" stroke="#a59b7b" stroke-width="1.5"/><path d="M26 9l18 3-11 16zM143 20h18l-9 14zM251 12l18-3-7 19z" fill="#b8bf9b"/><path d="M83 17l18 2-10 15zM201 19l18-2-8 17z" fill="#d6b48d"/></svg>
+  </div>
+  <div class="adoption-floor" aria-hidden="true"></div>
+  <div class="adoption-walkway" id="adoption-walkway" aria-label="会場を歩く来場者"></div>
+  <div class="adoption-display" aria-hidden="true"><i class="adoption-table-leg left"></i><i class="adoption-table-leg right"></i><div class="adoption-table-top"></div><div class="adoption-table-cloth"><span>家族を待っています</span></div></div>
+  <div class="adoption-basket" aria-label="かごの中のこむぎ"><svg class="adoption-basket-back" viewBox="0 0 212 174" aria-hidden="true"><path d="M78 34V20Q106 3 134 20V34" fill="none" stroke="#967b53" stroke-width="6"/><path d="M13 57Q13 32 39 32H173Q199 32 199 57V150H13Z" fill="#c5b086"/><path d="M23 58Q23 43 40 43H172Q189 43 189 58V140H23Z" fill="#e8ddbf"/></svg><div class="adoption-cat"><svg id="adoption-cat" viewBox="200 55 320 320" preserveAspectRatio="xMidYMax meet" role="img" aria-label="こむぎ"></svg></div><svg class="adoption-basket-front" viewBox="0 0 212 174" aria-hidden="true"><path d="M13 58V145Q13 162 30 162H182Q199 162 199 145V58" fill="none" stroke="#a88c5e" stroke-width="8"/><path d="M15 135H197V153Q197 164 183 164H29Q15 164 15 153Z" fill="#bba172"/><path d="M22 142H190M26 154H186" stroke="#dfc797" stroke-width="3"/><path d="M40 49V135M77 43V135M135 43V135M172 49V135" stroke="#af9a7166" stroke-width="3"/><path d="M16 51H196" stroke="#c7b38d" stroke-width="3"/></svg><span class="adoption-basket-tag">こむぎ</span></div>
+
+  <div class="adoption-result-title" id="adoption-result-title"><small id="adoption-result-kicker"></small><strong id="adoption-result-word"></strong></div>
+  <p class="adoption-visitor-comment" aria-live="polite"></p>
+  <div class="adoption-aside" id="adoption-aside"></div>
+ </div>
+ <section class="adoption-panel" aria-live="polite"><div class="adoption-eyebrow" id="adoption-step"></div><h1 id="adoption-heading"></h1><p id="adoption-copy"></p><div class="adoption-actions"><button id="adoption-next"></button><button id="adoption-secondary" class="adoption-secondary"></button></div></section>
+</div>`;
 function adoptionPerson(i){
- const hair=['#6e5b49','#514d43','#8a8170'][i%3],coat=ADOPTION_COLORS[i],skin=i%3===1?'#d8ad8b':'#dfbb98';
- const leg=(name,x,fill)=>`<g class="adoption-${name}"><g transform="translate(${x} 163)"><path d="M-9 0H10L8 42H-8Z" fill="${fill}"/><g class="adoption-shin"><path d="M-8 39H8L7 78H-7Z" fill="${fill}"/><path d="M-7 74H7L17 81Q20 87 10 87H-10Z" fill="#655b4c"/><path d="M-9 86H16" stroke="#b6a88b" stroke-width="2"/></g></g></g>`;
- return `<svg viewBox="0 0 120 260" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><ellipse cx="60" cy="253" rx="31" ry="4" fill="#8b79552a"/><g class="adoption-figure">${leg('leg-b',66,'#797967')}${leg('leg-a',51,'#656858')}<g class="adoption-torso"><path d="M39 106Q56 92 75 102L82 168Q62 176 34 168Z" fill="${coat}"/><path d="M49 99L59 115 68 99" fill="#f1e5cb"/><path d="M58 116L57 162" stroke="#eee2ca" stroke-width="1.5" opacity=".5"/><circle cx="61" cy="128" r="1.5" fill="#e4d9bf"/><circle cx="61" cy="142" r="1.5" fill="#e4d9bf"/><path d="M38 151H50V160H38" fill="#ffffff20"/><path d="M65 152H77V161H65" fill="#ffffff20"/><path d="M50 90L50 103Q61 111 67 100V87" fill="${skin}"/>
- <g class="adoption-head">${i===4?`<path d="M39 44Q18 42 24 70L34 86 45 75Z" fill="${hair}"/>`:''}<path d="M39 46Q42 26 66 29Q86 32 84 54L88 68 80 73Q77 94 61 96Q39 89 37 66Z" fill="${skin}"/><path d="M37 68Q26 41 40 29Q61 15 80 30Q90 36 85 53L72 43 62 35 47 49 44 70Z" fill="${hair}"/>${i===2?'<path d="M32 39Q47 19 73 26L88 43H32" fill="#b7a880"/><path d="M30 44H96" stroke="#9e8d68" stroke-width="5"/>':''}<ellipse cx="43" cy="66" rx="5" ry="7" fill="${skin}"/><g class="adoption-face-profile"><path d="M72 59L77 60M74 80L79 79" stroke="#705f4c" stroke-width="2" stroke-linecap="round" fill="none"/></g><g class="adoption-face-front"><path d="M49 61L54 60M68 60L73 61M54 81Q62 87 70 80" stroke="#705f4c" stroke-width="2" stroke-linecap="round" fill="none"/>${i%2?'<g stroke="#8e8167" stroke-width="1.4" fill="none"><rect x="45" y="55" width="14" height="13" rx="5"/><rect x="65" y="55" width="14" height="13" rx="5"/><path d="M59 60H65"/></g>':''}</g><ellipse cx="72" cy="73" rx="4" ry="2" fill="#cb9378" opacity=".5"/></g>
- <g class="adoption-arm"><path d="M74 109L84 136 78 157" stroke="${coat}" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M78 156L76 167" stroke="${skin}" stroke-width="8" stroke-linecap="round"/></g>${i===4?'<path d="M45 107L72 154" stroke="#b89765" stroke-width="3"/><path d="M62 149H86L89 175H61Z" fill="#c8ad78"/><path d="M67 151Q74 140 81 151" stroke="#9b8157" fill="none" stroke-width="2"/>':''}</g></g></svg>`;
+ const hair=['#685b4c','#514d43','#8b8170'][i%3],coat=ADOPTION_COLORS[i],skin=i%3===1?'#d8ad8b':'#e0bd9c';
+ const leg=(side,x,color)=>`<g class="adoption-leg-${side}"><path class="adoption-leg-line" d="M${x} 154L${x} 193L${x} 232" fill="none" stroke="${color}" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/><path class="adoption-shoe" d="M${x-8} 230h15l8 7q0 4-6 4h-19z" fill="#645e52"/></g>`;
+ return `<svg viewBox="0 0 120 248" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+  <ellipse cx="60" cy="242" rx="29" ry="4" fill="#655b4820"/>
+  <g class="adoption-figure">
+   ${leg('b',67,'#777970')}${leg('a',53,'#686d64')}
+   <g class="adoption-torso">
+    <path d="M38 93Q56 86 77 94L83 157Q62 164 34 157Z" fill="${coat}"/>
+    <path d="M52 81v13q9 9 17-1V80" fill="${skin}"/>
+    <path d="M48 92l12 15 12-15-5 26H55Z" fill="#f3ecdc"/><path d="M60 107v43" stroke="#f0e8d7" opacity=".4"/>
+    <path d="M38 137h12v12H38m28-12h12v12H66" fill="#ffffff16"/>
+    <g class="adoption-head">
+     ${i===4?`<path d="M38 29Q15 34 25 63L36 79 43 52Z" fill="${hair}"/>`:''}
+     <path d="M34 34Q35 9 62 10Q87 11 86 39L89 54 82 59Q80 83 61 85Q36 79 34 55Z" fill="${skin}"/>
+     <path d="M34 55Q23 28 36 15Q57-1 79 11Q91 17 86 37L71 29 62 21 44 36 42 57Z" fill="${hair}"/>
+     ${i===2?'<path d="M28 26Q42 3 68 9L87 28H28" fill="#b8aa85"/><path d="M26 30h68" stroke="#9e9170" stroke-width="4"/>':''}
+     <ellipse cx="40" cy="53" rx="5" ry="7" fill="${skin}"/>
+     <g class="adoption-face-profile"><path d="M73 46l4 1m-3 20 5-1" stroke="#75614d" stroke-width="2" stroke-linecap="round"/></g>
+     <g class="adoption-face-front"><path d="M48 48l5-1m15 0 5 1m-18 19q7 5 14-1" fill="none" stroke="#75614d" stroke-width="2" stroke-linecap="round"/>${i%2?'<g stroke="#8c816d" stroke-width="1.3" fill="none"><rect x="44" y="41" width="15" height="13" rx="5"/><rect x="65" y="41" width="15" height="13" rx="5"/><path d="M59 46h6"/></g>':''}</g>
+     <ellipse cx="73" cy="60" rx="4" ry="2" fill="#c58d78" opacity=".45"/>
+    </g>
+    <g class="adoption-arm"><path d="M75 101Q85 123 78 144" fill="none" stroke="${coat}" stroke-width="14" stroke-linecap="round"/><path d="M78 143l-2 9" stroke="${skin}" stroke-width="8" stroke-linecap="round"/></g>
+    ${i===4?'<path d="M44 94l29 49" stroke="#b89c74" stroke-width="3"/><path d="M63 140h23l3 27H62Z" fill="#c7ae86"/><path d="M67 142q7-11 15 0" stroke="#9c8562" fill="none" stroke-width="2"/>':''}
+   </g>
+  </g>
+ </svg>`;
 }
 
 

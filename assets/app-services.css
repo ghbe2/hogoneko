@@ -1,1 +1,15 @@
-.app-pay .reward-viewed{background:#e4eae2;color:#627362;border:1px solid #cdd7cb}.app-photo-view{z-index:140;background:#2b3b2d88;display:grid;place-items:center;padding:16px}.app-photo-view article{width:100%;max-width:360px;height:90%;background:#fafbf7;border-radius:24px;padding:16px;display:grid;grid-template-rows:30px minmax(100px,1fr) 44px 44px;gap:12px}.app-photo-view h2{font-size:20px;margin:0}.app-photo-view article>div{min-height:0}.app-photo-view svg{width:100%;height:100%}.app-photo-view button{border:1px solid #cbd6ca;border-radius:20px;background:#e6ede3;color:#435f45;font-size:14px}
+.app-pay .reward-viewed{background:#e4eae2;color:#627362;border:1px solid #cdd7cb}
+.app-photo-view.home-phone-layer{z-index:140!important}.app-album-layer.home-phone-layer{z-index:139!important}
+.home-phone.album-phone,.home-phone.photo-phone{--album-paper:#f7f1e6;background:#ded3bd;color:#514d43;gap:12px;max-height:none}
+.home-phone.album-phone{grid-template-rows:52px minmax(0,1fr) var(--action-height)}
+.home-phone.photo-phone{grid-template-rows:52px minmax(0,1fr) var(--action-height) var(--action-height)}
+.album-phone header,.photo-phone header{padding:2px 8px}.album-phone header small,.photo-phone header small{font-size:10px;letter-spacing:3px;color:#83765f}
+.album-phone h2,.photo-phone h2{font-size:21px;line-height:28px;margin:0}
+.album-photo-list.loop-album-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:12px;padding:4px;overflow-y:auto}
+.album-print{margin:0;border:0;border-radius:2px;background:var(--album-paper);padding:8px;box-shadow:0 2px 5px #65594722;color:#514d43;min-width:0}
+button.album-print{display:flex;flex-direction:column;align-items:stretch;text-align:center}
+button.album-print>span{display:block;height:122px;background:#c4b99d}
+.album-print svg{width:100%;height:100%;animation:none!important}.album-print strong{font-size:14px;margin-top:8px}.album-print small{display:block;font-size:11px;margin:5px 0}
+.photo-phone>figure{display:grid;grid-template-rows:minmax(0,1fr) 52px;padding:12px;min-height:0}
+.photo-phone>figure>div{min-height:0;background:radial-gradient(ellipse at 50% 30%,#e1d9c8,#b8ad91)}
+.photo-phone figcaption{text-align:center;font-size:16px;padding-top:8px}

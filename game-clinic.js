@@ -36,12 +36,15 @@ function receptionArt(kind){
  <path d="M192 226L450 221V239L188 245Z" fill="#98734f"/><path d="M193 241L450 235V300H193Z" fill="#c7a779"/><path d="M202 246H443" stroke="#dec49a" stroke-width="3"/>
  <path d="M231 219L267 219 274 233 226 234Z" fill="#f1e6cd"/><text x="250" y="230" text-anchor="middle" fill="#736449" font-size="10" font-family="Meiryo,sans-serif">受付</text><rect x="346" y="222" width="41" height="7" rx="1" fill="#e8dbc1"/><path d="M351 218L382 221" stroke="#738776" stroke-width="3" stroke-linecap="round"/>
  </svg>`;
- if(!clinic)return art;
  const doc=new DOMParser().parseFromString(art,'image/svg+xml'),svg=doc.documentElement,staff=svg.querySelector('.reception-staff'),head=svg.querySelector('.reception-staff-head');
  // Rear hair belongs behind the neck and uniform, never in front of the collar.
- staff.prepend(head.firstElementChild);
+ if(clinic)staff.prepend(head.firstElementChild);
+ if(doctor){
+  staff.firstElementChild.remove();
+  head.innerHTML='<path d="M286 98Q282 69 310 66Q343 60 353 85L350 121 342 141Q321 157 302 141L289 122Z" fill="#cda081"/><path d="M285 109L282 85Q285 66 306 63L329 62 350 75 355 92 346 108 342 84 326 78 308 84 293 80 293 111Z" fill="#7d8073"/><path d="M289 100L294 117M346 99L345 117" stroke="#ddd7c3" stroke-width="4"/><g class="reception-staff-eyes"><path d="M302 111h8m19 0h8" stroke="#514a3c" stroke-width="2.5" stroke-linecap="round"/></g><path d="M320 111l-3 12 6 1M310 134q10 5 19-1" fill="none" stroke="#8e6650" stroke-width="1.7"/><path d="M304 143l8 5 17-1 11-7" fill="none" stroke="#a09a85" stroke-width="3"/>';
+ }
  if(!doctor){
-  const group=doc.createElementNS('http://www.w3.org/2000/svg','g');group.setAttribute('transform','translate(0 310)');
+  const group=doc.createElementNS('http://www.w3.org/2000/svg','g');group.setAttribute('transform',clinic?'translate(0 310)':'translate(0 180)');
   while(svg.firstChild)group.append(svg.firstChild);svg.append(group);
   svg.setAttribute('viewBox','0 0 450 750');svg.setAttribute('preserveAspectRatio','xMidYMax slice');
   const background=doc.createElementNS('http://www.w3.org/2000/svg','path');background.setAttribute('d','M0 0H450V750H0Z');background.setAttribute('fill',wall);svg.prepend(background);

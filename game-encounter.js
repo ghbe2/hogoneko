@@ -17,10 +17,10 @@ function beginEncounterDrag(draft,event){
  moveEncounterDrag(draft,event);
 }
 // Probability is internal tuning only. No rates are rendered into player UI.
-const BAIT_GRADES={starter_food:0,food_dry:1,food_wet:2,food_chicken:2,food_fish:3,food_soup:3};
+const BAIT_GRADES={food_dry:1,food_wet:2,food_chicken:2,food_fish:3,food_soup:3};
 const ENCOUNTER_TUNING={baseRare:.03,boost:[0,.0025,.006,.01],waitMs:4200};
-const encounterFoods=()=>CONFIG.stage1.foods.filter(f=>!f.water);
-function encounterFood(state){return encounterFoods().find(f=>f.id===state.campaign.fieldFood)||encounterFoods()[0];}
+const encounterFoods=(state=gameState)=>CONFIG.stage1.foods.filter(f=>!f.water&&state.inventory[f.id]>=1);
+function encounterFood(state){return encounterFoods(state).find(f=>f.id===state.campaign.fieldFood)||encounterFoods(state)[0]||getFood(state.campaign.fieldFood)||getFood('food_dry');}
 function encounterPools(area){const all=stageCoats(area),special=all.filter(id=>CatSVG.coats[id].rare);const rare=special.length?special:all.slice(-1);return {rare,common:all.filter(id=>!rare.includes(id))};}
 function rollEncounter(state,foodId,random=Math.random){
  const area=state.campaign.area||'a1',pools=encounterPools(area),rare=random()<ENCOUNTER_TUNING.baseRare+ENCOUNTER_TUNING.boost[BAIT_GRADES[foodId]||0];
@@ -35,7 +35,7 @@ reduceGameState=function(state,action){
  if(action.type==='FIELD_PLACE_TRAP'){
   if(c.phase!=='field'||c.trapPlaced||c.trapWaiting||!canStartStage(state,c.area||'a1'))return state;
   const food=getFood(action.foodId||encounterFood(state).id);
-  if(!food||food.water||(!food.unlimited&&!(state.inventory[food.id]>=1)))return state;
+  if(!food||food.water||!(state.inventory[food.id]>=1))return state;
   let next=encounterReducer({...state,campaign:{...c,fieldFood:food.id,bait:[food.id]}},action);
   if(!next.campaign.trapPlaced)return state;
   next=encounterReducer(next,{type:'FINISH_FIELD_PREP'});
@@ -45,12 +45,12 @@ reduceGameState=function(state,action){
  if(action.type==='TRAP_READY'&&c.encounter&&gameNow()<c.encounter.readyAt)return state;
  if(action.type==='OPEN_TRAP'&&c.encounter&&gameNow()<c.encounter.readyAt)return state;
  if(['GO_RESCUE','ENTER_STAGE','ENTER_PARK','NEXT_RESCUE'].includes(action.type)){
-  const next=encounterReducer(state,action);return next.campaign.phase==='field'&&!next.campaign.trapPlaced||action.type==='NEXT_RESCUE'&&next!==state?{...next,campaign:{...next.campaign,encounter:null,fieldFood:'starter_food'}}:next;
+  const next=encounterReducer(state,action);return next.campaign.phase==='field'&&!next.campaign.trapPlaced||action.type==='NEXT_RESCUE'&&next!==state?{...next,campaign:{...next.campaign,encounter:null,fieldFood:'food_dry'}}:next;
  }
  return encounterReducer(state,action);
 };
 // Old waiting saves get one pinned result, persisted before any presentation.
-if(gameState.campaign.phase==='field'&&gameState.campaign.trapWaiting&&!gameState.campaign.encounter){gameState={...gameState,campaign:{...gameState.campaign,encounter:rollEncounter(gameState,gameState.campaign.bait[0]||'starter_food')}};saveGameState(gameState);}
+if(gameState.campaign.phase==='field'&&gameState.campaign.trapWaiting&&!gameState.campaign.encounter){gameState={...gameState,campaign:{...gameState.campaign,encounter:rollEncounter(gameState,gameState.campaign.bait[0]||'food_dry')}};saveGameState(gameState);}
 const chevrons=grade=>`<span class="bait-luck" aria-label="香りのランク${['なし','控えめ','豊か','特別'][grade]}">${Array.from({length:grade},()=>'<i></i>').join('')}</span>`;
 function encounterTrapArt(){return `<svg viewBox="0 0 220 125" aria-hidden="true"><ellipse cx="112" cy="111" rx="92" ry="9" fill="#574a3820"/><path d="M30 35L65 15H193V88L163 110H30Z" fill="#e7ddc3" stroke="#746e5b" stroke-width="3"/><path d="M30 35H163L193 15M163 35V110M163 110L193 88" fill="none" stroke="#746e5b" stroke-width="3"/><path d="M45 38V105M64 38V105M84 38V105M104 38V105M124 38V105M144 38V105M174 32V98M185 25V91M34 58H160M34 82H160" fill="none" stroke="#8b8771" stroke-width="3"/><path d="M91 16V8Q91 3 98 3H123Q130 3 130 8V16" fill="none" stroke="#746e5b" stroke-width="4"/><ellipse cx="100" cy="98" rx="23" ry="5" fill="#b68b59"/></svg>`;}
 const fieldArtCache=new Map();
@@ -77,14 +77,16 @@ renderField=function(state){
  const c=state.campaign,food=encounterFood(state),trap=FIELD_TRAPS.find(t=>t.id===c.fieldTrap)||FIELD_TRAPS[0],grade=BAIT_GRADES[food.id]||0,waiting=c.trapWaiting;
  const scene=c.encounter?.scene||'quiet';
  const effect=scene==='rainbow'?'<div class="encounter-rainbow" aria-hidden="true"></div>':scene==='moon'?'<div class="encounter-night" aria-hidden="true"></div><div class="encounter-moon" aria-hidden="true"></div>':'';
- const cage=waiting?`<button class="trap illustrated-trap ${c.trapReady?'ready':''}" style="left:${c.trapPosition?.x??50}%;top:${c.trapPosition?.y??68}%;bottom:auto" ${c.trapReady?'data-action="open-trap" aria-label="保護器を開ける"':'disabled'}>${encounterTrapArt()}</button><p class="encounter-wait" role="status">${c.trapReady?'保護器をタップ':'…草むらに、小さな気配。'}</p>`:'';
- const chooser=waiting?'':`<section class="encounter-picker" aria-label="餌を中央に合わせて保護器を設置"><div class="encounter-cage-row"><button class="encounter-trap" data-field-drag="trap" data-trap="${trap.id}" aria-label="保護器を草地へ運ぶ" ${!food.unlimited&&!(state.inventory[food.id]>=1)?'disabled':''}>${encounterTrapArt()}</button><button class="encounter-change" data-action="field-menu" data-kind="trap" aria-label="保護器を選ぶ">⇄</button></div><p class="encounter-instruction">中央のごはんで、保護器をそっと置く</p><div class="bait-carousel" tabindex="0" role="listbox" aria-label="横に送って餌を選ぶ" aria-activedescendant="bait-${food.id}">${encounterFoods().map(f=>`<div class="bait-option ${f.id===food.id?'chosen':''}" id="bait-${f.id}" role="option" aria-selected="${f.id===food.id}" data-food-id="${f.id}"><span class="bait-picture">${f.emoji}</span>${chevrons(BAIT_GRADES[f.id]||0)}</div>`).join('')}</div><p class="bait-detail"><strong>${food.label}</strong><span>${food.unlimited?'∞':'×'+(state.inventory[food.id]||0)}</span></p></section>`;
+ const cage=waiting?`<button class="trap illustrated-trap ${c.trapReady?'ready':''}" style="left:${c.trapPosition?.x??50}%;top:${c.trapPosition?.y??68}%;bottom:auto" ${c.trapReady?'data-action="open-trap" aria-label="保護器を開ける"':'disabled'}>${encounterTrapArt()}</button>`:'';
+ const chooser=waiting?'':`<section class="encounter-picker" aria-label="餌を中央に合わせて保護器を設置"><div class="encounter-cage-row"><button class="encounter-trap" data-field-drag="trap" data-trap="${trap.id}" aria-label="保護器を草地へ運ぶ" ${!(state.inventory[food.id]>=1)?'disabled':''}>${encounterTrapArt()}</button><button class="encounter-change" data-action="field-menu" data-kind="trap" aria-label="保護器を選ぶ">⇄</button></div><p class="encounter-instruction">中央のごはんで、保護器をそっと置く</p><div class="bait-carousel" tabindex="0" role="listbox" aria-label="横に送って餌を選ぶ" aria-activedescendant="bait-${food.id}">${encounterFoods(state).map(f=>`<div class="bait-option ${f.id===food.id?'chosen':''}" id="bait-${f.id}" role="option" aria-selected="${f.id===food.id}" data-food-id="${f.id}"><span class="bait-picture">${f.emoji}</span>${chevrons(BAIT_GRADES[f.id]||0)}</div>`).join('')}</div><p class="bait-detail"><strong>${food.label}</strong><span>${food.unlimited?'∞':'×'+(state.inventory[food.id]||0)}</span></p></section>`;
  return renderCampaignShell(state,stageName(c.area||'a1'),`<div class="field-scene encounter-scene ${scene}" data-field-drop="scene">${fieldBackdrop(state)}${effect}${cage}</div>${chooser}`).replace('class="campaign-frame"','class="campaign-frame field-fullscreen encounter-screen"')+(state.ui.modal==='fieldTraps'?renderFieldChoice(state):'');
 };
 let encounterTimer=null,encounterTimerKey=null,gustTimer=null,gustStopTimer=null,gustKey=null;
 function installCarousel(){
  const rail=app.querySelector('.bait-carousel');if(!rail||rail.dataset.bound)return;rail.dataset.bound='true';
  const options=[...rail.querySelectorAll('.bait-option')];
+ if(!options.length)return;
+ for(const type of ['pointerdown','wheel','keydown'])rail.addEventListener(type,()=>{rail.dataset.baitInteracted='true';},{capture:true});
  const center=option=>option.offsetLeft+option.offsetWidth/2-rail.clientWidth/2;
  rail.scrollLeft=center(options.find(o=>o.dataset.foodId===encounterFood(gameState).id)||options[0]);
  function select(){const middle=rail.getBoundingClientRect().left+rail.clientWidth/2;const option=options.reduce((a,b)=>Math.abs(b.getBoundingClientRect().left+b.clientWidth/2-middle)<Math.abs(a.getBoundingClientRect().left+a.clientWidth/2-middle)?b:a);const food=getFood(option.dataset.foodId);

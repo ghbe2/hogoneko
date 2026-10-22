@@ -9,7 +9,7 @@
 .capture-cage-back,.capture-cage-front{position:absolute;left:5%;top:12%;width:90%;height:66%;animation:capture-portrait 2800ms both;animation-delay:var(--capture-delay);pointer-events:none}.capture-cage-back{background:#b7b49a;border-radius:9px;box-shadow:inset 0 12px 35px #6f71584d}.capture-cage-front svg{width:100%;height:100%}.capture-journey.finished .capture-cage-back,.capture-journey.finished .capture-cage-front{opacity:1;animation:none}
 .capture-journey>*{animation-timing-function:linear}
 #app .capture-portrait{animation-timing-function:linear}
-#app .is-first-capture .capture-portrait,#app .is-first-capture .capture-first-eyes{top:188px!important;height:calc(100% - 340px)!important}
-#app .is-first-capture .capture-cage-back,#app .is-first-capture .capture-cage-front{top:178px;height:calc(100% - 324px)}
+#app .is-first-capture .capture-portrait,#app .is-first-capture .capture-first-eyes{top:238px!important;height:calc(100% - 340px)!important}
+#app .is-first-capture .capture-cage-back,#app .is-first-capture .capture-cage-front{top:228px;height:calc(100% - 324px)}
 .staged-action{animation:action-arrives .5s ease-out both}.staged-action[aria-hidden="true"]{visibility:hidden;pointer-events:none;animation:none}
 @keyframes action-arrives{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}

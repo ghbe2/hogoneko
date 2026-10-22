@@ -1,0 +1,7 @@
+.senior-help-trigger{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:calc(100% - 40px);max-width:300px;z-index:35}
+.item-senior_mat{width:84px;height:84px}
+.senior-review nav [data-senior-close],.senior-review nav [data-senior-gift]{min-width:112px;flex:none;width:112px}
+.senior-dialog-close{position:absolute;right:12px;top:12px;width:44px;height:44px;background:#637b55;color:#fff8e9;font-size:26px}
+.center-help>.senior-review{min-width:0;max-width:calc(100% - 20px)}
+.center-help>.senior-review p,.center-help>.senior-review nav{min-width:0}
+.is-plaza .center-menu button{min-height:62px;padding-top:10px;padding-bottom:10px}

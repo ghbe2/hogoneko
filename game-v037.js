@@ -2,7 +2,7 @@
 // One furniture library; selection and placement are separate interactions.
 let furnitureUndo=[];
 const ROOM_CONTROL_RESERVE=128;
-const ROOM_MENU_RESERVE=144;
+const ROOM_MENU_RESERVE=94;
 function layoutWallStart(height=app.clientHeight||window.innerHeight){return ROOM_MENU_RESERVE/height*100;}
 // The painted skirting is at y=429 in the 760-unit room artwork.
 function roomPlacementBounds(height=app.clientHeight||window.innerHeight,state=gameState){const intake=state.campaign.phase==='intake'&&state.onboarding?.status==='active'&&state.onboarding.flowVersion===1;return {wallTop:ROOM_MENU_RESERVE,wallBottom:height*429/760-8,floorTop:height*429/760+8,floorBottom:height-(intake?76:ROOM_CONTROL_RESERVE)};}
@@ -242,7 +242,9 @@ function productBenefit(id){
  if(id==='groom_comb')return '抜け毛を予防。掃除の手間を減らす。';
  if(id==='groom_wipe')return '体を拭いてお手入れ。';
  if(cleaner)return `掃除の強さ ${cleaner.power}。まとめて片づける。`;
- if(getFood(id))return 'お皿半分ずつ補充。好みに合うごはんを。';
+ if(id==='food_dry')return '毎日のごはんに。体重の変化を見ながら育てよう。';
+ if(['food_wet','food_chicken','food_fish','food_soup'].includes(id))return 'いつものカリカリより体重を増やしやすいごはん。';
+ if(getFood(id))return 'お皿半分ずつ補充。ゆっくり育てる基本のごはん。';
  return '';
 }
 const progressionReduce=reduceGameState;
@@ -267,7 +269,7 @@ renderLoopSheet=function(state){
  const t=document.createElement('template');t.innerHTML=html;
  const sheet=t.content.querySelector('.loop-prep'),p=sheet.querySelector('p'),total=state.economy?.spent||0,baseline=state.economy?.cycleStartSpent;
  const costs=Number.isFinite(baseline)?`今回の支出 ${Math.max(0,total-baseline)} コイン`:`これまでの支出 ${total} コイン`;
- p.innerHTML=`${costs}<br>次の初診：12コイン${state.coins<12?`（あと${12-state.coins}）`:`・支払い後 ${state.coins-12} コイン`}`;
+ p.innerHTML=`${costs}<br>次の初診：10コイン（治療費別）${state.coins<10?`・保護に出るにはあと${10-state.coins}コイン`:`・基本料金の支払い後 ${state.coins-10} コイン`}`;
  const keeps=sheet.querySelector('.loop-keeps');keeps.textContent='家具・道具・残りの消耗品は引き継ぎ。無料のごはん・玩具・コロコロも使えます。';
  const count=graduatedCount(state),newItems=SHOP_CATALOG.filter(p=>SHOP_UNLOCKS[p.id]===count);
  const news=newItems.length?'新入荷：'+newItems.map(p=>p.label).join('・'):nextShopGoal(state);
@@ -288,7 +290,7 @@ reduceGameState=function(state,action){
  if(action.type==='ROAM_CAT'&&discoveryScene(state))return state;
  const next=discoveryReduce(state,action);
  if(action.type!=='PICK_DISCOVERY_COIN'||!discoveryScene(state)||!discoveryScene(next))return next;
- return {...next,coins:next.coins+5,dailyDiscovery:{lastDay:discoveryDay(),visits:(state.dailyDiscovery?.visits||0)+1},ui:{...next.ui,coinDiscovery:{id:Date.now()+Math.random(),until:Date.now()+2200}}};
+ return {...next,coins:next.coins+(CONFIG.economy.discoveryCoins||5),dailyDiscovery:{lastDay:discoveryDay(),visits:(state.dailyDiscovery?.visits||0)+1},ui:{...next.ui,coinDiscovery:{id:Date.now()+Math.random(),until:Date.now()+2200}}};
 };
 const discoveryPose=scenePose;
 scenePose=function(svg){const pose=discoveryPose(svg);if(svg.closest('.cat-object')&&discoveryScene(gameState)&&!gameState.ui.playMode&&!['walk','jump'].includes(pose[0]))return [Date.now()%4500<2900?'punch':'sit','neutral'];return pose;};
@@ -300,13 +302,14 @@ render=function(state){
  if(discoveryScene(state)){const clue=document.createElement('button');clue.type='button';clue.className='discovery-pickup';clue.dataset.action='pick-discovery-coin';clue.innerHTML='<span>●</span>';clue.setAttribute('aria-label','ネコが遊んでいるコインを拾う');stage.appendChild(clue);positionDiscoveryCoin();}
  const coinMotion=app.querySelector('.discovery-pickup span')?.getAnimations()[0];if(coinMotion&&coinTime!=null)coinMotion.currentTime=coinTime+performance.now()-coinAt;
  const found=state.ui.coinDiscovery;if(!found||found.id===lastDiscovery||found.until<Date.now())return;lastDiscovery=found.id;
- const coin=document.createElement('span');coin.className='discovery-coin';coin.textContent='● +5';coin.setAttribute('role','status');coin.setAttribute('aria-label','5コインを見つけた');const x=Math.max(30,Math.min(s.width-50,c.left-s.left+c.width/2)),y=Math.max(35,c.top-s.top+c.height*.5);coin.style.left=x+'px';coin.style.top=y+'px';stage.appendChild(coin);
- coin.animate([{translate:'0 0',opacity:0,scale:.5},{offset:.2,translate:'0 -25px',opacity:1,scale:1.15},{offset:.6,translate:'0 -25px',opacity:1,scale:1},{translate:`${s.width-42-x}px ${-y}px`,opacity:0,scale:.45}],{duration:2100,fill:'forwards'});setTimeout(()=>coin.remove(),2200);
+ const coin=document.createElement('span');coin.className='discovery-coin';coin.textContent='● +'+(CONFIG.economy.discoveryCoins||5);coin.setAttribute('role','status');coin.setAttribute('aria-label',(CONFIG.economy.discoveryCoins||5)+'コインを見つけた');const x=Math.max(30,Math.min(s.width-50,c.left-s.left+c.width/2)),y=Math.max(35,c.top-s.top+c.height*.5);coin.style.left=x+'px';coin.style.top=y+'px';stage.appendChild(coin);
+ // The app button is created by the outer room renderer later in this frame.
+ requestAnimationFrame(()=>{if(!coin.isConnected)return;const target=app.querySelector('.room-icon-menu [data-action="open-notebook"]'),r=target?.getBoundingClientRect(),from=coin.getBoundingClientRect();const dx=r?r.left+r.width/2-from.left-from.width/2:0,dy=r?r.top+r.height/2-from.top-from.height/2:-25;coin.dataset.destination='app';coin.animate([{translate:'0 0',opacity:0,scale:.5},{offset:.2,translate:'0 -25px',opacity:1,scale:1.1},{offset:.6,translate:'0 -25px',opacity:1,scale:1},{translate:`${dx}px ${dy}px`,opacity:0,scale:.45}],{duration:1600,fill:'forwards'});setTimeout(()=>coin.remove(),1700);});
 };
-const discoveryStyle=document.createElement('style');discoveryStyle.textContent='.discovery-glint{position:absolute;pointer-events:none;color:#d6ac54;font-size:20px;animation:discovery-glint 3s ease-in-out infinite}.discovery-coin{position:absolute;z-index:90;pointer-events:none;color:#ba872d;font:bold 23px system-ui;text-shadow:0 2px #fff8}@keyframes discovery-glint{50%{opacity:.2;scale:.7}}@media(prefers-reduced-motion:reduce){.discovery-glint{animation:none}}';document.head.appendChild(discoveryStyle);
+const discoveryStyle=document.createElement('style');discoveryStyle.textContent='.discovery-glint{position:absolute;pointer-events:none;color:#d6ac54;font-size:20px;animation:discovery-glint 3s ease-in-out infinite}.discovery-coin{position:absolute;z-index:90;pointer-events:none;color:#ba872d;font:bold 16px system-ui;text-shadow:0 2px #fff8}@keyframes discovery-glint{50%{opacity:.2;scale:.7}}@media(prefers-reduced-motion:reduce){.discovery-glint{animation:none}}';document.head.appendChild(discoveryStyle);
 function positionDiscoveryCoin(){const coin=app.querySelector('.discovery-pickup'),cat=app.querySelector('.cat-object'),stage=app.querySelector('.stage');if(!coin||!cat||!stage)return;const c=cat.getBoundingClientRect(),s=stage.getBoundingClientRect();coin.style.left=Math.max(24,Math.min(s.width-24,c.left-s.left+c.width*.67))+'px';coin.style.top=Math.max(24,Math.min(s.height-24,c.bottom-s.top-12))+'px';}
 app.addEventListener('click',event=>{if(event.target.closest('[data-action="pick-discovery-coin"]'))dispatch({type:'PICK_DISCOVERY_COIN'});});
-discoveryStyle.textContent+='.discovery-pickup{position:absolute;z-index:76;width:48px;height:48px;padding:0;border:0;background:none;transform:translate(-50%,-50%);touch-action:manipulation}.discovery-pickup span{display:block;color:#dca735;font-size:30px;text-shadow:0 2px #8d631f,0 0 2px #fff;animation:coin-roll 4.5s ease-in-out infinite}@keyframes coin-roll{0%,65%,100%{translate:-7px 0;rotate:-20deg}32%{translate:7px -3px;rotate:30deg}}@media(prefers-reduced-motion:reduce){.discovery-pickup span{animation:none}}';
+discoveryStyle.textContent+='.discovery-pickup{position:absolute;z-index:76;width:48px;height:48px;padding:0;border:0;background:none;transform:translate(-50%,-50%);touch-action:manipulation}.discovery-pickup span{display:block;color:#dca735;font-size:14px;text-shadow:0 1px #8d631f,0 0 2px #fff;animation:coin-roll 4.5s ease-in-out infinite}@keyframes coin-roll{0%,65%,100%{translate:-7px 0;rotate:-20deg}32%{translate:7px -3px;rotate:30deg}}@media(prefers-reduced-motion:reduce){.discovery-pickup span{animation:none}}';
 setInterval(positionDiscoveryCoin,100);
 
 // Short-lived presentation cues: never save a backlog of offline animations.

@@ -22,13 +22,14 @@ render=function(state){
  if(!step||titleScreenOpen){homeTourLastStep=null;return;}
  const target=app.querySelector(step[1]);if(!target)return;
  const overlay=document.createElement('section');overlay.className='home-tour'+(homeTourLastStep!==step[0]?' entering':'');homeTourLastStep=step[0];overlay.setAttribute('role','dialog');overlay.setAttribute('aria-label',step[2]);
+ if(['play','clean','food','items'].includes(step[0]))overlay.classList.add('room-care-tour');
  const text=ACTIVITY_DIALOGUE['homeTour_'+step[0]];
  overlay.innerHTML=`<div class="home-tour-focus"></div><article><h2>${text.title}</h2><p>${text.copy}</p>${step[0]==='close'?'':`<button data-home-tour-next>${step[0]==='items'?'お世話をはじめる':'つぎへ'} →</button>`}</article>`;
  app.append(overlay);
  const a=app.getBoundingClientRect(),r=target.getBoundingClientRect(),ring=overlay.firstElementChild,card=overlay.lastElementChild;
  Object.assign(ring.style,{left:(r.left-a.left-3)+'px',top:(r.top-a.top-3)+'px',width:(r.width+6)+'px',height:(r.height+6)+'px'});
  const h=card.getBoundingClientRect().height,below=r.bottom-a.top+14;
- card.style.top=(below+h<a.height-10?below:Math.max(10,r.top-a.top-h-14))+'px';
+ card.style.top=overlay.classList.contains('room-care-tour')?'12px':(below+h<a.height-10?below:Math.max(10,r.top-a.top-h-14))+'px';
 };
 for(const type of ['pointerdown','click'])window.addEventListener(type,e=>{
  const step=HOME_TOUR.find(s=>s[0]===gameState.onboarding.homeTour);if(!step||!app.querySelector('.home-tour'))return;
