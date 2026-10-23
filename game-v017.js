@@ -270,11 +270,11 @@ function scenePose(svg){
     if(holder.classList.contains('walking'))return ['walk','neutral'];
     if(holder.classList.contains('toy-reject'))return ['sit','angry'];
     if(holder.classList.contains('toy-avoid'))return ['sit','wary'];
-    if(holder.classList.contains('toy-eager'))return ['punch','happy'];
-    if(holder.classList.contains('toy-alert'))return ['punch','happy'];
+    if(holder.classList.contains('toy-eager'))return ['hunt','happy'];
+    if(holder.classList.contains('toy-alert'))return ['hunt','happy'];
     if(holder.classList.contains('nibbling')&&gameState.ui.mealAt>Date.now()-3500)return ['eat','neutral'];
     if(holder.classList.contains('purring')&&gameState.ui.purrUntil>Date.now())return [getCat(gameState).heart>=90?'knead':'sit','happy'];
-    if(gameState.ui.catFocus?.operation==='play')return ['punch','happy'];
+    if(gameState.ui.catFocus?.operation==='play')return ['hunt','happy'];
     return [getCat(gameState).heart>=70&&Math.floor(Date.now()/12000)%5===0?'sleep':'sit',getCat(gameState).heart<70?'wary':'neutral'];
   }
   const capture=svg.closest('.capture-inspect');
@@ -292,11 +292,16 @@ function animateGameCats(now){
       if(pose!==entry.pose){entry.previous=entry.lastModel||CatSVG.poseModel(entry.pose,t);entry.pose=pose;entry.since=now;entry.changed=now;t=0;}
       entry.rig.d.mood=mood;
       // World movement owns the jump arc; the SVG only bends its limbs.
-      const poseTime=pose==='jump'?.3+Math.min(.7,t/CONFIG.stage1.jumpMs*1000*.7):pose==='punch'?t*(svg.closest('.toy-eager')?1.4:.85):t;
+      let poseTime=pose==='jump'?.3+Math.min(.7,t/CONFIG.stage1.jumpMs*1000*.7):pose==='punch'?t*(svg.closest('.toy-eager')?1.4:.85):t;
+      if(pose==='hunt'&&svg.closest('.cat-object'))poseTime+=2;
+      const lifeCue=svg.closest('.cat-object')&&typeof currentLifeCue==='function'?currentLifeCue():null;
+      if(lifeCue&&lifeCue.pose===pose)poseTime=Math.max(0,Math.min(3.1,(Date.now()-lifeCue.started)/1000));
       let model=CatSVG.poseModel(pose,poseTime);
       if(entry.previous&&pose!=='jump'&&now-entry.changed<180)model=CatSVG.mixModel(entry.previous,model,(now-entry.changed)/180);
       if(pose==='jump')model.lift=0;
       entry.lastModel=model;CatSVG.applyPose(entry.rig,model,poseTime,pose);svg.dataset.pose=pose;
+      // The room owns dirt and toys; the cat renderer supplies only the animal.
+      if(svg.closest('.cat-object')){entry.rig.nodes.props.innerHTML='';entry.rig.nodes.effects.innerHTML='';}
     }
   }
   requestAnimationFrame(animateGameCats);
@@ -361,7 +366,7 @@ const releaseStyle=document.createElement('style');
 releaseStyle.textContent=`
 .game-cat-svg{display:block;width:100%;height:100%;overflow:visible;pointer-events:none;transform-origin:50% 100%}
 .cat-object .game-cat-svg{transform:scale(1.3)}
-.cat-object.walking .game-cat-svg,.cat-object.jumping .game-cat-svg{transform:scale(calc(var(--cat-facing,1)*1.3),1.3)}
+.cat-object.walking .game-cat-svg,.cat-object.jumping .game-cat-svg{transform:scale(1.3)}
 .capture-cat .game-cat-svg{transform:scale(1.6)}
 .command-dock.tiered-dock{display:grid;grid-template-columns:minmax(0,1fr) 76px;align-items:center;gap:12px;width:calc(100% - 24px);max-width:350px;bottom:18px}
 .main-command-row{display:flex;gap:6px;justify-content:space-between}.sub-command-row{position:relative;display:flex;flex-direction:column;gap:8px;align-items:center}

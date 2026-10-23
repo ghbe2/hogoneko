@@ -4,7 +4,6 @@
 .tnr-cat{position:absolute;left:40%;top:calc(48% + 62px);width:84px;height:90px;z-index:3;transform:translate(-50%,-100%);transform-origin:50% 100%;opacity:0}.tnr-cat svg{width:100%;height:100%}
 .tnr-field.is-open .tnr-cat{animation:tnr-walk 6s linear both;animation-delay:var(--release-delay)}
 .tnr-field.is-open .tnr-door{animation:tnr-door-open 1s ease-out both;animation-delay:var(--release-delay)}
-.tnr-field.is-open:not(.is-done) .tnr-cat svg{transform:scaleX(-1)}
 .tnr-field.is-done .tnr-cat{animation:none;left:73%;top:38%;opacity:1;scale:.65}
 .tnr-note{position:absolute;bottom:16px;left:12px;right:12px;padding:16px;background:#fff8e9ed;border:1px solid #ded3b8;border-radius:20px;display:grid;gap:10px;z-index:5}
 .tnr-note h2{font-size:17px;margin:0;line-height:25px}.tnr-note p{font-size:13px;line-height:21px;margin:0}.tnr-note p:empty{display:none}

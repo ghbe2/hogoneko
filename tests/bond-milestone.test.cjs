@@ -1,0 +1,8 @@
+const{chromium}=require('playwright'),assert=require('node:assert/strict'),{pathToFileURL}=require('node:url'),path=require('node:path');
+(async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{for(const [width,height]of [[320,568],[375,812]]){
+ const p=await b.newPage({viewport:{width,height}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(pathToFileURL(path.resolve('index.html')).href+'?check=1&scenario=room');
+ await p.evaluate(()=>{titleScreenOpen=false;gameState.onboarding={status:'done',homeTour:'done',guide:null,appIntro:null};gameState.ui={...gameState.ui,modal:null,layoutMode:false};getCat(gameState).heart=40;render(gameState);beginBond(getCat(gameState),40,49,true);});await p.waitForTimeout(250);
+ assert.equal(await p.locator('.bond-gauge,.bond-total,.bond-milestone').count(),0);await p.screenshot({path:`tests/screenshots/milestone-${width}-normal.png`});
+ for(const n of [50,60]){await p.evaluate(n=>beginBond(getCat(gameState),40,n,true),n);await p.waitForTimeout(1100);assert.equal(await p.locator('.bond-milestone').textContent(),'こころ '+n);await p.screenshot({path:`tests/screenshots/milestone-${width}-${n}.png`});await p.evaluate(()=>render(gameState));await p.waitForTimeout(1200);assert.equal(await p.locator('.bond-milestone').count(),0);}
+ assert.equal(await p.locator('.bond-gauge,.bond-total').count(),0);assert.equal(await p.evaluate(()=>getCat(gameState).heart),40);assert.deepEqual(errors,[]);console.log('PASS',width,'heart only, 50/60 temporary milestone, fades away, redraw and no balance change');await p.close();
+}}finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});

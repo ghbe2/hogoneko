@@ -102,7 +102,7 @@ function installCarousel(){
  rail.addEventListener('pointerdown',event=>{if(event.button!==0)return;drag={x:event.clientX,left:rail.scrollLeft};rail.setPointerCapture(event.pointerId);rail.classList.add('dragging');event.preventDefault();});
  rail.addEventListener('pointermove',event=>{if(drag){event.preventDefault();rail.scrollLeft=drag.left+drag.x-event.clientX;select();}});
  const finish=()=>{if(!drag)return;const delta=rail.scrollLeft-drag.left,origin=options.reduce((a,b)=>Math.abs(center(b)-drag.left)<Math.abs(center(a)-drag.left)?b:a);drag=null;const index=options.indexOf(origin),chosen=options[Math.max(0,Math.min(options.length-1,index+(Math.abs(delta)>18?Math.sign(delta):0)))];rail.classList.remove('dragging');rail.scrollTo({left:center(chosen),behavior:'smooth'});saveGameState(gameState);rail.dispatchEvent(new CustomEvent('bait-released',{bubbles:true}));};
- rail.addEventListener('pointerup',finish);rail.addEventListener('pointercancel',finish);
+ rail.addEventListener('pointerup',()=>{select();finish();});rail.addEventListener('pointercancel',()=>{drag=null;rail.dataset.baitInteracted='false';rail.classList.remove('dragging');});
  select();
 }
 function scheduleGust(){

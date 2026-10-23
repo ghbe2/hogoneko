@@ -1,0 +1,11 @@
+const{chromium}=require('playwright'),assert=require('node:assert/strict'),{pathToFileURL}=require('node:url'),path=require('node:path');
+(async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{for(const [width,height]of [[320,568],[375,812]]){
+ const p=await b.newPage({viewport:{width,height}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(pathToFileURL(path.resolve('index.html')).href+'?check=1&scenario=room');
+ await p.evaluate(()=>{titleScreenOpen=false;gameState.onboarding={status:'done',homeTour:'done',guide:null,appIntro:null};gameState.ui={...gameState.ui,modal:null,layoutMode:false,usedHandItems:{},feel:null};const c=getCat(gameState);c.heart=40;c.heartCap=100;c.types=['prey','chase'];gameState.inventory.feather=5;gameState.ui.equippedHand='feather';gameState.ui.usedHandItems.play_feather=resolveInteraction(c,'play',getItem('feather')).baseHeart-1;render(gameState);});
+ const icon=await p.locator('.main-command-row [data-tab="play"]').boundingBox();await p.mouse.move(icon.x+icon.width/2,icon.y+icon.height/2);await p.mouse.down();const r=await p.locator('.cat-object').boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2;
+ await p.mouse.move(x,y);let gain=0;for(let i=0;i<40&&!gain;i++){await p.mouse.move(x+(i%2?10:-10),y);await p.waitForTimeout(80);gain=await p.evaluate(()=>commandDraft.heartEarned);}
+ assert.equal(gain,1);await p.mouse.move(x+9,y);await p.waitForTimeout(600);assert.equal(await p.locator('.bond-heart').count(),1,'last gain remains readable after cap');await p.screenshot({path:`tests/screenshots/play-heart-last-${width}.png`});
+ await p.waitForTimeout(650);assert.equal(await p.locator('.bond-heart').count(),0,'no gain display expires');await p.mouse.up();
+ for(let i=0;i<5;i++){await p.waitForTimeout(200);assert.equal(await p.locator('.bond-heart,.feel-cue,.live-heart').count(),0,'release must not replay either heart');}
+ await p.evaluate(()=>render(gameState));assert.equal(await p.locator('.bond-heart,.feel-cue,.live-heart').count(),0);assert.equal(await p.evaluate(()=>getCat(gameState).heart),41,'commit once');assert.deepEqual(errors,[]);console.log('PASS',width,'last gain held then expires; no outline or replay on release/redraw; +1 committed');await p.close();
+}}finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});

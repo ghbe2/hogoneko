@@ -1868,27 +1868,27 @@ const CONFIG = {
       feed: {
         fear:{ symbol:"", text:"動かない。見ていない間に皿が減りそう" },
         normal:{ symbol:"", text:"こちらを見て、少し待ってから近づく" },
-        sweet:{ symbol:"♡", text:"足元で待っている。すぐに食べ始めた" },
+        sweet:{ symbol:"♥", text:"足元で待っている。すぐに食べ始めた" },
       },
       play: {
         fear:{ symbol:"", text:"遠くから玩具を目で追っている" },
-        normal:{ symbol:"♡", text:"とことこ近づいて、じゃれ始めた" },
+        normal:{ symbol:"♥", text:"とことこ近づいて、じゃれ始めた" },
         sweet:{ symbol:"❤", text:"すぐに飛びついて大はしゃぎ" },
       },
       clean: {
         fear:{ symbol:"", text:"物音を警戒して部屋の奥へ離れた" },
         normal:{ symbol:"", text:"離れたところから掃除を見ている" },
-        sweet:{ symbol:"♡", text:"そばへ来て、掃除の邪魔をしている" },
+        sweet:{ symbol:"♥", text:"そばへ来て、掃除の邪魔をしている" },
       },
       layout: {
         fear:{ symbol:"", text:"新しい配置を警戒して奥へ下がった" },
         normal:{ symbol:"", text:"ちらりと見て、そっと匂いを嗅いだ" },
-        sweet:{ symbol:"♡", text:"すぐに確かめに来た" },
+        sweet:{ symbol:"♥", text:"すぐに確かめに来た" },
       },
       call: {
         fear:{ symbol:"", text:"名前を呼んでも、じっと動かない" },
         normal:{ symbol:"", text:"顔を上げて、耳だけこちらへ向けた" },
-        sweet:{ symbol:"♡", text:"鳴いて返事をしながら近づいてきた" },
+        sweet:{ symbol:"♥", text:"鳴いて返事をしながら近づいてきた" },
       },
       pet: {
         fear:{ symbol:"💢", text:"手を避けて、するりと逃げた" },
@@ -1898,7 +1898,7 @@ const CONFIG = {
       leave: {
         fear:{ symbol:"", text:"留守の間、自分の場所で少し落ち着けた" },
         normal:{ symbol:"", text:"留守中に部屋を歩き回った形跡がある" },
-        sweet:{ symbol:"♡", text:"帰りを待っていたようで、近くへ来た" },
+        sweet:{ symbol:"♥", text:"帰りを待っていたようで、近くへ来た" },
       },
     },
     careTrust: {
@@ -2327,6 +2327,7 @@ function getAvailableRoamPoints(state) {
 
 function getCatPoint(state) {
   const focus = state.ui.catFocus;
+  if(!focus&&state.ui.playRestPoint?.catId===getCat(state).id)return state.ui.playRestPoint;
   if (!focus) return getRoamPoint(state);
   const anchor = getAvailableRoamPoints(state).find(p => p.id === focus.id);
   return anchor ? {...anchor,response:focus.response} : getRoamPoint(state);
@@ -2902,7 +2903,7 @@ function reduceGameState(state, action) {
       return { ...state, ui:{ ...state.ui, roomPan:Math.max(0, Math.min(getMaxPan(state), action.pan)) } };
 
     case "ROAM_CAT":
-      return { ...state, ui:{ ...state.ui, roamIndex:action.index, pickupResult:null, catFocus:null } };
+      return { ...state, ui:{ ...state.ui, roamIndex:action.index, pickupResult:null, catFocus:null,playRestPoint:null } };
 
     case "TAP_CLUE": {
       if (state.ui.clueFound) return state;
@@ -3050,6 +3051,7 @@ function reduceGameState(state, action) {
         cats:[{ ...cat, heart:application.nextHeart, body:{ ...cat.body, weight:cat.body.weight + (bodyUsed ? 0 : 1) }, notebook }],
         ui:{ ...state.ui, modal:null, equippedHand, equippedContact:null, playMode:false, usedHandItems:{ ...state.ui.usedHandItems, [usedKey]:nextUsedValue, [bodyKey]:true, heart_overflow:state.ui.usedHandItems.heart_overflow || application.overflowUsed },
           roamIndex:action.anchorIndex ?? (result.referenceStage.id === "fear" ? state.ui.roamIndex : 4),
+          playRestPoint:action.playPoint?{...action.playPoint,catId:cat.id}:null,
           catFocus:action.live ? null : action.anchorIndex != null ? { ...getAvailableRoamPoints(state).find(p => p.index === action.anchorIndex), response:"play" } : getInteractionFocus(result, { x:action.x ?? 50, y:action.y ?? 65 }),
           lastAffinityLog:affinityLog({ ...result, heartDelta:delta }), message:worn.broken ? `${item.label}を使い切った` : `${item.label}を動かして、${getCallName(cat)}と遊んだ`,
           reaction:action.live ? liveReaction : reactionFromResult(result, delta, `${action.motionLabel || "玩具を追った"}${alreadyUsed ? "・今日は心への効果なし" : ""}`) },
@@ -4585,7 +4587,7 @@ function completeCommandDrag(draft, clientX, clientY) {
   const motionLabel = draft.fastMs > draft.slowMs * 1.2
     ? "速い動きを追いかけた"
     : draft.slowMs > draft.fastMs * 1.4 ? "ゆっくり揺れる玩具を見つめた" : "動きの変化に反応した";
-  dispatch({ type:"FINISH_PLAY", live:true, itemId:draft.itemId, anchorIndex:draft.liveAnchorIndex, motionLabel, liveHeartGain:draft.heartEarned,playMilliseconds:draft.activePlayMs||0,
+  dispatch({ type:"FINISH_PLAY", live:true, itemId:draft.itemId, anchorIndex:draft.liveAnchorIndex,playPoint:draft.livePlayPoint, motionLabel, liveHeartGain:draft.heartEarned,playMilliseconds:draft.activePlayMs||0,
     x:Math.max(5, Math.min(95, ((clientX - stageRect.left) / stageRect.width) * 100)),
     y:Math.max(12, Math.min(85, ((clientY - stageRect.top) / stageRect.height) * 100)),
   });
@@ -4608,8 +4610,15 @@ function clearCommandDrag(draft, accepted) {
   animation.onfinish = () => ghost.remove();
 }
 
+function scheduleToyFollow(draft,delay){
+  clearTimeout(draft.followTimer);draft.followTimer=setTimeout(()=>{if((commandDraft===draft||playDraft===draft)&&draft.valid)updateLiveToyPlay(draft,draft.lastClientX,draft.lastClientY);},delay);
+}
 function updateLiveToyPlay(draft, clientX, clientY) {
   if (!draft.valid || !draft.dropElement) return;
+  if (typeof discoveryScene==='function' && discoveryScene(gameState)) {
+    draft.canGainHeart=false;draft.playInReach=false;draft.lastMoveAt=performance.now();
+    draft.lastClientX=clientX;draft.lastClientY=clientY;return;
+  }
   const now = performance.now();
   // 止めていた時間やタブを離れた時間を、次の一振りに加算しない。
   const dt = Math.max(0, Math.min(100, now - draft.lastMoveAt));
@@ -4638,7 +4647,14 @@ function updateLiveToyPlay(draft, clientX, clientY) {
   catElement.classList.remove("toy-eager", "toy-alert", "toy-watch", "toy-avoid", "toy-reject");
   catElement.classList.add(feel.pose);
   draft.affinity = result.affinity;
-  accrueLivePlayHeart(draft, catElement, result, segment, dt, speed);
+  // Layout anchor is stable across crouch/strike poses and SVG bounding-box changes.
+  const parent=catElement.parentElement.getBoundingClientRect(),computed=getComputedStyle(catElement),cx=parent.left+parseFloat(computed.left),cy=parent.top+parseFloat(computed.top);
+  const reach=draft.playInReach?108:88,toyDistance=Math.hypot(clientX-cx,clientY-cy);
+  const moving=draft.catAnimation?.playState==='running';
+  draft.playInReach=!moving&&(toyDistance<=reach||now-(draft.landedAt||0)<400);
+  if(!moving&&Math.abs(clientX-cx)>30)catElement.style.setProperty('--cat-facing',clientX>cx?-1:1);
+  if(draft.playInReach)accrueLivePlayHeart(draft, catElement, result, segment, dt, speed);
+  else draft.canGainHeart=false;
   updateLiveHeartMeter(draft, stage);
   if (segment > .15 && now - (draft.lastMoodAt || 0) > (result.affinity === "superDislike" ? 700 : 1800)) {
     spawnLiveFeedback(catElement, result.affinity, false, true);
@@ -4666,19 +4682,18 @@ function updateLiveToyPlay(draft, clientX, clientY) {
     return;
   }
 
-  const eager = result.affinity === "superMatch";
-  if (now - draft.lastCatMoveAt < feel.followWaitMs || draft.totalDistance < feel.distance) return;
-  const points = eager
-    ? available
-    : result.baseStage.id === "fear"
-      ? available.filter(point => point.distance === "far")
-      : available.filter(point => ["floor","box","tower"].includes(point.surface));
-  const targetIndex = getNearestRoamIndex(toyPoint, points);
-  if (targetIndex === draft.liveAnchorIndex) return;
-  const from = available.find(p => p.index === draft.liveAnchorIndex) || getCatPoint(gameState);
-  const to = available.find(p => p.index === targetIndex);
+  // Bat from a planted stance. Only chase when the toy leaves paw reach.
+  if(draft.playInReach||now-(draft.landedAt||0)<500){draft.chaseSince=0;return;}
+  draft.chaseSince ||= now;
+  if(now-draft.chaseSince<180){scheduleToyFollow(draft,190);return;}
+  const from=draft.livePlayPoint||getCatPoint(gameState),scale=from.scale||.75;
+  const floor=typeof roomPlacementBounds==='function'?roomPlacementBounds(parent.height):{floorTop:parent.height*.56,floorBottom:parent.height-100};
+  const to={...from,id:'toy-floor',surface:'floor',distance:'near',scale,
+    x:Math.max(48,Math.min(parent.width-48,clientX-parent.left+(clientX>cx?-24:24)))/parent.width*100,
+    y:Math.max(floor.floorTop-28,Math.min(floor.floorBottom-12,clientY-parent.top-12))/parent.height*100};
+  if(Math.hypot((to.x-from.x)*parent.width/100,(to.y-from.y)*parent.height/100)<24)return;
   animateLiveCatMove(draft, catElement, from, to, speed);
-  draft.liveAnchorIndex = targetIndex;
+  draft.livePlayPoint=to;draft.chaseSince=0;
   draft.lastCatMoveAt = now;
   draft.totalDistance = 0;
 }
@@ -4698,6 +4713,7 @@ function updateLiveHeartMeter(draft, stage) {
 }
 
 function accrueLivePlayHeart(draft, catElement, result, segment, dt, speed) {
+  draft.canGainHeart=false;
   if(segment>=.15){const available=Math.max(0,toyPlayMillisecondsLeft(gameState,draft.itemId)-(draft.activePlayMs||0));dt=Math.min(Math.max(0,Math.min(100,dt)),available);draft.activePlayMs=(draft.activePlayMs||0)+dt;if(dt<=0)return;}
   if (result.baseHeart <= 0 || segment < .15) return;
   const usedKey = `play_${draft.itemId}`;
@@ -4706,13 +4722,17 @@ function accrueLivePlayHeart(draft, catElement, result, segment, dt, speed) {
   const overflowAvailable = result.affinity === "superMatch" && !gameState.ui.usedHandItems.heart_overflow;
   const limit = overflowAvailable ? CONFIG.week.heartCapMax : cat.heartCap;
   const allowance = Math.max(0, Math.min(result.baseHeart - earnedToday, limit - cat.heart));
-  if (allowance - draft.heartEarned < .099) return;
+  draft.heartAtLimit=allowance-draft.heartEarned<.9999;
+  if (allowance - draft.heartEarned < .9999) return;
+  draft.canGainHeart=true;
   draft.heartProgressMs += Math.max(0, Math.min(100, dt));
   const interval = CONFIG.playFeel[result.affinity].tickMs / (getItem(draft.itemId)?.playEfficiency || 1);
-  while (draft.heartProgressMs >= interval && allowance - draft.heartEarned + .0001 >= .1) {
+  while (draft.heartProgressMs >= interval && allowance - draft.heartEarned + .0001 >= 1) {
     draft.heartProgressMs -= interval;
     const before = earnedToday + draft.heartEarned;
-    draft.heartEarned = Math.round((draft.heartEarned + .1) * 10) / 10;
+    draft.heartEarned += 1;
+    draft.heartAtLimit=allowance-draft.heartEarned<.9999;
+    draft.lastHeartGainAt=performance.now();
     const after = earnedToday + draft.heartEarned;
     const reachedFullHeart = Math.floor(after + .0001) > Math.floor(before + .0001);
     spawnLiveFeedback(catElement, result.affinity, false);
@@ -4745,7 +4765,15 @@ function animateLiveCatMove(draft, catElement, from, to, speed) {
   catElement.style.left = to.x+"%";
   catElement.style.top = to.y+"%";
   catElement.style.transform = `translate(-50%,-50%) scale(${to.scale})`;
-  draft.catAnimation = animateFelineTravel(catElement,from,to,CONFIG.playFeel[draft.affinity]?.moveScale || 1);
+  if(isNegativeAffinity(draft.affinity)){draft.catAnimation = animateFelineTravel(catElement,from,to,CONFIG.playFeel[draft.affinity]?.moveScale || 1);return;}
+  catElement._travelAnimation?.cancel();catElement.classList.remove('walking');catElement.classList.add('jumping');
+  catElement.style.setProperty('--cat-facing',to.x>=from.x?-1:1);
+  const frame=(x,y,scale)=>({left:x+'%',top:y+'%',transform:`translate(-50%,-50%) scale(${scale})`});
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const distance=Math.hypot((to.x-from.x)*parentRect.width/100,(to.y-from.y)*parentRect.height/100);
+  const animation=catElement.animate([frame(from.x,from.y,from.scale),{...frame((from.x+to.x)/2,Math.min(from.y,to.y)-5,(from.scale+to.scale)/2),offset:.5},frame(to.x,to.y,to.scale)],{duration:reduced?1:Math.max(360,Math.min(650,distance*2.5)),easing:'ease-in-out'});
+  draft.catAnimation=animation;catElement._travelAnimation=animation;
+  const settled=()=>{if(catElement._travelAnimation===animation){catElement._travelAnimation=null;catElement.classList.remove('jumping','walking');draft.landedAt=performance.now();draft.playInReach=true;scheduleToyFollow(draft,520);}};animation.onfinish=settled;animation.oncancel=settled;
 }
 
 function movePlayObjects(clientX, clientY) {
@@ -5158,6 +5186,8 @@ triggerAutoEvent=function(){
 </script>
 <script src="assets/book-materials.js"></script>
 <script src="assets/cat-svg.js"></script>
+<script src="assets/cat-life-motion.js"></script>
+<script src="assets/cat-life-game.js"></script>
 <script src="game-v017.js"></script>
 <script src="assets/storybook-art.js"></script>
 <script src="game-v020.js"></script>
@@ -5222,6 +5252,8 @@ triggerAutoEvent=function(){
 <script src="game-release-return.js"></script>
 <link rel="stylesheet" href="assets/release-return.css">
 <script src="game-senior-rescue.js"></script>
+<link rel="stylesheet" href="assets/character-life.css">
+<script src="assets/character-life.js"></script>
 <link rel="stylesheet" href="assets/senior-rescue.css">
 <link rel="stylesheet" href="assets/action-buttons.css">
 <script>

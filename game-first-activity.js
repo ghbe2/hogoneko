@@ -227,9 +227,10 @@ app.addEventListener('click',event=>{
 });
 app.addEventListener('input',event=>{if(event.target.matches('.first-name input')){gameState={...gameState,campaign:{...gameState.campaign,nameDraft:event.target.value}};saveGameState(gameState);}});
 function gateFirstInput(event){
- if(!firstActive(gameState)||titleScreenOpen||gameState.ui.firstName)return;
+ if(!firstActive(gameState)||titleScreenOpen)return;
+ if(gameState.ui.firstName){if(event.target.closest('.first-name'))return;event.preventDefault();event.stopImmediatePropagation();return;}
  const spec=FIRST_GUIDES[gameState.onboarding.guide];if(!spec||event.target.closest('.first-guide-note'))return;
- if(gameState.onboarding.guide==='moveFurniture'&&event.target.closest('[data-room-world]'))return;
+ if(gameState.onboarding.guide==='moveFurniture'&&event.target.closest('.placed-item.item-box'))return;
  if(['quantity','purchase'].includes(gameState.onboarding.guide)&&event.target.closest('.store-quantity button'))return;
  if(gameState.onboarding.guide==='placeFurniture'&&event.target.closest('[data-room-world]')){
   event.preventDefault();event.stopImmediatePropagation();
@@ -241,8 +242,10 @@ function gateFirstInput(event){
  if(!spec.next&&!spec.finish&&event.target.closest(allowed))return;
  event.preventDefault();event.stopImmediatePropagation();
 }
-app.addEventListener('pointerdown',gateFirstInput,true);
-app.addEventListener('click',gateFirstInput,true);
+// Gate before any app-level capture handlers can start an unrelated interaction.
+window.addEventListener('pointerdown',gateFirstInput,true);
+window.addEventListener('click',gateFirstInput,true);
+window.addEventListener('keydown',gateFirstInput,true);
 const firstGate=renderStageGate;
 renderStageGate=function(state){if(getCat(state).status!=='candidate')return `<div class="modal-layer"><section class="modal-card"><h2>いまいるネコを大切に</h2><p>複数のネコを同時に迎えると、感染症や相性の問題、お世話の負担が増えます。いまいる子を見送ってから、次の保護へ進みましょう。</p><button data-action="close-modal">もどる</button></section></div>`;return firstGate(state);};
 if(checkMode&&checkScenario==='naming'){gameState={...gameState,cats:gameState.cats.map(c=>({...c,status:'intake',name:'',named:false})),campaign:{...gameState.campaign,phase:'intake',nameDraft:''},ui:{...gameState.ui,firstName:true}};}

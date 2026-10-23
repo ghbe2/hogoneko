@@ -1,0 +1,19 @@
+/* Small local deformations add volume without stretching silhouettes or moving UI. */
+.actor-breath{animation:actor-breathe 4.8s ease-in-out infinite;animation-delay:var(--actor-delay,-1.1s);transform-box:view-box}
+.actor-look{animation:actor-look 9.7s ease-in-out infinite;animation-delay:var(--actor-delay,-1.1s);transform-box:view-box}
+[data-character-life="senior"] .actor-look{animation-name:actor-senior-look;animation-duration:10.7s}
+[data-character-life="doctor"] .actor-look{animation-duration:12.3s}
+[data-character-life="plaza"] .actor-breath{animation-duration:5.3s}
+[data-character-life="visitor"] .actor-breath{animation-duration:5.7s}
+.actor-bird-head{transform-origin:35px -2px;animation:actor-bird-look 7.1s ease-in-out infinite;transform-box:view-box}
+.actor-bird-eye{animation:actor-blink 5.7s infinite;transform-box:view-box}
+.actor-rabbit-ear-back{animation:actor-ear-back 8.1s ease-in-out infinite;transform-box:view-box}
+.store-rabbit-body>.actor-breath{animation-duration:2.7s}
+.actor-bird-head,.actor-bird-eye,.actor-rabbit-ear-back{animation-delay:var(--actor-delay,-1.1s)}
+@keyframes actor-breathe{0%,100%{transform:scale(1,1)}45%{transform:scale(1.006,1.009)}}
+@keyframes actor-look{0%,18%,67%,100%{transform:skewY(0deg) scaleX(1)}30%,44%{transform:skewY(-1.8deg) scaleX(.98)}79%,88%{transform:skewY(1deg) scaleX(.992)}}
+@keyframes actor-senior-look{0%,15%,64%,100%{transform:rotate(0deg) skewY(0deg)}27%,39%{transform:rotate(-2deg) skewY(-1.5deg)}76%,85%{transform:rotate(1.5deg) skewY(1deg)}}
+@keyframes actor-bird-look{0%,16%,52%,100%{transform:rotate(0deg)}23%,32%{transform:rotate(-8deg)}68%,77%{transform:rotate(5deg)}}
+@keyframes actor-blink{0%,39%,43%,72%,76%,100%{transform:scaleY(1)}41%,74%{transform:scaleY(.1)}}
+@keyframes actor-ear-back{0%,18%,38%,68%,100%{transform:rotate(0deg)}24%,29%{transform:rotate(5deg)}77%,82%{transform:rotate(-3deg)}}
+@media(prefers-reduced-motion:reduce){.actor-breath,.actor-look,.actor-bird-head,.actor-bird-eye,.actor-rabbit-ear-back{animation:none!important}}

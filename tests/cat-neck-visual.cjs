@@ -1,0 +1,5 @@
+const {chromium}=require('playwright'),sharp=require('sharp'),path=require('node:path'),{pathToFileURL}=require('node:url');
+(async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{const p=await b.newPage({viewport:{width:375,height:764}});await p.goto(pathToFileURL(path.resolve('cat-life-sample.html')).href);
+for(const name of ['stalk','pin','eat','sit','rest']){await p.click('#pose-open');await p.click(`button[data-pose="${name}"]`);await p.waitForTimeout(550);const tiles=[];
+for(let i=0;i<6;i++){await p.waitForTimeout(370);const box=await p.evaluate(()=>{const r=new DOMPoint(0,0).matrixTransform(rig.nodes.headRig.getScreenCTM());const x=Math.max(0,r.x-70);return{x,y:Math.max(0,r.y-45),width:Math.min(210,innerWidth-x),height:150};});const shot=await p.screenshot({clip:box});tiles.push({input:await sharp(shot).resize(420,300).png().toBuffer(),left:i%3*420,top:Math.floor(i/3)*300});}
+await sharp({create:{width:1260,height:600,channels:3,background:'#eee'}}).composite(tiles).png().toFile(`tests/screenshots/neck-detail-${name}.png`);console.log(name);}}finally{await b.close()}})();

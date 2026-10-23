@@ -1,0 +1,10 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>三毛の同一性確認</title><link rel="stylesheet" href="assets/cat-pose-gallery.css"></head><body>
+<header><div><h1>同じ三毛 · 正面と左右の動き</h1><p>同じ正面の顔を使用。顔の柄は左右反転せず、顔全体をまとめて傾けます。</p></div><button id="pause">一時停止 Ⅱ</button></header>
+<main>
+<article><iframe title="正面" src="cat-life-sample.html?embed=1&coat=calico&pose=sit&head-turn=0"></iframe><div class="caption"><h2>正面</h2></div></article>
+<article><iframe title="左斜め" src="cat-life-sample.html?embed=1&coat=calico&pose=sit&head-turn=-0.85"></iframe><div class="caption"><h2>左斜め</h2></div></article>
+<article><iframe title="右斜め" src="cat-life-sample.html?embed=1&coat=calico&pose=sit&head-turn=0.85"></iframe><div class="caption"><h2>右斜め</h2></div></article>
+<article><iframe title="左への歩行" src="cat-life-sample.html?embed=1&coat=calico&pose=walk"></iframe><div class="caption"><h2>左への歩行</h2></div></article>
+<article><iframe title="右への歩行" src="cat-life-sample.html?embed=1&coat=calico&pose=walk&direction=right"></iframe><div class="caption"><h2>右への歩行</h2></div></article>
+<article><iframe title="トイレ" src="cat-life-sample.html?embed=1&coat=calico&pose=poop"></iframe><div class="caption"><h2>トイレ</h2></div></article>
+</main><script>let paused=false;document.querySelector('#pause').onclick=()=>{paused=!paused;document.querySelector('#pause').textContent=paused?'再生 ▶':'一時停止 Ⅱ';document.querySelectorAll('iframe').forEach(f=>f.contentWindow.postMessage({type:'cat-gallery',paused},'*'));};</script></body></html>

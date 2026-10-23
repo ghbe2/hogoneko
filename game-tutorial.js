@@ -80,11 +80,13 @@ render=function(state){
  };place();
 };
 // Explanatory steps cannot accidentally navigate away; swipe remains a real gesture.
-app.addEventListener('click',event=>{
+function gateTownInput(event){
  const spec=currentTownTutorial(gameState);if(!spec||event.target.closest('.tutorial-note'))return;
+ if(gameState.onboarding.townStep==='swipe'&&event.type!=='click'&&event.target.closest('.town-map-scroll'))return;
  if(gameState.onboarding.townStep==='rescue'&&event.target.closest(spec.target))return;
  event.preventDefault();event.stopImmediatePropagation();
-},true);
+}
+for(const type of ['pointerdown','click','keydown'])window.addEventListener(type,gateTownInput,true);
 const tutorialStyle=document.createElement('style');
 tutorialStyle.textContent=`
 section.tutorial-focus{position:absolute;inset:0;z-index:90;pointer-events:none;overflow:hidden;--guide-paper:#fff7e5;--guide-ink:#514b37}

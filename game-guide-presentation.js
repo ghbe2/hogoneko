@@ -31,11 +31,11 @@ function guidePresentation(state){
  const id=(first?'first:':'town:')+key+':'+text;
  if(!guideSpeechCache.has(id))guideSpeechCache.set(id,performance.now());
  const start=guideSpeechCache.get(id),chars=Array.from(text),next=note.querySelector('button');
- const cue=key==='bait'?(encounterFoods(state).length===1?'tap':'swipe'):key==='moveFurniture'?'swipe':['trap','swipe'].includes(key)?'drag':key==='clinicScroll'?'swipe-down':['rescue','trapReady','toClinic','clinicBuilding','firstCommand','receipt','pay','shopBuilding','tools','starter','addCart','purchase','homeBuilding','layout','addFurniture','chooseFurniture','addMore','cutCardboard','name','callFirst','callAgain'].includes(key)?'tap':null;
+ const cue=key==='bait'?(encounterFoods(state).length===1?'tap':'swipe'):key==='moveFurniture'?'swipe':key==='trap'?'drag':['rescue','trapReady','toClinic','clinicBuilding','firstCommand','receipt','pay','shopBuilding','tools','starter','addCart','purchase','homeBuilding','layout','addFurniture','chooseFurniture','addMore','cutCardboard','name','callFirst','callAgain'].includes(key)?'tap':null;
  const noFocus=!!cue||['area','fieldHello','captured','clinicHello','healthy','stats','shopHello','shopHelloDetail','homeHello','roomExplain','roomReady','farewell','lifeStarts','askSenior','goodLuck','essentials','cardboard','callWait'].includes(key);
  if(cue)layer.insertAdjacentHTML('beforeend',guideHand(cue));
  const hand=layer.querySelector('.guide-gesture');
- if(noFocus)ring.hidden=true;
+ if(noFocus||['swipe','clinicScroll'].includes(key))ring.hidden=true;
  const selector=typeof spec.target==='function'?spec.target():spec.target;
  const target=app.querySelector(selector);
  if(state.ui.layoutTrayOpen&&target?.closest('.furniture-grid'))target.scrollIntoView({block:'nearest'});
@@ -54,7 +54,7 @@ function guidePresentation(state){
    if(!guideFocusSeen.has(id)){guideFocusSeen.add(id);if(!matchMedia('(prefers-reduced-motion: reduce)').matches)ring.animate([{transform:'scale(1.65)',opacity:0},{transform:'scale(1)',opacity:1}],{duration:420,easing:'ease-out'});}
   }
   const a=app.getBoundingClientRect(),r=target?.getBoundingClientRect();
-  if(hand){hand.hidden=!ready||!r||target.disabled||getComputedStyle(target).visibility==='hidden';if(r)Object.assign(hand.style,{left:Math.max(cue==='swipe'?34:4,Math.min(a.width-(cue==='swipe'?82:52),r.left+r.width*(cue==='tap'?.64:.5)-21-a.left))+'px',top:Math.max(cue==='drag'?44:4,Math.min(a.height-66,r.top+r.height*.5-15-a.top))+'px'});}
+  if(hand){hand.hidden=!ready||!r||target.disabled||getComputedStyle(target).visibility==='hidden';if(r)Object.assign(hand.style,{left:Math.max(cue==='swipe'?34:4,Math.min(a.width-(cue==='swipe'?82:52),(cue==='tap'?(r.width>100?r.right-28:r.left+r.width*.82):r.left+r.width*.5)-21-a.left))+'px',top:Math.max(cue==='drag'?44:4,Math.min(a.height-66,r.top+r.height*.5-15-a.top))+'px'});}
   note.style.top=r&&r.top+r.height/2>a.top+a.height/2?'12px':'auto';note.style.bottom=note.style.top==='auto'?'12px':'auto';
   if(['field','trapInspect','clinic'].includes(state.campaign.phase)){note.style.top='18px';note.style.bottom='auto';}
   if(state.campaign.phase==='shop'){note.style.top='12px';note.style.bottom='auto';}

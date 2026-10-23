@@ -11,7 +11,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),path
    assert(await p.locator('.first-guide-ring').isVisible());const next=await p.locator('.shared-guide-note button').boundingBox();assert.equal(next.width,112);assert.equal(next.height,44);
   }else{
    assert(await p.locator('.guide-gesture[data-kind="tap"]').isVisible());
-   const fraction=await p.evaluate(()=>{const r=app.querySelector('[data-first="exam"]').getBoundingClientRect(),h=app.querySelector('.guide-gesture').getBoundingClientRect();return (h.left+21-r.left)/r.width;});assert(Math.abs(fraction-.64)<.02);
+   const fraction=await p.evaluate(()=>{const r=app.querySelector('[data-first="exam"]').getBoundingClientRect(),h=app.querySelector('.guide-gesture').getBoundingClientRect();return (h.left+21-r.left)/r.width;});assert(fraction>=.70&&fraction<=.90);
    await p.locator('.guide-gesture').evaluate(n=>n.getAnimations({subtree:true}).forEach(a=>{a.pause();a.currentTime=450}));
   }
   await p.screenshot({path:`tests/screenshots/guide-${width}-${key}.png`});

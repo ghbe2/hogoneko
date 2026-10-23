@@ -34,7 +34,7 @@ function createAdoptionView(root){
  for(const side of ['left','right']){const table=root.querySelector('.adoption-display').cloneNode(true);table.classList.add('is-neighbor','is-'+side);root.querySelector('.adoption-stage').append(table);}
  const walkers=ADOPTION_COLORS.map((_,i)=>{const n=document.createElement('div');n.className='adoption-person';n.innerHTML=adoptionPerson(i);find('walkway').append(n);return n});
  const family=walkers[4],held=document.createElementNS('http://www.w3.org/2000/svg','g');held.classList.add('adoption-held');held.innerHTML='<path d="M37 104Q22 127 45 144M78 104Q94 127 80 144" fill="none" stroke="'+ADOPTION_COLORS[4]+'" stroke-width="15" stroke-linecap="round"/><svg class="adoption-held-cat" x="23" y="70" width="76" height="78" viewBox="200 55 320 320" preserveAspectRatio="xMidYMax meet"></svg><path d="M44 144Q56 150 67 144M80 143L71 145" fill="none" stroke="#dfbb98" stroke-width="8" stroke-linecap="round"/>';
- family.querySelector('.adoption-figure').append(held);const heldRig=CatSVG.buildCat(held.querySelector('svg'),'adoption-held',dna,375,dna.age==='adult'?1.25:1);held.querySelector('.floor')?.remove();
+ (family.querySelector('.adoption-torso > .actor-breath')||family.querySelector('.adoption-torso')).append(held);const heldRig=CatSVG.buildCat(held.querySelector('svg'),'adoption-held',dna,375,dna.age==='adult'?1.25:1);held.querySelector('.floor')?.remove();
  const speech=document.createElement('p');speech.className='adoption-request-speech';speech.style.whiteSpace='pre-line';root.querySelector('.adoption-stage').append(speech);
  return {root,find,rig,heldRig,neighbors,walkers,speech,comment:root.querySelector('.adoption-visitor-comment'),key:null};
 }

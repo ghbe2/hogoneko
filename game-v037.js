@@ -287,7 +287,7 @@ function discoveryAvailable(state){return getCat(state).status==='raising'&&(!st
 const discoveryReduce=reduceGameState;
 function discoveryScene(state){return state.campaign.phase==='room'&&!state.ui.modal&&!state.ui.layoutMode&&!state.ui.holdingCat&&!state.ui.careAnimation&&!state.campaign.requiredVisit&&discoveryAvailable(state);}
 reduceGameState=function(state,action){
- if(action.type==='ROAM_CAT'&&discoveryScene(state))return state;
+ if(['ROAM_CAT','FINISH_PLAY'].includes(action.type)&&discoveryScene(state))return state;
  const next=discoveryReduce(state,action);
  if(action.type!=='PICK_DISCOVERY_COIN'||!discoveryScene(state)||!discoveryScene(next))return next;
  return {...next,coins:next.coins+(CONFIG.economy.discoveryCoins||5),dailyDiscovery:{lastDay:discoveryDay(),visits:(state.dailyDiscovery?.visits||0)+1},ui:{...next.ui,coinDiscovery:{id:Date.now()+Math.random(),until:Date.now()+2200}}};
@@ -315,38 +315,58 @@ setInterval(positionDiscoveryCoin,100);
 // Short-lived presentation cues: never save a backlog of offline animations.
 let catLifeCues=[],coinRestPoint=null;
 function currentLifeCue(){while(catLifeCues.length&&catLifeCues[0].until<=Date.now())catLifeCues.shift();return catLifeCues[0];}
+function scheduleLifeCueRefresh(cue){
+ for(const at of [cue.started,cue.reveal,cue.until+30])setTimeout(()=>{
+  if(gameState.campaign.phase!=='room'||getCat(gameState).id!==cue.catId||document.hidden||(at!==cue.until+30&&!catLifeCues.includes(cue)))return;
+  if(at===cue.reveal&&cue.pose==='vomit'){
+   const svg=app.querySelector('.cat-object .game-cat-svg'),entry=svgRigs.get(svg),mess=app.querySelector('.mess-object'),parent=mess?.offsetParent;
+   if(entry&&parent){const point=new DOMPoint(0,25).matrixTransform(entry.rig.nodes.face.getScreenCTM()),r=parent.getBoundingClientRect();dispatch({type:'LIFE_MESS_POSITION',catId:cue.catId,point:{x:Math.max(3,Math.min(93,(point.x-r.left)/r.width*100)),y:Math.max(3,Math.min(94,(point.y-r.top)/r.height*100))}});return;}
+  }
+  render(gameState);
+ },Math.max(0,at-Date.now()));
+}
 const expressiveReducer=reduceGameState;
 reduceGameState=function(state,action){
+ if(action.type==='LIFE_MESS_POSITION')return {...state,cats:state.cats.map(c=>c.id===action.catId?{...c,body:{...c.body,vomitPoint:action.point}}:c)};
  if(action.type==='ROAM_CAT'&&(currentLifeCue()||discoveryScene(state)))return state;
  const next=expressiveReducer(state,action),before=getCat(state),after=getCat(next);
- if(state.campaign.phase==='room'&&next.campaign.phase==='room'&&before.id===after.id){
+ if(state.campaign.phase==='room'&&next.campaign.phase==='room'&&before.id===after.id&&!document.hidden&&!state.ui.modal&&!state.ui.layoutMode){
   const poses=[];
   if(after.body.foodLevel<before.body.foodLevel)poses.push('eat');
   if(after.body.litter>before.body.litter)poses.push('poop');
   if(after.body.vomit>before.body.vomit)poses.push('vomit');
-  if(poses.length){const now=Date.now();catLifeCues=poses.map((pose,i)=>({pose,until:now+(i+1)*3000}));}
+  if(poses.length){const now=Date.now(),point=getCatPoint(state);catLifeCues=poses.map((pose,i)=>{const started=now+800+i*3600;return {pose,catId:before.id,point:pose==='poop'?{...point,...getPlacedPoint(state,'litter',point),y:Math.min(88,getPlacedPoint(state,'litter',point).y+3)}:{...point},started,reveal:started+1800,until:started+3400,previous:pose==='vomit'?before.body.vomit:before.body.litter};});catLifeCues.forEach(scheduleLifeCueRefresh);}
  }else catLifeCues=[];
  return next;
 };
 const expressivePoint=getCatPoint;
-getCatPoint=function(state){const point=expressivePoint(state);if(discoveryScene(state)&&!state.ui.playMode){if(!coinRestPoint||coinRestPoint.catId!==getCat(state).id)coinRestPoint={...point,catId:getCat(state).id};return {...coinRestPoint};}coinRestPoint=null;return point;};
+getCatPoint=function(state){const point=expressivePoint(state),cue=currentLifeCue();if(state.campaign.phase==='room'&&cue?.catId===getCat(state).id)return {...cue.point};if(state.ui.playRestPoint?.catId===getCat(state).id){coinRestPoint=null;return point;}if(discoveryScene(state)&&!state.ui.playMode){if(!coinRestPoint||coinRestPoint.catId!==getCat(state).id)coinRestPoint={...point,catId:getCat(state).id};return {...coinRestPoint};}coinRestPoint=null;return point;};
 const expressiveTravel=animateFelineTravel;
-animateFelineTravel=function(element,...args){if(discoveryScene(gameState)&&!commandDraft&&!playDraft){element._travelAnimation?.cancel();element.classList.remove('walking','jumping');return null;}return expressiveTravel(element,...args);};
+animateFelineTravel=function(element,...args){const cue=currentLifeCue();if(cue&&Date.now()<cue.started)return expressiveTravel(element,...args);if(cue||discoveryScene(gameState)&&!commandDraft&&!playDraft){element._travelAnimation?.cancel();element.classList.remove('walking','jumping');return null;}return expressiveTravel(element,...args);};
 const expressivePose=scenePose;
 scenePose=function(svg){
  const holder=svg.closest('.cat-object');if(!holder)return expressivePose(svg);
- const playing=commandDraft?.command==='play'?commandDraft:playDraft;
- if(playing){
-  const toy=playing.ghost||playing.toy,rect=toy?.getBoundingClientRect(),cat=holder.getBoundingClientRect();
-  if(rect)holder.style.setProperty('--cat-facing',rect.left+rect.width/2>=cat.left+cat.width/2?-1:1);
-  if(holder.classList.contains('toy-reject')||holder.classList.contains('toy-avoid'))return expressivePose(svg);
-  return ['punch','happy'];
- }
- const cue=currentLifeCue();if(cue)return [cue.pose,cue.pose==='vomit'?'wary':'neutral'];
+ const cue=currentLifeCue();if(cue?.catId===getCat(gameState).id)return [Date.now()<cue.started?'sit':cue.pose,cue.pose==='vomit'?'wary':'neutral'];
+ const playing=['cat','play'].includes(commandDraft?.command)?commandDraft:playDraft;
  if(discoveryScene(gameState)){holder._travelAnimation?.cancel();holder.classList.remove('walking','jumping');return [Date.now()%4500<2900?'punch':'sit','neutral'];}
+ if(playing){
+  if(holder.classList.contains('jumping'))return ['jump','neutral'];
+  if(holder.classList.contains('walking'))return ['walk','neutral'];
+  if(holder.classList.contains('toy-reject')||holder.classList.contains('toy-avoid'))return expressivePose(svg);
+  if(playing.playInReach===false)return ['stalk','happy'];
+  return ['hunt','happy'];
+ }
  const pose=expressivePose(svg);if(pose[0]!=='sit'||gameState.ui.modal||gameState.ui.layoutMode)return pose;
  const cycle=Math.floor(Date.now()/5000)%6;
  if(cycle===1&&getPlaced(getRoom(gameState)).some(p=>p.itemId==='scratch'))return ['scratch','neutral'];
  if(cycle===3&&getCat(gameState).heart>=60)return ['knead','happy'];
  return pose;
+};
+const lifeRevealRender=render;
+render=function(state){
+ lifeRevealRender(state);if(state.campaign.phase!=='room')return;
+ const cue=currentLifeCue(),mess=app.querySelector('.mess-object'),point=getCat(state).body.vomitPoint;
+ if(cue)app.querySelector('.discovery-pickup')?.remove();
+ if(mess&&point){mess.style.left=point.x+'%';mess.style.top=point.y+'%';}
+ for(const pending of catLifeCues)if(Date.now()<pending.reveal&&!pending.previous){const node=app.querySelector(pending.pose==='vomit'?'.mess-object':pending.pose==='poop'?'.book-litter-mark':'.no-life-target');if(node)node.style.visibility='hidden';}
 };
