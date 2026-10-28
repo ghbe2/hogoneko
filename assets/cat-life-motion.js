@@ -7,6 +7,7 @@ window.CatLifeMotion=(()=>{
  // A held glance, with separate eye and head timing, not perpetual oscillation.
  function glance(t,delay=0){const u=((t-delay)%7+7)%7;return u<1.2?0:u<1.8?smooth((u-1.2)/.6):u<3?1:u<3.8?1-2*smooth((u-3)/.8):u<5?-1:u<5.8?-1+smooth((u-5)/.8):0;}
  function expression(p,t){
+  if(p.startsWith('reaction')){const [tag,base]=p.split(':'),level=Number(tag.slice(8)),e=expression(base,t);e.lid=[.6,.8,1][level];return e;}
   const q=action(p,t),horizontal=['walk','dash','jump','stalk','bat','pin','hunt','scratch','eat','poop','vomit','rest','sleep'].includes(p);
   let turn=horizontal?-.65:glance(t,.22)*.68,eye=glance(t)*.7,lid=1,ear=0;
   if(toys.has(p)){turn=-.58-.25*glance(t,.16);eye=-.8;lid=.85;ear=-5;}
@@ -16,6 +17,10 @@ window.CatLifeMotion=(()=>{
   if(p==='alert'){turn=glance(t,.12)*.85;ear=-7;}
   if(p==='punch'){turn=-.65;eye=-.9;lid=.8;ear=12;}
   if(p==='knead'){turn=glance(t,.5)*.22;lid=.48;}
+  if(p==='sniff'){turn=-.4+.14*Math.sin(t*1.8);lid=.9;}
+  if(p==='settle'){turn=-.18;lid=1-.55*smooth(((t%8)-1)/2);}
+  if(p==='disengage'){turn=.55*smooth(((t%8)-.4)/1.2);ear=16;}
+  if(p==='avoid'){turn=.85*smooth((t%8)/.6);ear=18;lid=.85;}
   if(p==='rest'){turn=-.35+.24*glance(t,.4);lid=.55;}
   if(p==='sleep'){turn=-.35;lid=0;}
   if(p==='eat'){turn=-.8+.18*glance(t,.2);eye=-.65;lid=.65;}
@@ -55,6 +60,58 @@ window.CatLifeMotion=(()=>{
   return m;
  }
  function model(p,t){
+  if(p.startsWith('reaction')){
+   const [tag,base]=p.split(':'),level=Number(tag.slice(8)),u=t%6;
+   // A visible sequence, not merely three playback speeds: eager continuous
+   // engagement, sustained engagement with a short pause, single actions with
+   // clear observation breaks. Every positive level still plays/eats.
+   const active=level===0||u<(level===1?4.4:2.5);
+   const activeModel=model(base,t*[1.2,.85,.7][level]);
+   const waiting=model(base==='eat'?'walk':'stalk',0);
+   if(base==='eat'){waiting.hx=level===1?-89:-72;waiting.hy=level===1?-72:-102;waiting.hr=level===1?12:-4;}
+   const amount=level===0?1:1-smooth((u-(level===1?4.1:2.2))/.3);
+   const m=CatSVG.mixModel(waiting,activeModel,amount);
+   if(level===0){m.bx-=5;m.hx-=5;m.tr-=12;}
+   if(level===2&&active&&base!=='eat'){
+    // Keep a single deliberate paw reach, not the enthusiastic double strike.
+    m.legs[3]=[-36,-40,-59,0];
+   }
+   return m;
+  }
+  if(p==='avoid'){
+   const m=basePoseModel('sit',t),a=smooth((t%8)/.6);
+   m.hx+=12*a;m.hr+=8*a;m.br+=3*a;m.tr+=Math.sin(t*3)*10;
+   return m;
+  }
+  if(['sniff','settle','disengage'].includes(p)){
+   const u=t%(p==='disengage'?10:8),envelope=smooth(u/.8)*(1-smooth((u-6.6)/1.4)),m=basePoseModel('sit',t);
+   if(p==='sniff'){
+    const reach=smooth((u-.4)/1.2)*envelope,check=Math.sin(u*8)*smooth((u-1.4)/.5)*(1-smooth((u-4.7)/.6));
+    m.bx=-7*reach;m.br=-4*reach;m.hx=-18*reach+check*1.4;m.hy+=10*reach+check*.7;m.hr=-4*reach;m.bend=-2*reach;
+   }else if(p==='settle'){
+    const relax=smooth((u-1)/2)*envelope;
+    m.by+=7*relax;m.bh-=.07*relax;m.bw+=.03*relax;m.hy+=13*relax;m.hr=-4*relax;m.tr=3*Math.sin(t*.5);m.sleep=0;
+    m.legs[1]=[-19,-110+7*relax,-19,0];m.legs[3]=[18,-108+7*relax,18,0];
+   }else{
+    // Turn away, get all four paws underneath, then retreat. Never translate
+    // the upright seated model. Return travel is only the preview's loop reset.
+    const standing=smooth((u-.45)/.75)*(1-smooth((u-8.3)/.8));
+    const out=Math.max(0,Math.min(2,u-1.4)),back=Math.max(0,Math.min(2,u-6));
+    const moving=u>=1.4&&u<3.4||u>=6&&u<8,sign=u<6?1:-1;
+    const walking=basePoseModel('walk',0);
+    walking.hx=-72;walking.hy=-100;walking.hr=-3;walking.headTurn=1;
+    walking.legs=walking.legs.map((l,i)=>{
+     const anchor=i%2?-65:72,phase=(((u-(sign>0?1.4:6))/1.4+[.5,.25,0,.75][i])%1+1)%1;
+     const stance=phase<.7,v=stance?phase/.7:(phase-.7)/.3;
+     const x=stance?11.76-23.52*v:-11.76+23.52*smooth(v);
+     const fade=moving?Math.min(smooth((u-(sign>0?1.4:6))/.2),1-smooth((u-(sign>0?3.2:7.8))/.2)):0;
+     return[l[0],l[1],anchor+sign*x*fade,stance?0:-9*Math.sin(v*Math.PI)*fade];
+    });
+    Object.assign(m,CatSVG.mixModel(m,walking,standing));
+    m.reactionOffset=(out-back)*24;
+   }
+   return m;
+  }
   if(toys.has(p))return toyModel(p,t);
   const m=basePoseModel(p,t),s=Math.sin;
   if(p==='walk'){
@@ -155,6 +212,7 @@ window.CatLifeMotion=(()=>{
  }
  function reset(r){prepare(r);r.lifeAnatomy.outline.setAttribute('d',r.lifeAnatomy.path);r.lifeAnatomy.chestShape.setAttribute('d',r.lifeAnatomy.chestPath);}
  function finish(r,m,p,t){
+  if(p.startsWith('reaction'))p=p.split(':')[1];
   prepare(r);
   if(p==='punch')r.nodes.effects.replaceChildren();
   const locomotion=['walk','dash','jump'].includes(p);
@@ -186,7 +244,8 @@ window.CatLifeMotion=(()=>{
    const young=r.d.age==='kitten',s=m.hs*(young?1.15:1);
    face.setAttribute('transform',`translate(${-m.hx} ${m.hy*(young?.88:1)}) rotate(${-m.hr}) scale(${s} ${s})`);
   }
-  face.setAttribute('transform',face.getAttribute('transform')+` rotate(${turn*4}) skewY(${turn*5}) scale(${1-Math.abs(turn)*.06} 1)`);
+  // Keep skull volume; depth is expressed inside the face, not as a tilted card.
+  if(!window.CatFaceDepth)face.setAttribute('transform',face.getAttribute('transform')+` rotate(${turn*4}) skewY(${turn*5}) scale(${1-Math.abs(turn)*.06} 1)`);
   r.nodes.face.removeAttribute('transform');
   // One shoulder/neck silhouette, painted in the chest's own continuous coat space.
   // The two upper contour endpoints sit under the jaw/back of the skull, not at
@@ -206,6 +265,12 @@ window.CatLifeMotion=(()=>{
    if(locomotion||p==='poop')n.chestShape.setAttribute('d',`M-46 -10 L-49 7 Q0 20 50 7 L47 -7 C34 -42 ${b.x+4} ${b.y+22} ${b.x} ${b.y} L${a.x} ${a.y} C${a.x-4} ${a.y+20} -35 -42 -46 -10Z`);
   }
   const tail=r.nodes.tail,base=tail.getAttribute('transform');tail.setAttribute('transform',base+` skewX(${Math.sin(t*1.8-.8)*2.2})`);
+  if(window.CatFaceDepth&&!r.depthManual){
+   const depthTurn=p==='wall'?0:p==='sleep'?-.16:Math.max(-.58,Math.min(.58,turn));
+   CatFaceDepth.apply(r,depthTurn);
+  }
+  if(m.reactionOffset){const travel=r.nodes.travel;travel.setAttribute('transform',travel.getAttribute('transform')+` translate(${m.reactionOffset*r.scale} 0)`);}
+  r.svg.querySelector('[data-life-shadow]')?.setAttribute('transform',`translate(${(m.reactionOffset||0)*r.scale} 0)`);
   const toy=r.svg.querySelector('[data-life-toy]');if(!toy)return;
   toy.style.display=toys.has(p)?'':'none';
   if(toys.has(p)){

@@ -11,7 +11,8 @@
   // The family's walking figure may be mirrored; cancel that for the held cat.
   const figure=r.svg.closest('.adoption-figure');
   if(figure){r.svg.style.transformOrigin='50% 50%';r.svg.style.transformBox='view-box';r.svg.style.transform=figure.getAttribute('transform')?.includes('scale(-1')?'scaleX(-1)':'';}
-  CatLifeMotion.reset(r);apply(r,m,t,p);
+  const drawingPose=p.startsWith('reaction')?p.split(':')[1]:p==='avoid'?'sit':p;
+  CatLifeMotion.reset(r);apply(r,m,t,drawingPose);
   // Eyelids are animated in place; the original coat and eye positions do not move apart.
   const acting=CatLifeMotion.expression(p,t);
   for(const def of r.nodes.face.querySelectorAll('defs')){

@@ -29,7 +29,8 @@ updateLiveHeartMeter=function(draft){
  if(heartShow.target!==earned||!heartShow.live||heartShow.catId!==cat.id)beginBond(cat,cat.heart,earned,true);
  heartShow.until=Infinity;
 };
-spawnLiveFeedback=function(cat,affinity,big=false,moodOnly=false){if(moodOnly&&affinity==='superDislike'){feelSpawn(cat,affinity,false,true);const cue=cat.closest('.stage')?.querySelector('.live-heart:last-child');if(cue)cue.textContent='💢';}};
+// Affinity is expressed by the cat; progress hearts are owned by bondTick only.
+spawnLiveFeedback=function(){};
 const bondRender=render;
 render=function(state){bondRender(state);app.querySelectorAll('.live-heart-meter,.heart-closeup,.play-heart-burst').forEach(n=>n.remove());};
 const BOND_HEART='<svg viewBox="0 0 64 60"><path d="M32 55C24 48 4 33 4 18C4 1 25-3 32 11C39-3 60 1 60 18C60 33 40 48 32 55Z" fill="#d98299"/><path d="M12 17q1-7 8-7" fill="none" stroke="#f9c9d2" stroke-width="4" stroke-linecap="round"/></svg>';

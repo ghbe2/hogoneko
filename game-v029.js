@@ -15,7 +15,7 @@ function finishSurgery(state,now=gameNow()){
  const cat=getCat(state),surgery=cat.surgery;
  if(surgery?.status!=='in_progress'||now-surgery.startedAt<SURGERY_MS)return state;
  const day=cat.body.days+1;
- return {...state,cats:state.cats.map(c=>c.id!==cat.id?c:{...c,phenotype:{...phenotypeFor(c),earCut:'left'},surgery:{...surgery,status:'done',completedDay:day,completedAt:now},lifeLog:[...(c.lifeLog||[]).filter(log=>log.kind!=='surgery'),{day,kind:'surgery',title:'手術を終えた',note:'耳カット済み'}]}),campaign:{...state.campaign,phase:'shop',shopId:'clinic',medicalStage:'receipt',requiredVisit:null},ui:{...state.ui,modal:null}};
+ return {...state,cats:state.cats.map(c=>c.id!==cat.id?c:{...c,phenotype:{...phenotypeFor(c),earCut:c.sex==='male'?'right':'left'},surgery:{...surgery,status:'done',completedDay:day,completedAt:now},lifeLog:[...(c.lifeLog||[]).filter(log=>log.kind!=='surgery'),{day,kind:'surgery',title:'手術を終えた',note:'耳カット済み'}]}),campaign:{...state.campaign,phase:'shop',shopId:'clinic',medicalStage:'receipt',requiredVisit:null},ui:{...state.ui,modal:null}};
 }
 const beforeSurgeryReducer=reduceGameState;
 reduceGameState=function(state,action){
@@ -98,7 +98,7 @@ render=function(state){
  const snip=app.querySelector('.surgery-snip');
  if(snip&&medical?.startedAt){
   // Cat's left ear is viewer-right in the front-facing rig (earCut:'left').
-  const ear=room.querySelector('[data-part="innerR"]')||room.querySelector('.surgery-cat');
+  const ear=room.querySelector(getCat(state).sex==='male'?'[data-part="innerL"]':'[data-part="innerR"]')||room.querySelector('.surgery-cat');
   const r=room.getBoundingClientRect(),e=ear.getBoundingClientRect();
   snip.style.left=(e.left+e.width/2-r.left)+'px';snip.style.top=(e.top+e.height/3-r.top)+'px';
   snip.querySelector('b').style.top=Math.max(-28,8-parseFloat(snip.style.top))+'px';

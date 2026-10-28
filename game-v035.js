@@ -19,13 +19,12 @@ reduceGameState=function(state,action){
 };
 const feelPose=scenePose;
 scenePose=function(svg){
- const original=feelPose(svg),f=gameState.ui.feel;
+ const original=feelPose(svg),active=gameState.ui.feel,legacy=gameState.ui.reaction;
+ const f=active&&active.until>Date.now()?active:legacy?{affinity:legacy.kind,operation:legacy.operation,until:Infinity}:null;
  if(!svg.closest('.cat-object')||!f||f.until<Date.now()||['walk','jump'].includes(original[0]))return original;
- if(f.affinity==='superDislike')return ['sit','angry'];
- if(f.affinity==='dislike')return ['sit','wary'];
- if(f.affinity==='superMatch')return [f.operation==='play'?'punch':'knead','happy'];
- if(f.affinity==='match')return [f.operation==='pet'||f.operation==='groom'?'knead':'sit','happy'];
- return ['sit','neutral'];
+ const plan=catReactionPlan(getCat(gameState).types,f.affinity,f.operation);
+ const elapsed=active?Math.max(0,(Date.now()-(active.until-3600))/1000):2;
+ return [elapsed<plan.delay?'sit':plan.lead&&elapsed<plan.delay+.7?plan.lead:plan.motion,plan.mood];
 };
 function showFeel(catElement,affinity){
  if(!catElement)return;
@@ -43,8 +42,8 @@ render=function(state){
  const b=cat.getBoundingClientRect(),s=stage.getBoundingClientRect();
  const cue=document.createElement('span');cue.className='feel-cue';cue.style.left=`${Math.max(25,Math.min(s.width-25,b.left+b.width/2-s.left))}px`;cue.style.top=`${Math.max(35,b.top-s.top)}px`;
  cue.textContent=f.affinity==='superDislike'?'💢':'';
- cue.setAttribute('role','status');cue.setAttribute('aria-label',{superMatch:'大喜び',match:'うれしそう',neutral:'気付いてこちらを見る',dislike:'身を引く',superDislike:'強く嫌がる'}[f.affinity]);stage.appendChild(cue);
- if(f.delta!==0){const meter=document.createElement('aside');meter.className='live-heart-meter care-heart-meter';meter.innerHTML=renderHeartVisual(getCat(state));stage.appendChild(meter);meter.classList.add(f.delta>0?'heart-growing':'heart-falling');}
+ cue.setAttribute('role','status');cue.setAttribute('aria-label',{superMatch:'大喜び',match:'うれしそう',neutral:'気付いてこちらを見る',dislike:'身を引く',superDislike:'強く嫌がる'}[f.affinity]);
+
  if(lastFeelId!==f.id){showFeel(cat,f.affinity);if(f.delta>0)spawnLiveFeedback(cat,f.affinity,true);lastFeelId=f.id;}
  setTimeout(()=>{cue.remove();stage.querySelector('.care-heart-meter')?.remove();},Math.max(0,f.until-Date.now()));
 };

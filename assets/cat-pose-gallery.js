@@ -1,5 +1,5 @@
 'use strict';
-const poses={sit:'正面 · すわる',sit_left:'左斜め',sit_right:'右斜め',walk:'左への歩行',walk_right:'右への歩行',hunt:'玩具で遊ぶ',stalk:'低く狙う',bat:'前足で連打',pin:'両手で押さえる',dash:'走る',jump:'ジャンプ',rest:'伏せる',sleep:'眠る',cower:'身をすくめる',alert:'身構える',punch:'ネコパンチ',knead:'ふみふみ',wall:'壁をひっかく',scratch:'床をひっかく',eat:'食べる',poop:'トイレ',vomit:'吐く'};
+const poses={sniff:'匂いを確かめる',settle:'静かに安心する',disengage:'接触を外して離れる',sit:'正面 · すわる',sit_left:'左斜め',sit_right:'右斜め',walk:'左への歩行',walk_right:'右への歩行',hunt:'玩具で遊ぶ',stalk:'低く狙う',bat:'前足で連打',pin:'両手で押さえる',dash:'走る',jump:'ジャンプ',rest:'伏せる',sleep:'眠る',cower:'身をすくめる',alert:'身構える',punch:'ネコパンチ',knead:'ふみふみ',wall:'壁をひっかく',scratch:'床をひっかく',eat:'食べる',poop:'トイレ',vomit:'吐く'};
 let stopped=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let coatSeed=null;
 const detail=document.querySelector('#detail'),toggle=document.querySelector('#toggle');

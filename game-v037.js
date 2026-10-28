@@ -314,7 +314,7 @@ setInterval(positionDiscoveryCoin,100);
 
 // Short-lived presentation cues: never save a backlog of offline animations.
 let catLifeCues=[],coinRestPoint=null;
-function currentLifeCue(){while(catLifeCues.length&&catLifeCues[0].until<=Date.now())catLifeCues.shift();return catLifeCues[0];}
+function currentLifeCue(){while(catLifeCues.length&&catLifeCues[0].until<=Date.now()){const done=catLifeCues.shift();if(gameState.campaign.phase==='room'&&getCat(gameState).id===done.catId)gameState.ui.playRestPoint={...done.point,catId:done.catId};}return catLifeCues[0];}
 function scheduleLifeCueRefresh(cue){
  for(const at of [cue.started,cue.reveal,cue.until+30])setTimeout(()=>{
   if(gameState.campaign.phase!=='room'||getCat(gameState).id!==cue.catId||document.hidden||(at!==cue.until+30&&!catLifeCues.includes(cue)))return;
@@ -340,13 +340,13 @@ reduceGameState=function(state,action){
  return next;
 };
 const expressivePoint=getCatPoint;
-getCatPoint=function(state){const point=expressivePoint(state),cue=currentLifeCue();if(state.campaign.phase==='room'&&cue?.catId===getCat(state).id)return {...cue.point};if(state.ui.playRestPoint?.catId===getCat(state).id){coinRestPoint=null;return point;}if(discoveryScene(state)&&!state.ui.playMode){if(!coinRestPoint||coinRestPoint.catId!==getCat(state).id)coinRestPoint={...point,catId:getCat(state).id};return {...coinRestPoint};}coinRestPoint=null;return point;};
+getCatPoint=function(state){const cue=currentLifeCue(),point=expressivePoint(state);if(state.campaign.phase==='room'&&cue?.catId===getCat(state).id)return {...cue.point};if(state.ui.playRestPoint?.catId===getCat(state).id){coinRestPoint=null;return point;}if(discoveryScene(state)&&!state.ui.playMode){if(!coinRestPoint||coinRestPoint.catId!==getCat(state).id)coinRestPoint={...point,catId:getCat(state).id};return {...coinRestPoint};}coinRestPoint=null;return point;};
 const expressiveTravel=animateFelineTravel;
-animateFelineTravel=function(element,...args){const cue=currentLifeCue();if(cue&&Date.now()<cue.started)return expressiveTravel(element,...args);if(cue||discoveryScene(gameState)&&!commandDraft&&!playDraft){element._travelAnimation?.cancel();element.classList.remove('walking','jumping');return null;}return expressiveTravel(element,...args);};
+animateFelineTravel=function(element,...args){const cue=currentLifeCue();if(!cue&&discoveryScene(gameState)&&!commandDraft&&!playDraft){element._travelAnimation?.cancel();element.classList.remove('walking','jumping');return null;}return expressiveTravel(element,...args);};
 const expressivePose=scenePose;
 scenePose=function(svg){
  const holder=svg.closest('.cat-object');if(!holder)return expressivePose(svg);
- const cue=currentLifeCue();if(cue?.catId===getCat(gameState).id)return [Date.now()<cue.started?'sit':cue.pose,cue.pose==='vomit'?'wary':'neutral'];
+ const cue=currentLifeCue();if(cue?.catId===getCat(gameState).id){if(holder._travelAnimation?.playState==='running')return [holder.classList.contains('jumping')?'jump':'walk','neutral'];return [Date.now()<cue.started?'sit':cue.pose,cue.pose==='vomit'?'wary':'neutral'];}
  const playing=['cat','play'].includes(commandDraft?.command)?commandDraft:playDraft;
  if(discoveryScene(gameState)){holder._travelAnimation?.cancel();holder.classList.remove('walking','jumping');return [Date.now()%4500<2900?'punch':'sit','neutral'];}
  if(playing){
@@ -354,12 +354,10 @@ scenePose=function(svg){
   if(holder.classList.contains('walking'))return ['walk','neutral'];
   if(holder.classList.contains('toy-reject')||holder.classList.contains('toy-avoid'))return expressivePose(svg);
   if(playing.playInReach===false)return ['stalk','happy'];
-  return ['hunt','happy'];
+  return catAffinityPose(getAffinity(getCat(gameState),getItem(playing.itemId)).kind,'play',getCat(gameState).types);
  }
  const pose=expressivePose(svg);if(pose[0]!=='sit'||gameState.ui.modal||gameState.ui.layoutMode)return pose;
  const cycle=Math.floor(Date.now()/5000)%6;
- if(cycle===1&&getPlaced(getRoom(gameState)).some(p=>p.itemId==='scratch'))return ['scratch','neutral'];
- if(cycle===3&&getCat(gameState).heart>=60)return ['knead','happy'];
  return pose;
 };
 const lifeRevealRender=render;

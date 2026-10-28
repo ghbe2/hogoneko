@@ -64,9 +64,9 @@ const owned=(state,id)=>Number(state.inventory[id])>0;
 const productById=id=>SHOP_CATALOG.find(p=>p.id===id);
 function stableCatSeed(id){let value=2166136261;for(const char of String(id))value=Math.imul(value^char.charCodeAt(0),16777619);return value>>>0;}
 function phenotypeFor(cat){
-  if(cat.phenotype)return {...cat.phenotype,age:cat.age,earCut:cat.surgery?.status==='done'||cat.status==='tnr'?'left':cat.phenotype.earCut};
+  if(cat.phenotype)return {...cat.phenotype,age:cat.age,earCut:cat.surgery?.status==='done'||cat.status==='tnr'?(cat.sex==='male'?'right':'left'):cat.phenotype.earCut};
   const dna=CatSVG.sampleDNA(stableCatSeed(cat.id));
-  return {...dna,age:cat.age||'adult',earCut:cat.surgery?.status==='done'||cat.status==='tnr'?'left':'none',mood:'neutral'};
+  return {...dna,age:cat.age||'adult',earCut:cat.surgery?.status==='done'||cat.status==='tnr'?(cat.sex==='male'?'right':'left'):'none',mood:'neutral'};
 }
 function withPhenotype(cat,random=false){
   const dna=random?{...CatSVG.sampleDNA(crypto.getRandomValues(new Uint32Array(1))[0]),earCut:'none',mood:'neutral'}:phenotypeFor(cat);

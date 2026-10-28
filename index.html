@@ -3753,14 +3753,8 @@ function renderPlacedItem(placed, state, clue) {
 }
 
 function renderReaction(reaction, x, y) {
-  if (reaction.visual === "hearts") {
-    return `<div class="play-heart-burst" style="left:${x}%;top:${y}%" role="status" aria-label="心が上がった">
-      <i>♥</i><i>♥</i><i>♥</i>
-    </div>`;
-  }
-  const action = reaction.operation === "name" ? `data-action="open-notebook" role="button" tabindex="0"` : `role="status"`;
-  return `<div class="reaction ${reaction.kind} ${reaction.operation === "name" ? "name-reaction" : ""}" style="left:${x}%;top:${y}%;bottom:auto" ${action}>
-    <strong>${reaction.title}</strong></div>`;
+  // State still drives body language and affinity. No cat speech/thought UI.
+  return "";
 }
 
 function renderMenuIcon(id, state) {
@@ -4594,6 +4588,7 @@ function completeCommandDrag(draft, clientX, clientY) {
 }
 
 function clearCommandDrag(draft, accepted) {
+  clearTimeout(draft.followTimer);
   document.querySelector(".live-heart-meter")?.remove();
   draft.readyElements?.forEach(element => element.classList.remove("drop-ready", "drop-hover"));
   draft.target.closest(".modal-layer")?.classList.remove("dragging-source");
@@ -4608,6 +4603,7 @@ function clearCommandDrag(draft, accepted) {
     { left:`${draft.origin.x}px`, top:`${draft.origin.y}px`, opacity:.25 },
   ], { duration:240, easing:"ease-in" });
   animation.onfinish = () => ghost.remove();
+  animation.oncancel = () => ghost.remove();
 }
 
 function scheduleToyFollow(draft,delay){
@@ -5123,7 +5119,7 @@ const roomLifeBeforeV016=renderRoomLife;
 renderRoomLife=function(state,cat,food,roam){
   let html=roomLifeBeforeV016(state,cat,food,roam);
   const purr=!state.ui.layoutMode&&state.ui.purrUntil>Date.now();
-  if(purr)html=html.replace('class="cat-object ','class="cat-object purring ')+`<span class="purr-note" style="left:${roam.x}%;top:${roam.y}%">ごろごろ<span>〰 〰</span></span>`;
+  if(purr)html=html.replace('class="cat-object ','class="cat-object purring ');
   if(!state.ui.layoutMode&&state.ui.mealAt>Date.now()-3500)html=html.replace('class="cat-object ','class="cat-object nibbling ');
   if(!state.ui.layoutMode)html+=(cat.body.hair||[]).map(h=>`<button class="shed-hair" style="left:${h.x}%;top:${h.y}%" data-action="tap-trouble" data-problem="hair" data-hair="${h.id}" data-drop-target="clean" aria-label="落ちた毛を掃除"><i></i><i></i><i></i><i></i><i></i></button>`).join('');
   return html;
@@ -5186,7 +5182,7 @@ triggerAutoEvent=function(){
 </script>
 <script src="assets/book-materials.js"></script>
 <script src="assets/cat-svg.js"></script>
-<script src="assets/cat-life-motion.js"></script>
+<script src="assets/cat-face-depth.js"></script><script src="assets/cat-life-motion.js"></script>
 <script src="assets/cat-life-game.js"></script>
 <script src="game-v017.js"></script>
 <script src="assets/storybook-art.js"></script>
@@ -5206,6 +5202,7 @@ triggerAutoEvent=function(){
 <script src="game-v032.js"></script>
 <script src="game-v033.js"></script>
 <script src="game-v034.js"></script>
+<script src="assets/cat-reaction-definitions.js"></script>
 <script src="game-v035.js"></script>
 <script src="game-v036.js"></script>
 <script src="game-v037.js"></script>
@@ -5254,6 +5251,7 @@ triggerAutoEvent=function(){
 <script src="game-senior-rescue.js"></script>
 <link rel="stylesheet" href="assets/character-life.css">
 <script src="assets/character-life.js"></script>
+<script src="game-room-reactions.js"></script>
 <link rel="stylesheet" href="assets/senior-rescue.css">
 <link rel="stylesheet" href="assets/action-buttons.css">
 <script>

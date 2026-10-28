@@ -6,7 +6,7 @@ let rig,seed=2718,mode='idle',paused=reduced,time=0,last=0,modeMix={wary:0,warm:
 let nextLook=2,look={x:0,y:0},nextBlink=2.2,blinkAt=-100,blinkDuration=.34,nextEar=1.6,earAt=-100;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=(a,b,rate,dt)=>a+(b-a)*(1-Math.exp(-rate*dt));
 const descriptions={idle:'こちらを見たり、耳を澄ませたり。',wary:'少し距離をとって、様子をうかがっています。',warm:'目を細めて、こちらに顔を寄せています。'};
-const poseLabels={hunt:'玩具で遊ぶ',stalk:'低く狙う',bat:'前足で連打',pin:'両手で押さえる',sit:'すわる',walk:'あるく',dash:'走る',jump:'ジャンプ',rest:'伏せる',sleep:'眠る',cower:'身をすくめる',alert:'身構える',punch:'ネコパンチ',knead:'ふみふみ',wall:'壁をひっかく',scratch:'床をひっかく',eat:'食べる',poop:'トイレ',vomit:'吐く'};
+const poseLabels={sniff:'匂いを確かめる',settle:'静かに安心する',disengage:'接触を外して離れる',hunt:'玩具で遊ぶ',stalk:'低く狙う',bat:'前足で連打',pin:'両手で押さえる',sit:'すわる',walk:'あるく',dash:'走る',jump:'ジャンプ',rest:'伏せる',sleep:'眠る',cower:'身をすくめる',alert:'身構える',punch:'ネコパンチ',knead:'ふみふみ',wall:'壁をひっかく',scratch:'床をひっかく',eat:'食べる',poop:'トイレ',vomit:'吐く'};
 let pose='hunt',poseTime=0,poseTransition=null,lastModel=null,original=false;
 const sampleParams=new URLSearchParams(location.search);
 let galleryCoatSeed=null;
@@ -33,7 +33,7 @@ function mount(first=false){
  if(galleryCoatSeed!==null)d=CatSVG.sampleDNA(galleryCoatSeed,d,true);
  if(sampleParams.get('coat')==='calico')Object.assign(d,{headCoat:'calico',bodyCoat:'calico',legCoat:'calico',tailCoat:'calico',seed:2718});
  d.mood='neutral';rig=CatSVG.buildCat(svg,'life',d,390,1);if(sampleParams.has('head-turn'))rig.reviewHeadTurn=Number(sampleParams.get('head-turn'));rig.reviewDirection=sampleParams.get('direction');svg.querySelector('.floor').remove();
- const ns='http://www.w3.org/2000/svg',shadow=document.createElementNS(ns,'ellipse');shadow.setAttribute('cx','368');shadow.setAttribute('cy','392');shadow.setAttribute('rx',d.age==='kitten'?'48':'66');shadow.setAttribute('ry','9');shadow.setAttribute('fill','#6d644b');shadow.setAttribute('opacity','.16');svg.insertBefore(shadow,rig.nodes.travel);
+ const ns='http://www.w3.org/2000/svg',shadow=document.createElementNS(ns,'ellipse');shadow.setAttribute('data-life-shadow','');shadow.setAttribute('cx','368');shadow.setAttribute('cy','392');shadow.setAttribute('rx',d.age==='kitten'?'48':'66');shadow.setAttribute('ry','9');shadow.setAttribute('fill','#6d644b');shadow.setAttribute('opacity','.16');svg.insertBefore(shadow,rig.nodes.travel);
  const toy=document.createElementNS(ns,'g');toy.dataset.lifeToy='';toy.innerHTML='<ellipse cx="0" cy="4" rx="14" ry="4" fill="#75684a" opacity=".2"/><path d="M7 0Q30 -2 23 -11" fill="none" stroke="#8d7057" stroke-width="2"/><path d="M-12 0Q-10 -13 2 -9Q14 -4 10 2Q0 7 -12 0Z" fill="#a67c60"/><path d="M-7 -7Q-11 -17 -1 -14L2 -8Z" fill="#cfab88"/><circle cx="-8" cy="-4" r="1.5" fill="#354536"/>';svg.insertBefore(toy,rig.nodes.travel);
  draw(0);response.textContent=currentDescription();
 }
