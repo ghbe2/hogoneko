@@ -24,9 +24,14 @@ function openIntakePositions(itemId,placed,frame){
  for(let y=minY+8;y<maxY;y+=8)ys.push(y);
  return xs.flatMap(x=>ys.map(y=>({itemId,x:x/frame.width*100,y:y/frame.height*100}))).filter(p=>intakePositionClear(p,placed,frame));
 }
+function intakeBoxCanMove(placed,frame){
+ const box=placed.find(p=>p.itemId==='box');if(!box)return true;
+ return [[24,0],[-24,0],[0,24],[0,-24]].some(([dx,dy])=>intakePositionClear({...box,x:box.x+dx/frame.width*100,y:box.y+dy/frame.height*100},placed,frame));
+}
 function planIntakeFurniture(state,placed,pending,randomize=false){
  const frame=intakePlacementFrame(state);let budget=3000;
  function solve(items,rest){
+  if(!intakeBoxCanMove(items,frame))return null;
   if(!rest.length)return items;
   if(--budget<0)return null;
   const options=openIntakePositions(rest[0],items,frame);
@@ -34,15 +39,16 @@ function planIntakeFurniture(state,placed,pending,randomize=false){
   for(const p of options){const result=solve([...items,p],rest.slice(1));if(result)return result;}
   return null;
  }
- return solve(placed,pending);
+ return solve(placed,[...pending].sort((a,b)=>furnitureHeight(b)-furnitureHeight(a)));
 }
 function repairIntakePlacement(state){
  if(!guidedIntake(state))return state;
  const room=getRoom(state),frame=intakePlacementFrame(state),valid=[],invalid=[];
  for(const p of room.floor){if(intakePositionClear(p,valid,frame))valid.push(p);else invalid.push(p.itemId);}
- if(!invalid.length)return state;
+ const needsPracticeSpace=state.onboarding.guide==='moveFurniture'&&!intakeBoxCanMove(room.floor,frame);
+ if(!invalid.length&&!needsPracticeSpace)return state;
  // Preserve valid positions. Only legacy/resize collisions are relocated.
- const arranged=planIntakeFurniture(state,valid,invalid)||planIntakeFurniture(state,[],room.floor.map(p=>p.itemId).sort((a,b)=>furnitureHeight(b)-furnitureHeight(a)));
+ const arranged=(!needsPracticeSpace&&planIntakeFurniture(state,valid,invalid))||planIntakeFurniture(state,[],room.floor.map(p=>p.itemId).sort((a,b)=>furnitureHeight(b)-furnitureHeight(a)));
  if(!arranged)return state;
  return {...state,rooms:state.rooms.map(r=>r===room?{...r,floor:r.floor.map(p=>({...p,...arranged.find(n=>n.itemId===p.itemId)}))}:r)};
 }
