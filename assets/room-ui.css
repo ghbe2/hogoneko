@@ -5,6 +5,7 @@
 #app .room-travel-icon{position:absolute;left:0;top:0;width:84px;height:84px;background:none;border:0;padding:0;z-index:35;text-align:left;color:#564b38}#app .room-travel-icon>.corner-frame{position:absolute;left:-87px;top:-87px;width:174px;height:174px;pointer-events:none}#app .corner-picture{position:absolute;left:0;top:0;width:84px;height:63px;clip-path:circle(76px at 0 0);pointer-events:none}#app .corner-picture>svg{width:100%;height:100%}
 #app .home-travel-cat{position:absolute;left:31px;top:16px;width:34px;height:40px;pointer-events:none}#app .home-travel-cat svg{display:block;width:100%;height:100%;overflow:hidden}
 
+#app .travel-frame polygon{fill:var(--guide-accent, #9d5341)}
 #app .travel-frame{transform-origin:87px 87px;animation:travel-frame 24s linear infinite;pointer-events:none}
 @keyframes travel-frame{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){#app .travel-frame{animation:none}}
@@ -38,7 +39,7 @@
 #app .room-call-icon:after,#app .room-call-icon:before{display:none!important}
 #app .room-icon-menu button:active svg,#app .main-command:active svg{transform:translateY(2px)}#app .new-room-ui button:focus-visible{outline:2px solid #6e8567;outline-offset:2px}
 #app:has(.modal-layer) .room-travel-icon{display:none}@media(prefers-reduced-motion:reduce){#app .room-preparation{transition:none}}
-#app .room-icon-menu [aria-pressed="true"] .label{background:#405d48;color:#fff6e2;box-shadow:inset 0 2px 0 #2f4936}
+#app .room-icon-menu [aria-pressed="true"] .label{background:var(--guide-accent, #9d5341);color:#fff6e2;box-shadow:inset 0 2px 0 #2f4936}
 #app .room-supplies-menu{position:absolute;inset:0;display:block;padding:0;background:#493c262b;z-index:100}
 #app .room-supplies-menu .menu-sheet{position:absolute;left:54px;right:8px;bottom:120px;top:auto;width:auto;height:min(420px,calc(100% - 168px));max-height:none;min-height:0;margin:0;padding:10px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box;animation:none}
 #app .room-supplies-menu .sheet-head{padding:0 48px 0 0;min-height:50px;margin:0;flex:none}
@@ -62,7 +63,7 @@
 .care-booking{position:absolute;inset:0;z-index:180!important;background:#29332466;display:grid;place-items:center;padding:12px;box-sizing:border-box}
 .care-booking article{width:100%;max-width:360px;box-sizing:border-box;padding:16px;background:#fff8e6;border:1px solid #dbcfb0;border-radius:20px;color:#5b503b;display:grid;gap:10px}
 .care-booking h2{font-size:18px;line-height:26px;margin:0}.care-booking p{font-size:14px;line-height:22px;margin:0}.care-booking small{font-size:12px;line-height:18px}
-.care-booking button{min-height:44px;border:0;border-radius:24px;background:#596f4d;color:#fff7e5;font-size:14px;padding:8px 12px}.care-booking button:last-child{background:#eee4cf;color:#5b503b}
+.care-booking button{min-height:44px;border:0;border-radius:24px;background:var(--guide-accent, #9d5341);color:#fff7e5;font-size:14px;padding:8px 12px}.care-booking button:last-child{background:var(--guide-accent, #9d5341);color:var(--guide-ink, #fff8e9)}
 .app-plan-note{font-size:12px;line-height:18px}
 #app .room-preparation-items button{position:relative}
 #app .shelf-stock{position:absolute;right:5px;top:4px;font-size:12px;color:#65583e;line-height:16px}

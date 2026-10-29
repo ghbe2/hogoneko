@@ -5,12 +5,11 @@
  if(!['9d5341','926125','77516e'].includes(palette))return;
  const color='#'+palette;
  const style=document.createElement('style');
- style.textContent=`:root{--action-green:${color}}#app .travel-frame polygon{fill:${color}!important}
+ style.textContent=`:root{--guide-accent:${color};--action-green:${color}}#app .travel-frame polygon{fill:${color}!important}
  #app :is(.home-tour button,.clinic-commands button,.shared-guide-note button){background:${color}!important;color:#fff8e9}
  #app .town-scroll-hint{color:${color}!important}
  #app .town-swipe-arrows i{border-color:${color}!important}
  #app :is(.first-guide-ring,.tutorial-ring,.home-tour-focus){border-color:${color}!important}
- #app .guide-gesture [stroke="#584137"]{stroke:${color}}
  #app{pointer-events:none}`;
  document.head.append(style);
  const baseline=JSON.stringify(gameState);

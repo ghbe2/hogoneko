@@ -1,15 +1,15 @@
 .senior-help-trigger{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:calc(100% - 40px);max-width:300px;z-index:35}
 .item-senior_mat{width:84px;height:84px}
 .senior-review nav [data-senior-close],.senior-review nav [data-senior-gift]{min-width:112px;flex:none;width:112px}
-.senior-dialog-close{position:absolute;right:12px;top:12px;width:44px;height:44px;background:#637b55;color:#fff8e9;font-size:26px}
+.senior-dialog-close{position:absolute;right:12px;top:12px;width:44px;height:44px;background:var(--guide-accent, #9d5341);color:#fff8e9;font-size:26px}
 .center-help>.senior-review{min-width:0;max-width:calc(100% - 20px)}
 .center-help>.senior-review p,.center-help>.senior-review nav{min-width:0}
 .is-plaza .center-menu button{min-height:62px;padding-top:10px;padding-bottom:10px}
 .center-questions{position:absolute;inset:16px 10px;background:#fff8e9;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;color:#4b513c}
 .center-questions h2{margin:0;font-size:18px}
 .center-question-list{min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;flex:1}
-#app .center-question-list button{flex:none;height:72px;min-height:72px;white-space:normal;width:100%;padding:10px 32px 10px 16px;text-align:left;background:#617a53;color:#fff8e9;position:relative}
+#app .center-question-list button{flex:none;height:72px;min-height:72px;white-space:normal;width:100%;padding:10px 32px 10px 16px;text-align:left;background:var(--guide-accent, #9d5341);color:#fff8e9;position:relative}
 #app .center-question-list button:after,#app .center-questions>button:after{content:'›';position:absolute;right:15px;top:50%;transform:translateY(-50%)}
-#app .center-questions>button{flex:none;width:100%;min-height:44px;background:#617a53;color:#fff8e9;position:relative;padding-right:32px}
+#app .center-questions>button{flex:none;width:100%;min-height:44px;background:var(--guide-accent, #9d5341);color:#fff8e9;position:relative;padding-right:32px}
 .title-screen h1:has(.tsuguneko-logo){width:92%;margin:0 auto;font-size:0;line-height:0}
 .title-screen .tsuguneko-logo{display:block;width:100%;height:auto;aspect-ratio:2063/762;object-fit:contain}
