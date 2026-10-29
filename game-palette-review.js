@@ -6,7 +6,7 @@
  const color='#'+palette;
  const style=document.createElement('style');
  style.textContent=`:root{--action-green:${color}}#app .travel-frame polygon{fill:${color}!important}
- #app :is(.home-tour button,.clinic-commands button){background:${color}!important;color:#fff8e9}
+ #app :is(.home-tour button,.clinic-commands button,.shared-guide-note button){background:${color}!important;color:#fff8e9}
  #app .town-scroll-hint{color:${color}!important}
  #app .town-swipe-arrows i{border-color:${color}!important}
  #app :is(.first-guide-ring,.tutorial-ring,.home-tour-focus){border-color:${color}!important}
@@ -44,3 +44,4 @@
   app.replaceChildren();setScene(e.data.scene);render(gameState);
  });
 })();
+
