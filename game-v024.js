@@ -29,7 +29,7 @@ render=function(state){paperV024Render(state);
  for(const node of app.querySelectorAll('.shed-hair')){const h=getCat(state).body.hair.find(h=>h.id===node.dataset.hair);const image=node.querySelector('img');if(image)image.style.opacity=String(1-(h?.wipeProgress||0)*.65);}
 };
 const worldPaper=document.createElement('style');worldPaper.textContent=`
-body,button,input,textarea,select{font-family:"Yu Mincho","Hiragino Mincho ProN","BIZ UDPMincho",serif;letter-spacing:.035em}
+body,button,input,textarea,select{font-family:var(--game-font);letter-spacing:.035em}
 button,input,select,.label,.touch-switch-hint{font-weight:600}
 .place-chip,.room-chip{background:#e5d6b7!important;color:#7b664b!important;border-radius:10px 6px 12px 7px!important}
 .command-slot .command-emoji>.book-icon{max-width:29px;max-height:29px}

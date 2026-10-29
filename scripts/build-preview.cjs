@@ -28,8 +28,14 @@ source=source.replaceAll('src="assets/town-map.svg"', 'src="data:image/svg+xml;c
 source=source.replaceAll('href="assets/town-map.svg"', 'href="data:image/svg+xml;charset=utf-8,'+encodeURIComponent(readSource(path.join(root,'assets/town-map.svg')))+'"');
 source=source.replace(/<link rel="stylesheet" href="([^"]+)">/g,(_,relative)=>{
  const file=path.resolve(base,relative);if(!file.startsWith(root+path.sep))throw new Error('Invalid stylesheet');
- return '<style>'+readSource(file)+'</style>';
+ const css=readSource(file).replace(/url\(['"]?(\.\.?\/[^'"\)]+\.(?:otf|woff2?))['"]?\)/g,(_,asset)=>{
+  const font=path.resolve(path.dirname(file),asset);if(!font.startsWith(root+path.sep))throw new Error('Invalid font path');
+  const ext=path.extname(font).slice(1);return 'url("data:font/'+ext+';base64,'+fs.readFileSync(font).toString('base64')+'")';
+ });
+ return '<style>'+css+'</style>';
 });
+// Fonts are embedded above; a local-path preload would request a missing deployed file.
+source=source.replace(/<link\b[^>]*\bas="font"[^>]*>/g,'');
 if(relativePage!=='index.html'&&relativePage!=='check.html'&&relativePage!=='check-view.html'&&relativePage!=='heart-study.html'&&relativePage!=='heart-fall.html'){
  const back=relativePage.startsWith('art/')?'../../check.html':'check.html';
  source=source.replace('</body>',`<a href="${back}" target="_top" style="position:fixed;right:8px;bottom:8px;z-index:99999;background:#514940;color:#fff;padding:8px 12px;border-radius:24px;text-decoration:none;font:12px system-ui">チェック一覧へ</a></body>`);

@@ -49,11 +49,11 @@ function guidePresentation(state){
  setTextPage();
  layer.dataset.copyPending=String(page<pages.length-1);
  layer.addEventListener('click',e=>{if(!e.target.closest('[data-copy-page]'))return;e.preventDefault();e.stopImmediatePropagation();page++;guideTextPages.set(id,page);start=performance.now();setTextPage();layer.dataset.copyPending=String(page<pages.length-1);},true);
- const cue=key==='bait'?(encounterFoods(state).length===1?'tap':'swipe'):key==='moveFurniture'?'move-furniture':key==='trap'?'drag':['rescue','trapReady','toClinic','clinicBuilding','firstCommand','receipt','pay','shopBuilding','tools','starter','addCart','purchase','homeBuilding','layout','addFurniture','chooseFurniture','addMore','cutCardboard','name','callFirst','callAgain'].includes(key)?'tap':null;
- const noFocus=!!cue||['area','fieldHello','captured','clinicHello','healthy','stats','shopHello','shopHelloDetail','homeHello','roomExplain','roomReady','farewell','lifeStarts','askSenior','goodLuck','essentials','cardboard','callWait'].includes(key);
+ const cue=['swipe','clinicScroll'].includes(key)?'swipe-down':key==='bait'?(encounterFoods(state).length===1?'tap':'swipe'):key==='moveFurniture'?'move-furniture':key==='trap'?'drag':['rescue','trapReady','toClinic','clinicBuilding','firstCommand','receipt','pay','shopBuilding','tools','starter','addCart','purchase','homeBuilding','layout','addFurniture','chooseFurniture','addMore','cutCardboard','name','callFirst','callAgain'].includes(key)?'tap':null;
+ const noFocus=(!!cue&&! ['swipe','clinicScroll'].includes(key))||['area','fieldHello','captured','clinicHello','healthy','stats','shopHello','shopHelloDetail','homeHello','roomExplain','roomReady','farewell','lifeStarts','askSenior','goodLuck','essentials','cardboard','callWait'].includes(key);
  if(cue)layer.insertAdjacentHTML('beforeend',guideHand(cue));
  const hand=layer.querySelector('.guide-gesture');
- if(noFocus||['swipe','clinicScroll'].includes(key))ring.hidden=true;
+ ring.hidden=noFocus;
  const selector=typeof spec.target==='function'?spec.target():spec.target;
  const target=app.querySelector(selector);
  if(state.ui.layoutTrayOpen&&target?.closest('.furniture-grid'))target.scrollIntoView({block:'nearest'});
@@ -78,6 +78,7 @@ function guidePresentation(state){
   note.style.top=r&&r.top+r.height/2>a.top+a.height/2?'12px':'auto';note.style.bottom=note.style.top==='auto'?'12px':'auto';
   if(['field','trapInspect','clinic'].includes(state.campaign.phase)){note.style.top='18px';note.style.bottom='auto';}
   if(state.campaign.phase==='shop'){note.style.top='12px';note.style.bottom='auto';}
+  if(['swipe','clinicScroll'].includes(key)){note.style.top='92px';note.style.bottom='auto';if(hand){hand.style.left=(a.width*.72)+'px';hand.style.top=(a.height*.66)+'px';hand.dataset.kind=key==='swipe'?'swipe-down':'swipe-up';}}
   if(state.campaign.phase==='intake'){note.style.top=INTAKE_GUIDE_TOP+'px';note.style.bottom='auto';}
   guidePresentationFrame=requestAnimationFrame(tick);
  };tick();
@@ -95,7 +96,7 @@ render=function(state){
   veil.animate([{opacity:0},{opacity:1}],{duration:180,fill:'forwards'}).finished.then(()=>{snapshot.remove();return veil.animate([{opacity:1},{opacity:0}],{duration:260,fill:'forwards'}).finished;}).finally(()=>{snapshot.remove();veil.remove();guideNavigationBusy=false;});
  }
 };
-for(const event of ['click','pointerdown'])window.addEventListener(event,e=>{if(app.querySelector('[data-reading="true"]')||(app.querySelector('[data-copy-pending="true"]')&&!e.target.closest('[data-copy-page]'))){e.preventDefault();e.stopImmediatePropagation();}},true);
+for(const event of ['click','pointerdown'])window.addEventListener(event,e=>{if(e.target.closest('[data-alpha-report],.alpha-report,.alpha-layer'))return;if(app.querySelector('[data-reading="true"]')||(app.querySelector('[data-copy-pending="true"]')&&!e.target.closest('[data-copy-page]'))){e.preventDefault();e.stopImmediatePropagation();}},true);
 // Fade both sides of navigation, never re-enter the reducer while an exit is playing.
 const guideNavigationDispatch=dispatch;
 let guideNavigationBusy=false;

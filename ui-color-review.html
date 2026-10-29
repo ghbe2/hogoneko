@@ -1,0 +1,7 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>つぐねこ｜案内色の比較</title>
+<style>body{margin:0;background:#ece7d9;color:#504b3f;font:15px/1.6 Meiryo,sans-serif}header{max-width:1120px;margin:28px auto;padding:0 18px}h1{font-size:24px;margin:0}main{display:flex;gap:24px;justify-content:center;align-items:start;padding:0 18px 36px;flex-wrap:wrap}article{width:320px}h2{font-size:17px;margin:0 0 4px}p{margin:0 0 12px}article>p{min-height:52px}iframe{display:block;width:320px;height:568px;border:0;border-radius:20px;box-shadow:0 8px 25px #504b3f20}.swatch{display:inline-block;width:16px;height:16px;border-radius:50%;vertical-align:-2px;margin-right:8px}small{display:block;margin-top:10px}</style>
+<header><h1>操作の案内色を比べる</h1><p>背景・配置・アイコンは同じ。左上の回る枠、操作ボタン、タップの手を比較します。</p></header><main></main>
+<script>
+const palettes=[['赤茶','#9d5341','部屋の緑から分かれ、木や布の色ともつながる。'],['黄土','#926125','暖かく、道具やコインにもなじむ。'],['くすみ紫','#77516e','背景から明確に分かれ、案内を見つけやすい。']];
+for(const [name,color,copy]of palettes){const article=document.createElement('article');article.innerHTML=`<h2><i class="swatch" style="background:${color}"></i>${name}</h2><p>${copy}</p><iframe title="${name}の配色" src="index.html?check=1&scenario=room&palette-review=${color.slice(1)}"></iframe><small>本編の配色は、選定後に統一します。</small>`;document.querySelector('main').append(article);}
+</script></html>

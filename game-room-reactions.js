@@ -61,7 +61,7 @@ animateFelineTravel=function(node,from,to,...rest){
  if(node._travelAnimation?.playState==='running')from=visibleRoomCatPoint(node);
  node.dataset.travelTarget=key;node.dataset.travelSurface=to.surface||'floor';
  const animation=continuousRoomTravel(node,from,to,...rest),cue=currentLifeCue();
- if(animation&&cue){const arrival=Date.now()+animation.effect.getComputedTiming().duration;if(arrival>cue.started){const delay=arrival-cue.started;cue.started+=delay;cue.reveal+=delay;cue.until+=delay;scheduleLifeCueRefresh(cue);}}
+ if(animation&&cue){const arrival=Date.now()+animation.effect.getComputedTiming().duration;if(arrival>cue.started){const delay=arrival-cue.started;for(const queued of catLifeCues.slice(catLifeCues.indexOf(cue))){queued.started+=delay;queued.reveal+=delay;queued.until+=delay;scheduleLifeCueRefresh(queued);}}}
  return animation;
 };
 render=function(state){

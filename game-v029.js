@@ -1,8 +1,8 @@
 'use strict';
 // A real milestone, with a single persistent charge and resumable presentation.
-RELEASE_ECONOMY.surgery=12;
+RELEASE_ECONOMY.surgery=10;
 RELEASE_ECONOMY.graduation=0;
-const SURGERY_MS=2200;
+const SURGERY_MS=5500;
 const surgeryText=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function surgeryEligibility(state){
  const cat=getCat(state),goal=cat.age==='kitten'?CONFIG.cat.weightGoal.kitten:CONFIG.stage1.campaign.bodyGoal;
@@ -48,9 +48,9 @@ renderMapShop=function(state){
  const plan=carePlan(cat),booked=!!plan.surgeryDay;
  const hint=done?`譲渡会は${medical.completedDay+2}日目。おうちでゆっくり過ごそう。`:!e.healthy?'体調が整ってから申し込みましょう。':!e.weightReady?`目標は2,000g。あと${Math.ceil(e.goal-cat.body.weight).toLocaleString('ja-JP')}gです。`:cat.age==='kitten'?'まずは最初の１週間、子猫の成長を見守りましょう。':e.dayReady?'今日は手術の日。ごはんをお休みして来院できました。':booked?`${plan.surgeryDay}日目の手術を予約しました。予約中は、ごはんをお休みします。`:e.day+1<e.minDay?`手術は最短${e.minDay}日目。おうちで落ち着く時間も必要です。`:'アプリから翌日の手術を予約できます。予約後はごはんを休み、当日も2,000g以上・体調良好が条件です。';
  const row=(label,value,ok)=>`<div class="surgery-check"><span class="medical-check ${ok?'ok':''}">${ok?'✓':'○'}</span><span>${label}</span><strong>${value}</strong></div>`;
-const body=`<section class="surgery-sheet ${done?'surgery-done':''} ${busy?'surgery-busy':''}"><div class="surgery-room"><div class="surgery-cat">${renderCatArt(cat)}</div>${busy?'<span class="surgery-snip" aria-hidden="true"><i></i><b>ぱっちん</b></span>':done?'<span class="surgery-stamp">手術済み ✓</span>':''}</div><header><small>${surgeryText(cat.name||'この子')}・保護生活${e.day}日目</small><h1>${title}</h1></header>${busy?'<p class="surgery-copy" role="status">不妊去勢手術を終えた目印に、<br>耳に小さなカットを。</p>':done?`<div class="surgery-receipt"><span>手術の記録</span><strong>${medical.completedDay}日目</strong><span>${state.coins<0?'医療費（未払いあり）':'お支払い済み'}</span><strong>${medical.paid} コイン</strong></div><p class="surgery-copy">${hint}</p>`:`<div class="surgery-checks">${row('体重',`${Math.round(cat.body.weight).toLocaleString('ja-JP')} / ${e.goal.toLocaleString('ja-JP')}g`,e.weightReady)}${row('体調',e.healthy?'落ち着いています':'準備中',e.healthy)}</div><p class="surgery-copy" role="status">${hint}</p><div class="surgery-price"><span>手術</span><strong>12 コイン</strong><small>所持 ${state.coins} コイン</small></div>`}<small class="medical-footnote">このゲーム内の目安です。現実の手術は獣医師が判断します。</small></section>`;
+const body=`<section class="surgery-sheet ${done?'surgery-done':''} ${busy?'surgery-busy':''}"><div class="surgery-room"><div class="surgery-cat">${renderCatArt(cat)}</div>${busy?'<span class="surgery-snip" aria-hidden="true"><i></i><b>ぱっちん</b></span>':done?'<span class="surgery-stamp">手術済み ✓</span>':''}</div><header><small>${surgeryText(cat.name||'この子')}・保護生活${e.day}日目</small><h1>${title}</h1></header>${busy?'<p class="surgery-copy" role="status">不妊去勢手術を終えた目印に、<br>耳に小さなカットを。</p>':done?`<div class="surgery-receipt"><span>手術の記録</span><strong>${medical.completedDay}日目</strong><span>${state.coins<0?'医療費（未払いあり）':'お支払い済み'}</span><strong>${medical.paid} コイン</strong></div><p class="surgery-copy">${hint}</p>`:`<div class="surgery-checks">${row('体重',`${Math.round(cat.body.weight).toLocaleString('ja-JP')} / ${e.goal.toLocaleString('ja-JP')}g`,e.weightReady)}${row('体調',e.healthy?'落ち着いています':'準備中',e.healthy)}</div><p class="surgery-copy" role="status">${hint}</p><div class="surgery-price"><span>手術</span><strong>10 コイン</strong><small>所持 ${state.coins} コイン</small></div>`}<small class="medical-footnote">このゲーム内の目安です。現実の手術は獣医師が判断します。</small></section>`;
  const returnHome=state.campaign.requiredVisit||state.campaign.medicalStage;
- const primary=e.canBook?'<button class="campaign-button" data-action="book-surgery">明日の手術を予約する</button>':e.dayReady?`<button class="campaign-button" data-action="start-surgery">${!e.ready?'今日は見合わせる':poor?'手術する（不足分は未払い）':'コイン12枚で手術する'}</button>`:'';
+ const primary=e.canBook?'<button class="campaign-button" data-action="book-surgery">明日の手術を予約する</button>':e.dayReady?`<button class="campaign-button" data-action="start-surgery">${!e.ready?'今日は見合わせる':poor?'手術する（不足分は未払い）':'コイン10枚で手術する'}</button>`:'';
  const actions=busy?'':done?'<button class="campaign-button" data-action="leave-surgery-clinic">おうちへ帰ろう</button>':primary+'<button class="campaign-button secondary" data-action="leave-surgery-clinic">おうちへ戻る</button>';
  const template=document.createElement('template');template.innerHTML=body;
  const sheet=template.content.firstElementChild,room=sheet.querySelector('.surgery-room');room.remove();
@@ -65,7 +65,7 @@ const beforeSurgerySchedule=renderSchedule;
 renderSchedule=function(state,cat){
  const template=document.createElement('template');template.innerHTML=beforeSurgerySchedule(state,cat);
  const day5=[...template.content.querySelectorAll('.timeline-card')].find(n=>n.querySelector('small')?.textContent.match(/^5日目/));
- if(day5){day5.querySelector('strong').textContent=cat.surgery?.status==='done'?'手術の準備・確認':'手術の目標';day5.querySelector('span').textContent=cat.surgery?.status==='done'?`${cat.surgery.completedDay}日目に手術済み`:`体重${surgeryEligibility(state).goal}g以上・12コイン`;}
+ if(day5){day5.querySelector('strong').textContent=cat.surgery?.status==='done'?'手術の準備・確認':'手術の目標';day5.querySelector('span').textContent=cat.surgery?.status==='done'?`${cat.surgery.completedDay}日目に手術済み`:`体重${surgeryEligibility(state).goal}g以上・10コイン`;}
  const completed=[...template.content.querySelectorAll('.timeline-card')].find(n=>n.querySelector('small')?.textContent.match(new RegExp(`^${cat.surgery?.completedDay}日目`)));
  if(cat.surgery?.status==='done'&&completed){completed.querySelector('strong').textContent=cat.surgery.completedDay===CONFIG.stage1.adoptionEventDay?'手術完了・譲渡会':'手術を終えた ✓';completed.querySelector('span').textContent='卒業へ、ひとつ前進';completed.classList.remove('quiet');}
  const go=template.content.querySelector('[data-action="go-event"]');
@@ -86,10 +86,10 @@ getScreenGuide=function(state){
  if(state.campaign.phase==='shop'&&state.campaign.shopId==='clinic'&&getCat(state).status==='raising')return {title:'からだの準備を確認しよう',detail:'体重2,000g以上・体調良好になったら、翌日の手術を申し込めます。'};
  return beforeSurgeryGuide(state);
 };
-let surgeryTimer=null,surgeryTimerKey=null;
+let surgeryTimer=null,surgeryTimerKey=null,surgerySnipFrame=0;
 const beforeSurgeryRender=render;
 render=function(state){
- beforeSurgeryRender(state);
+ cancelAnimationFrame(surgerySnipFrame);beforeSurgeryRender(state);
  const medical=getCat(state).surgery;
  const key=medical?.status==='in_progress'?`${getCat(state).id}:${medical.startedAt}`:null;
  if(key!==surgeryTimerKey){clearTimeout(surgeryTimer);surgeryTimerKey=key;if(key)surgeryTimer=setTimeout(()=>dispatch({type:'FINISH_SURGERY'}),Math.max(0,SURGERY_MS-(gameNow()-medical.startedAt))+50);}
@@ -97,11 +97,13 @@ render=function(state){
  if(room){room.style.setProperty('--clinic-wall',state.season==='winter'?'#d6ddd0':'#d4dcc6');room.insertAdjacentHTML('afterbegin','<div class="surgery-setting" aria-hidden="true"><span class="surgery-poster">診察室<i></i><i></i><i></i></span><span class="surgery-window"></span><span class="surgery-table"></span></div>');}
  const snip=app.querySelector('.surgery-snip');
  if(snip&&medical?.startedAt){
+  const art=room.querySelector('.surgery-cat');if(art)art.style.animationDelay=`-${Math.max(0,gameNow()-medical.startedAt)}ms`;
   // Cat's left ear is viewer-right in the front-facing rig (earCut:'left').
   const ear=room.querySelector(getCat(state).sex==='male'?'[data-part="innerL"]':'[data-part="innerR"]')||room.querySelector('.surgery-cat');
-  const r=room.getBoundingClientRect(),e=ear.getBoundingClientRect();
+  const follow=()=>{if(!room.isConnected)return;const r=room.getBoundingClientRect(),e=ear.getBoundingClientRect();
   snip.style.left=(e.left+e.width/2-r.left)+'px';snip.style.top=(e.top+e.height/3-r.top)+'px';
   snip.querySelector('b').style.top=Math.max(-28,8-parseFloat(snip.style.top))+'px';
+  surgerySnipFrame=requestAnimationFrame(follow);};follow();
   snip.style.animationDelay=`-${Math.max(0,gameNow()-medical.startedAt)}ms`;
  }
  if(medical?.status==='in_progress'&&room){const frame=room.closest('.campaign-frame');frame.querySelectorAll('button').forEach(button=>button.disabled=true);}
@@ -138,9 +140,9 @@ const surgeryStyle=document.createElement('style');surgeryStyle.textContent=`
 .surgery-actions>p{width:100%;font-size:13px;text-align:center;margin:auto 0}
 .surgery-receipt{display:grid;grid-template-columns:1fr auto;gap:10px;padding:12px;background:#ecefdc;border-radius:12px;font-size:13px}
 .surgery-stamp{position:absolute;right:14px;top:14px;background:#fff8e9e8;padding:8px 14px;border:1px solid #829373;border-radius:18px;color:#526b46;font-size:12px}
-.surgery-snip{position:absolute;pointer-events:none;z-index:3;animation:ear-snip 2.2s linear both;transform-origin:center}.surgery-snip i{display:block;width:26px;height:26px;background:#fff6cf;clip-path:polygon(50% 0,60% 35%,100% 25%,72% 54%,100% 85%,60% 69%,43% 100%,38% 65%,0 75%,26% 49%,0 20%,38% 32%);transform:translate(-50%,-50%)}.surgery-snip b{position:absolute;left:12px;top:-28px;white-space:nowrap;background:#fff8e9;color:#806442;padding:5px 10px;border-radius:14px;font-size:14px;font-weight:500;box-shadow:0 2px 0 #b6a98255}
+.surgery-snip{position:absolute;pointer-events:none;z-index:3;animation:ear-snip 5.5s linear both;transform-origin:center}.surgery-snip i{display:block;width:26px;height:26px;background:#fff6cf;clip-path:polygon(50% 0,60% 35%,100% 25%,72% 54%,100% 85%,60% 69%,43% 100%,38% 65%,0 75%,26% 49%,0 20%,38% 32%);transform:translate(-50%,-50%)}.surgery-snip b{position:absolute;left:12px;top:-28px;white-space:nowrap;background:#fff8e9;color:#806442;padding:5px 10px;border-radius:14px;font-size:14px;font-weight:500;box-shadow:0 2px 0 #b6a98255}
 .medical-notebook-chip{background:#e2eadb!important;color:#52704c!important}
-@keyframes ear-snip{0%,53%{opacity:0;scale:.7}59%{opacity:1;scale:1.16}68%,96%{opacity:1;scale:1}100%{opacity:0;scale:1}}
+@keyframes ear-snip{0%,70%{opacity:0;scale:.7}75%{opacity:1;scale:1.16}80%,96%{opacity:1;scale:1}100%{opacity:0;scale:1}}
 @media(prefers-reduced-motion:reduce){.surgery-snip{animation:none;opacity:1}}
 @media(max-height:650px){.surgery-sheet{padding:12px;gap:6px}.surgery-information{gap:6px}.surgery-sheet h1{font-size:18px}}
 `;document.head.append(surgeryStyle);

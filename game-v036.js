@@ -52,7 +52,7 @@ function bondTick(now){
  if(heartLayer.parentElement!==stage)stage.append(heartLayer);
  if(!heartLayer.firstChild)heartLayer.innerHTML='<div class="bond-cluster"><div class="bond-charge"><span class="bond-heart">'+BOND_HEART+'</span></div></div>';
  const s=stage.getBoundingClientRect(),c=node.getBoundingClientRect(),cluster=heartLayer.firstChild;
- cluster.style.left=Math.max(65,Math.min(s.width-65,c.left-s.left+c.width/2))+'px';cluster.style.top=Math.max(100,c.top-s.top-12)+'px';
+ cluster.style.left=Math.max(65,Math.min(s.width-65,c.left-s.left+c.width/2))+'px';cluster.style.top=Math.max(70,c.top-s.top+18)+'px';
  const whole=Math.floor(heartShow.target+.00001),bank=Math.floor(whole/10)*10,reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,heart=cluster.querySelector('.bond-heart');
  if(heartShow.flight&&(now-heartShow.flight.start>=850||reduced)){
   heartShow.bank=heartShow.flight.bank;heartShow.flight=null;heart.getAnimations().forEach(a=>a.cancel());
@@ -70,7 +70,7 @@ function bondTick(now){
  }
  cluster.querySelector('.bond-charge').classList.toggle('is-pulsing',canEarn&&!heartShow.flight);
  // The growing heart is the remainder, not the lifetime score. Its box never moves.
- heart.style.scale=String(.55+.65*charge/10);heart.style.visibility='visible';
+ heart.style.scale=String(.65+1.15*charge/10);heart.style.visibility='visible';
  cluster.dataset.charge=String(charge);cluster.dataset.total=String(heartShow.bank);
  heartShow.lastWhole=whole;
  heartShow.value=heartShow.target;requestAnimationFrame(bondTick);

@@ -81,6 +81,7 @@ render=function(state){
 };
 // Explanatory steps cannot accidentally navigate away; swipe remains a real gesture.
 function gateTownInput(event){
+ if(event.target.closest('[data-alpha-report],.alpha-report,.alpha-layer'))return;
  const spec=currentTownTutorial(gameState);if(!spec||event.target.closest('.tutorial-note'))return;
  if(gameState.onboarding.townStep==='swipe'&&event.type!=='click'&&event.target.closest('.town-map-scroll'))return;
  if(gameState.onboarding.townStep==='rescue'&&event.target.closest(spec.target))return;

@@ -198,8 +198,8 @@ function fitFirstPortrait(svg){
 const firstRender=render;
 render=function(state){
  cancelAnimationFrame(firstFrame);clearTimeout(firstTimer);clearTimeout(shopExitTimer);state=repairIntakePlacement(state);if(guidedIntake(state))gameState=state;firstRender(state);
- if(guidedIntake(state)){
-  app.querySelector('.intake-layout')?.classList.add('guided-intake');
+ if(state.campaign.phase==='intake'){
+  if(guidedIntake(state))app.querySelector('.intake-layout')?.classList.add('guided-intake');
   const r=intakePlacementFrame(state).carrier,cage=app.querySelector('.room-carrier'),emerging=app.querySelector('.intake-emerging-cat');
   if(cage)Object.assign(cage.style,{left:(r.x+r.width/2)+'px',top:(r.y+r.height/2)+'px',width:r.width+'px',height:r.height+'px'});
   if(emerging)Object.assign(emerging.style,{left:(r.x+r.width/2)+'px',top:(r.y+r.height-67)+'px'});
@@ -221,7 +221,7 @@ render=function(state){
  }
  if(state.campaign.phase==='clinic'&&getCat(state).status==='captured'&&state.campaign.clinicStep==='exam')firstTimer=setTimeout(()=>dispatch({type:'FINISH_EXAM'}),Math.max(0,3000-(Date.now()-(state.campaign.firstExamAt||Date.now()))));
  if(state.ui.storeThanks&&state.campaign.phase==='shop')shopExitTimer=setTimeout(()=>dispatch({type:'BACK_TO_TOWN'}),Math.max(0,(state.ui.storeLeaveAt||Date.now()+3000)-Date.now()));
- if(state.ui.firstName){const panel=document.createElement('div');panel.className='first-name modal-layer';panel.innerHTML=`<section><div class="first-name-cat">${renderCatArt(getCat(state))}</div><h2>なまえ決まった？</h2><input maxlength="8" aria-label="ネコの名前"><button data-first="name">決定</button></section>`;panel.querySelector('input').value=state.campaign.nameDraft||'';app.append(panel);mountGameCats();return;}
+ if(state.ui.firstName){const panel=document.createElement('div');panel.className='first-name modal-layer';panel.innerHTML=`<section><div class="first-name-cat">${renderCatArt(getCat(state))}</div><h2>なまえ決まった？</h2><input maxlength="8" aria-label="ネコの名前（8文字まで）"><button data-first="name">決定</button></section>`;panel.querySelector('input').value=state.campaign.nameDraft||'';app.append(panel);mountGameCats();return;}
  if(!firstActive(state)||titleScreenOpen)return;
  const spec=FIRST_GUIDES[state.onboarding.guide];if(!spec)return;
  if(state.onboarding.guide==='chartReview'){const cue=document.createElement('div');cue.className='chart-pay-cue';cue.innerHTML=guideHand();app.querySelector('.campaign-actions')?.append(cue);return;}
@@ -235,6 +235,7 @@ app.addEventListener('click',event=>{
 });
 app.addEventListener('input',event=>{if(event.target.matches('.first-name input')){gameState={...gameState,campaign:{...gameState.campaign,nameDraft:event.target.value}};saveGameState(gameState);}});
 function gateFirstInput(event){
+ if(event.target.closest('[data-alpha-report],.alpha-report,.alpha-layer'))return;
  if(!firstActive(gameState)||titleScreenOpen)return;
  if(gameState.ui.firstName){if(event.target.closest('.first-name'))return;event.preventDefault();event.stopImmediatePropagation();return;}
  const spec=FIRST_GUIDES[gameState.onboarding.guide];if(!spec||event.target.closest('.first-guide-note'))return;

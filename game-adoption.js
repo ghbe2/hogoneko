@@ -75,6 +75,7 @@ function paintAdoption(view,time){
   view.root.querySelector('.adoption-basket-tag').textContent=name;
   view.root.querySelector('.adoption-basket').setAttribute('aria-label',`かごの中の${name}`);find('cat').setAttribute('aria-label',name);
   view.speech.textContent=phase==='thanks'?`大切に、一緒に暮らします。\n${name}を育ててくれて、ありがとう。`:`あの……${name}を、\n家族に迎えたいんです。`;
+  view.root.querySelector('.adoption-panel').style.visibility=['ready','result'].includes(phase)?'visible':'hidden';
   const ready=isGraduationReady(state);
   let text=['最後の挑戦','この子の、これからへ。',ready?'育ててきた日々を、この出会いへ。\n準備ができたら、譲渡会をはじめよう。':'もう少し、おうちで準備を続けよう。\n体調と手術の記録を確認しましょう。','譲渡会をはじめる','BEGIN_ADOPTION',!ready];
   if(phase==='walking')text=['譲渡会・見守る時間','どんな出会いがあるだろう。','会場を、人が行き交う。\n気づいて、足を止める人もいる。','見守っています','',true];
@@ -85,7 +86,7 @@ function paintAdoption(view,time){
   find('step').textContent=text[0];find('heading').textContent=text[1];find('copy').textContent=text[2];find('copy').style.whiteSpace='pre-line';find('next').textContent=text[3];find('next').dataset.adoptionAction=text[4];find('next').disabled=text[5];
   view.root.querySelector('.adoption-panel').inert=!['ready','result'].includes(phase);
   const secondary=find('secondary');secondary.hidden=phase!=='ready';secondary.disabled=false;secondary.textContent='←';secondary.setAttribute('aria-label','おうちへ戻る');secondary.dataset.adoptionAction='POSTPONE_EVENT';
-  find('aside').textContent=phase==='ready'?'育ててきた日々を、この出会いへ。':phase==='result'?(adopted?'「この子と、一緒に暮らしたいです。」':'返したあとも、見守りは続く。'):'';
+  find('aside').textContent='';
   find('result-kicker').textContent=adopted?'この出会いが、未来になった':'保護活動の、ひとつの区切り';find('result-word').textContent=adopted?'譲渡成立':'元いた街へ';
  }
  if(phase==='walking')adoptionVisitors(view,seconds,run.grade);

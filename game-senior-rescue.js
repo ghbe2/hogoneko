@@ -27,7 +27,8 @@ reduceGameState=function(s,a){
   if(!next.campaign.intakeCalled)return {...next,cats:next.cats.map(n=>n.id===c.id?{...n,seniorHelpUnlocked:true,seniorPromptDismissed:false}:n)};
   return next;
  }
- if(a.type==='SENIOR_HELP_OPEN'&&seniorCanHelp(s))return {...s,cats:s.cats.map(n=>n.id===c.id?{...n,seniorPromptDismissed:true}:n),ui:{...s.ui,seniorHelp:true}};
+ if(a.type==='SENIOR_HELP_OPEN'&&seniorCanHelp(s))return {...s,cats:s.cats.map(n=>n.id===c.id?{...n,seniorPromptDismissed:true}:n),ui:{...s.ui,seniorHelp:true,seniorHelpPage:0}};
+ if(a.type==='SENIOR_HELP_NEXT'&&s.ui.seniorHelp)return {...s,ui:{...s.ui,seniorHelpPage:(s.ui.seniorHelpPage||0)+1}};
  if(a.type==='SENIOR_HELP_CLOSE')return {...s,ui:{...s.ui,seniorHelp:false}};
  if(a.type==='SENIOR_GIFT'&&s.ui.seniorHelp&&seniorCanHelp(s)&&!c.seniorGift){return {...s,cats:s.cats.map(n=>n.id===c.id?{...n,seniorGift:true}:n),inventory:{...s.inventory,[SENIOR_GIFT_ID]:1},durability:{...s.durability,[SENIOR_GIFT_ID]:3},ui:{...s.ui,seniorHelp:true}};}
  // Recovery rewards are independent of the regular daily reward. Never replay a claim.
@@ -54,7 +55,7 @@ render=function(s){seniorRender(s);
  if(s.ui.appRewardStarted&&reward){reward.removeAttribute('data-app-reward');reward.dataset.seniorCancel='';reward.disabled=false;reward.innerHTML='広告再生中（モック）<br>中止する';}
  if(!s.ui.seniorHelp||s.campaign.phase!=='intake')return;
  const c=getCat(s),missing=getRoomComfortBreakdown(s).missingEssential.map(id=>getItem(id).label),text=missing.length?ACTIVITY_DIALOGUE.seniorMissing.copy.replace('{家具}',missing.join('・')):ACTIVITY_DIALOGUE[c.seniorGift?'seniorGiftPlace':'seniorGiftOffer'].copy;
- const offer=!c.seniorGift&&!missing.length;
- const panel=document.createElement('div');panel.className='center-help modal-layer';panel.setAttribute('role','dialog');panel.setAttribute('aria-label','先輩に相談');panel.innerHTML=`${offer?'<button class="senior-dialog-close" data-senior-close aria-label="相談を閉じる">×</button>':''}<section class="shared-guide-note senior-review">${seniorDialogueContents(text,offer?'<button data-senior-gift>受け取る</button>':'<button data-senior-close>閉じる</button>')}</section>`;app.append(panel);
+ const ready=!c.seniorGift&&!missing.length;const page=s.ui.seniorHelpPage||0;const offer=ready&&page>=2;const words=ready&&page<2?['まだ、少し緊張しているみたいですね。急がなくても大丈夫。一緒に、お部屋を見てみましょう。','落ち着ける場所を探しているのかもしれませんね。うちで使っていたマットがあるので、試してみませんか。'][page]:text;
+ const panel=document.createElement('div');panel.className='center-help modal-layer';panel.setAttribute('role','dialog');panel.setAttribute('aria-label','先輩に相談');panel.innerHTML=`${offer?'<button class="senior-dialog-close" data-senior-close aria-label="相談を閉じる">×</button>':''}<section class="shared-guide-note senior-review">${seniorDialogueContents(words,ready&&page<2?'<button data-senior-next>つぎへ</button>':offer?'<button data-senior-gift>受け取る</button>':'<button data-senior-close>閉じる</button>')}</section>`;app.append(panel);
 };
-app.addEventListener('click',e=>{if(e.target.closest('[data-senior-help]'))dispatch({type:'SENIOR_HELP_OPEN'});if(e.target.closest('[data-senior-close]'))dispatch({type:'SENIOR_HELP_CLOSE'});if(e.target.closest('[data-senior-gift]'))dispatch({type:'SENIOR_GIFT'});if(e.target.closest('[data-senior-cancel]'))dispatch({type:'SENIOR_AD_CANCEL'});});
+app.addEventListener('click',e=>{if(e.target.closest('[data-senior-next]'))dispatch({type:'SENIOR_HELP_NEXT'});if(e.target.closest('[data-senior-help]'))dispatch({type:'SENIOR_HELP_OPEN'});if(e.target.closest('[data-senior-close]'))dispatch({type:'SENIOR_HELP_CLOSE'});if(e.target.closest('[data-senior-gift]'))dispatch({type:'SENIOR_GIFT'});if(e.target.closest('[data-senior-cancel]'))dispatch({type:'SENIOR_AD_CANCEL'});});

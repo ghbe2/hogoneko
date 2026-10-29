@@ -51,7 +51,7 @@ function syncActivityAffordances(state){
   Object.assign(layer.querySelector('.guide-gesture').style,{left:r.x-a.x+r.width/2+'px',top:r.y-a.y+r.height/2+'px'});
  }
 }
-for(const kind of ['pointerdown','click'])window.addEventListener(kind,event=>{if(gameState.onboarding.appIntro==='prompt'&&gameState.campaign.phase==='room'&&!event.target.closest('[data-action="open-notebook"]')){event.preventDefault();event.stopImmediatePropagation();}},true);
+for(const kind of ['pointerdown','click'])window.addEventListener(kind,event=>{if(event.target.closest('[data-alpha-report],.alpha-report,.alpha-layer'))return;if(gameState.onboarding.appIntro==='prompt'&&gameState.campaign.phase==='room'&&!event.target.closest('[data-action="open-notebook"]')){event.preventDefault();event.stopImmediatePropagation();}},true);
 const feedbackRender=render;
 render=function(state){
  const normalized=normalizeStarterCart(state);if(normalized!==state){state=normalized;gameState=state;}

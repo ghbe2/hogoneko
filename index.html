@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#f4bfc7">
   <title>ホゴネコ｜保護から卒業までモック v0.37</title>
+  <link rel="preload" href="assets/fonts/nikumaru/nikumaru.otf" as="font" type="font/otf" crossorigin>
+  <link rel="stylesheet" href="assets/game-font.css">
   <style>
     :root {
       color-scheme: light;
@@ -19,7 +21,7 @@
       --sage-dark: #667b5f;
       --line: rgba(71, 59, 58, .16);
       --shadow: 0 10px 30px rgba(99, 67, 63, .16);
-      font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+      font-family:var(--game-font);
     }
 
     * { box-sizing: border-box; }
@@ -3579,7 +3581,7 @@ function renderIntake(state, cat) {
     <header class="hud"><div class="hud-main"><span class="place-chip">おうち</span></div><div class="hud-side"><strong>${DAY_LABELS[state.week.dayOfWeek]}曜日</strong><span>💰 ${state.coins.toLocaleString("ja-JP")}</span></div></header>
     <section class="stage"><div class="room-world" style="width:${worldWidth * 100}%;left:-${state.ui.roomPan}%" data-room-world><div class="wall"></div><div class="floor"></div><div class="curtain left"></div><div class="curtain right"></div>${state.ui.layoutMode ? '<div class="layout-zones" aria-hidden="true"><div class="layout-zone wall-zone"><span>壁に置くもの</span></div><div class="layout-zone floor-zone"><span>床に置くもの</span></div></div>' : ''}${renderFixedWindow(state, CONFIG.stage1.clueCycle[0])}${getPlaced(room).map(placed => renderPlacedItem(placed, state, CONFIG.stage1.clueCycle[0])).join("")}<div class="room-carrier ${called ? "called" : ""} ${mood.disliked.length ? "uneasy" : ""}" aria-label="奥に置いた猫のキャリー"></div>${callScene}</div>
       ${called ? "" : state.ui.layoutMode && state.ui.layoutTrayOpen ? renderLayoutPalette(state) : `<button class="layout-tray-toggle" data-action="toggle-layout">${state.ui.layoutMode ? '完了' : '模様替え'}</button>`}${renderDebugQuickbar(state, true)}${state.ui.debugIntakeOpen ? renderIntakeDebug(state) : ""}</section>
-    <footer class="intake-footer">${called ? `${callName}が、キャリーから出てくる` : `<button class="intake-footer-call" data-action="call-intake-cat">「${callName}」と呼ぶ</button>`}</footer>
+    <footer class="intake-footer">${called ? `` : `<button class="intake-footer-call" data-action="call-intake-cat">「${callName}」と呼ぶ</button>`}</footer>
   </section>`;
 }
 
@@ -5258,6 +5260,11 @@ triggerAutoEvent=function(){
 <script src="game-room-reactions.js"></script>
 <link rel="stylesheet" href="assets/senior-rescue.css">
 <link rel="stylesheet" href="assets/action-buttons.css">
+<link rel="stylesheet" href="assets/alpha-meeting.css">
+<script src="assets/vendor/html2canvas.min.js"></script>
+<script src="alpha-report-config.js"></script>
+<script src="game-alpha-report.js"></script>
+<script src="game-alpha-meeting.js"></script>
 <script>
 // Render only after every module has installed its current rules and artwork.
 document.addEventListener('DOMContentLoaded', () => render(gameState), {once:true});

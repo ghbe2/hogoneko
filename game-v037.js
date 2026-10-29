@@ -212,7 +212,7 @@ const openingStyle=document.createElement('style');openingStyle.textContent=`
 #app .main-command-row{position:relative;display:flex;align-items:center;justify-content:space-evenly;height:88px;width:calc(100% - 94px);gap:4px}
 #app .main-command-row .main-command{position:relative;flex:none;transform:none}
 #app .sub-command-row{position:absolute;right:8px;top:0}
-#app .tiered-dock .main-command small{font:700 14px/1.2 system-ui,sans-serif;min-width:26px;padding:3px 5px;top:-8px;right:-4px;background:#746044;color:#fffdf5}
+#app .tiered-dock .main-command small{font:700 14px/1.2 var(--game-font);min-width:26px;padding:3px 5px;top:-8px;right:-4px;background:#746044;color:#fffdf5}
 #app .layout-zone.floor-zone{top:var(--placement-floorTop);height:calc(var(--placement-floorBottom) - var(--placement-floorTop));bottom:auto}
 #app .campaign-button{border:1px solid #f0e5d4;border-radius:32px;background:#fff8e9;color:#715746;box-shadow:0 3px 12px #70553414;font-weight:500;transition:transform .15s,background .15s}
 #app .campaign-button.secondary{background:#ffffff75;border-color:#d9c8ae;box-shadow:none;color:#806b58}
@@ -318,7 +318,7 @@ render=function(state){
  // The app button is created by the outer room renderer later in this frame.
  requestAnimationFrame(()=>{if(!coin.isConnected)return;const target=app.querySelector('.room-icon-menu [data-action="open-notebook"]'),r=target?.getBoundingClientRect(),from=coin.getBoundingClientRect();const dx=r?r.left+r.width/2-from.left-from.width/2:0,dy=r?r.top+r.height/2-from.top-from.height/2:-25;coin.dataset.destination='app';coin.animate([{translate:'0 0',opacity:0,scale:.5},{offset:.2,translate:'0 -25px',opacity:1,scale:1.1},{offset:.6,translate:'0 -25px',opacity:1,scale:1},{translate:`${dx}px ${dy}px`,opacity:0,scale:.45}],{duration:1600,fill:'forwards'});setTimeout(()=>coin.remove(),1700);});
 };
-const discoveryStyle=document.createElement('style');discoveryStyle.textContent='.discovery-glint{position:absolute;pointer-events:none;color:#d6ac54;font-size:20px;animation:discovery-glint 3s ease-in-out infinite}.discovery-coin{position:absolute;z-index:90;pointer-events:none;color:#ba872d;font:bold 16px system-ui;text-shadow:0 2px #fff8}@keyframes discovery-glint{50%{opacity:.2;scale:.7}}@media(prefers-reduced-motion:reduce){.discovery-glint{animation:none}}';document.head.appendChild(discoveryStyle);
+const discoveryStyle=document.createElement('style');discoveryStyle.textContent='.discovery-glint{position:absolute;pointer-events:none;color:#d6ac54;font-size:20px;animation:discovery-glint 3s ease-in-out infinite}.discovery-coin{position:absolute;z-index:90;pointer-events:none;color:#ba872d;font:bold 16px var(--game-font);text-shadow:0 2px #fff8}@keyframes discovery-glint{50%{opacity:.2;scale:.7}}@media(prefers-reduced-motion:reduce){.discovery-glint{animation:none}}';document.head.appendChild(discoveryStyle);
 // The paw and coin share one clock and the cat's ground-space coordinates.
 function discoveryContactMotion(t){
  const smooth=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};

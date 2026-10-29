@@ -1,7 +1,7 @@
 'use strict';
 function householdCapacity(state){return state.flags.returnedCat?2+(state.household?.renovation||0):1;}
 function residentCats(state){return state.cats.filter(c=>['raising','intake','captured'].includes(c.status));}
-function resetHouseholdCandidate(cat){const next={...cat};for(const key of ['carePlan','initialAge','permanentResident','returnTutorial','previousDayHeart','seniorGift','seniorHelpUnlocked','seniorPromptDismissed'])delete next[key];return next;}
+function resetHouseholdCandidate(cat){const next={...cat};for(const key of ['carePlan','initialAge','permanentResident','returnTutorial','previousDayHeart','seniorGift','seniorHelpUnlocked','seniorPromptDismissed','alphaLayoutTried','alphaMessSeen'])delete next[key];return next;}
 const householdRoll=rollEncounter;
 rollEncounter=function(state,food,random=Math.random){let e=householdRoll(state,food,random);if(e.cat.age==='adult'&&!isFirstActivity(state)){const base=['slim','skinny'].includes(e.cat.phenotype?.body)?1780:e.cat.phenotype?.body==='round'?1900:1840,sampled=base+Math.floor(random()*80);e={...e,cat:{...e.cat,body:{...e.cat.body,weight:sampled%10?sampled:sampled+3}}};}if(state.campaign.area==='a2'&&!state.flags.parkFirstRescue)e={...e,cat:{...e.cat,age:'kitten',initialAge:'kitten',returnTutorial:true,estimatedAgeMonths:3,phenotype:{...e.cat.phenotype,age:'kitten'},body:{...e.cat.body,weight:883+Math.floor(random()*70)}}};return e;};
 function returnChance(cat){return cat.returnTutorial?1:cat.heart>=90?Math.min(.55,(Math.floor(cat.heart)-89)*.05):0;}

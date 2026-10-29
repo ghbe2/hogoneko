@@ -22,9 +22,9 @@ function seniorArt(){return `<svg viewBox="0 0 220 270" aria-label="ネコを抱
 <path d="M68 63Q60 14 105 12q48-4 49 51l-7 35H72Z" fill="#655d4d"/>
 <ellipse cx="109" cy="65" rx="35" ry="40" fill="#e3bd98"/>
 <path d="M73 57Q62 18 104 14q39-4 46 38l-24-18-14 10-13-9Z" fill="#655d4d"/>
-<path d="M87 64l9-1m26 0 9 1" stroke="#615a49" stroke-width="3" stroke-linecap="round"/>
+<g class="senior-face-features"><path d="M87 64l9-1m26 0 9 1" stroke="#615a49" stroke-width="3" stroke-linecap="round"/>
 <path d="M100 83q10 7 19-1" fill="none" stroke="#a57660" stroke-width="2.5" stroke-linecap="round"/>
-<ellipse cx="86" cy="76" rx="7" ry="3" fill="#dca58c"/><ellipse cx="133" cy="76" rx="7" ry="3" fill="#dca58c"/>
+<ellipse cx="86" cy="76" rx="7" ry="3" fill="#dca58c"/><ellipse cx="133" cy="76" rx="7" ry="3" fill="#dca58c"/></g>
 </g>
 ${seniorCompanionArt()}<path d="M66 129Q58 152 69 169Q77 181 94 187M153 129Q163 154 148 170Q138 180 124 186" fill="none" stroke="#b98466" stroke-width="18" stroke-linecap="round"/>
 <path d="M92 185Q102 190 111 189M125 185Q118 190 110 190" fill="none" stroke="#e3bd98" stroke-width="10" stroke-linecap="round"/>

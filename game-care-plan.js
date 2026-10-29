@@ -31,7 +31,7 @@ function applySurgeryFasting(state,at=gameNow()){
 function careNotice(state){
  const cat=getCat(state),plan=carePlan(cat),day=cat.body.days+1;
  if(cat.status!=='raising'||cat.permanentResident)return null;
- const type=cat.surgery?.status==='done'&&day>=plan.eventDay?'event':cat.surgery?.status!=='done'&&plan.surgeryDay===day?'surgery':!plan.surgeryDay&&careReady(cat)?'ready':null;
+ const type=cat.surgery?.status==='done'&&day>=plan.eventDay?'event':cat.surgery?.status!=='done'&&plan.surgeryDay===day?'surgery':!plan.surgeryDay&&careReady(cat)&&day+1>=earliestSurgeryDay(cat)?'ready':null;
  const key=type==='ready'?'ready':type+':'+(type==='event'?plan.eventDay:plan.surgeryDay);
  return type&&!plan.notices?.[key]?{type,key}:null;
 }

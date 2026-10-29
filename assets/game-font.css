@@ -1,0 +1,13 @@
+@font-face {
+  font-family: Nikumaru;
+  src: url('./fonts/nikumaru/nikumaru.otf') format('opentype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+:root {
+  --game-font: Nikumaru, 'Hiragino Maru Gothic ProN', 'Yu Gothic', Meiryo, sans-serif;
+  font-synthesis: none;
+}
+/* Embedded SVG lettering uses the same face as the surrounding controls. */
+#app svg text { font-family: var(--game-font); }
