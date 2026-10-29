@@ -999,8 +999,8 @@
     .layout-drag-preview { pointer-events:none !important; z-index:50 !important; filter:drop-shadow(0 8px 8px #5e403744); }
     .layout-drag-preview.invalid { opacity:.38; outline:2px dashed #bd6475 !important; }
     .layout-lift-origin { opacity:.2 !important; }
-    .layout-edge-palette.drop-storage, .layout-tray-toggle.drop-storage { outline:3px solid #dc9da9; }
-    .layout-edge-palette.drop-storage-active, .layout-tray-toggle.drop-storage-active { outline:4px solid #bc657c; background:#f8dbe3; }
+    .layout-edge-palette.drop-storage, .layout-tray-toggle:not(.layout-store-target).drop-storage { outline:3px solid #dc9da9; }
+    .layout-edge-palette.drop-storage-active, .layout-tray-toggle:not(.layout-store-target).drop-storage-active { outline:4px solid #bc657c; background:#f8dbe3; }
     .layout-drop-hint { position:absolute; z-index:75; bottom:12px; left:50%; transform:translateX(-50%); padding:7px 12px; border-radius:20px; background:#fffaf4ee; color:#946c66; font-size:11px; pointer-events:none; white-space:nowrap; }
     .layout-tray-toggle {
       position:absolute;
@@ -2519,7 +2519,7 @@ function reduceGameState(state, action) {
 
     case "NEXT_STORY":
       if (state.campaign.phase !== "story") return state;
-      if (state.onboarding.storyIndex < 2) return { ...state, onboarding:{ ...state.onboarding, storyIndex:state.onboarding.storyIndex + 1 } };
+      if (state.onboarding.storyIndex < INTRODUCTION_PAGES.length-1) return { ...state, onboarding:{ ...state.onboarding, storyIndex:state.onboarding.storyIndex + 1 } };
       return reduceGameState(state, { type:"GO_RESCUE" });
 
     case "PREVIOUS_STORY":
@@ -3388,7 +3388,7 @@ function renderCampaignProgress(step) {
 function renderTitle(state) {
   const continuing = state.onboarding.status !== "new";
   const titleCat = continuing && getCat(state).status === 'raising' ? getCat(state) : initialCat;
-  return `<section class="title-screen" aria-label="タイトル"><h1>ホゴネコ</h1><div class="intro-illustration">${renderCatArt(titleCat)}</div><div class="title-actions"><button class="opening-start campaign-button" data-action="start-game"><span>${continuing ? "つづきから" : "はじめる"}</span></button></div></section>`;
+  return `<section class="title-screen" aria-label="タイトル"><h1><img class="tsuguneko-logo" src="assets/tsuguneko-logo.png" width="2063" height="762" alt="つぐねこ あそんでつながる、ねこの未来。"></h1><div class="intro-illustration">${renderCatArt(titleCat)}</div><div class="title-actions"><button class="opening-start campaign-button" data-action="start-game"><span>${continuing ? "つづきから" : "はじめる"}</span></button></div></section>`;
 }
 
 function renderOpeningStory(state) {
@@ -4476,7 +4476,9 @@ function moveLayoutDrag(draft, clientX, clientY) {
   draft.ghost.classList.toggle('invalid',!draft.valid);
   draft.ghost.style.visibility=draft.store?'hidden':'';
   draft.storage?.classList.toggle('drop-storage-active',draft.store);
-  draft.hint.textContent=draft.store?'離して押し入れに戻す':draft.valid?'離してここに置く':`置けるのは${draft.zone==='wall'?'壁':'床'}。右の押し入れへ戻せます`;
+  if(typeof updateFurnitureStorage==='function')updateFurnitureStorage(draft);
+  draft.hint.hidden=draft.store;
+  draft.hint.textContent=draft.store?'離してしまう':draft.valid?'離してここに置く':`置けるのは${draft.zone==='wall'?'壁':'床'}。収納箱へ運ぶとしまえます`;
 }
 
 function clearLayoutDrag(draft) {
@@ -4484,6 +4486,7 @@ function clearLayoutDrag(draft) {
   draft.origin?.classList.remove('layout-lift-origin');
   draft.stage.classList.remove('layout-dragging');
   draft.storage?.classList.remove('drop-storage','drop-storage-active');
+  if(draft.storage?.classList.contains('layout-store-target')){draft.storage.dataset.state='idle';draft.storage.querySelector('.storage-copy').textContent='ここへドラッグしてしまう';}
   if(app.hasPointerCapture(draft.pointerId)) app.releasePointerCapture(draft.pointerId);
 }
 
@@ -5233,6 +5236,7 @@ triggerAutoEvent=function(){
 <script src="game-home-app.js"></script>
 <link rel="stylesheet" href="assets/room-ui.css">
 <script src="assets/room-corner-art.js"></script>
+<script src="assets/room-control-art.js"></script>
 <script src="game-room-ui.js"></script>
 <link rel="stylesheet" href="assets/center-household.css">
 <script src="game-rescue-center.js"></script>

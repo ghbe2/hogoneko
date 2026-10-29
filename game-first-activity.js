@@ -159,7 +159,7 @@ const firstTown=renderTown;
 renderTown=function(state){const t=document.createElement('template');t.innerHTML=firstTown(state);if(getCat(state).status==='intake')t.content.querySelector('.town-destination.home')?.removeAttribute('disabled');return t.innerHTML;};
 const firstShop=renderMapShop;
 renderMapShop=function(state){
- if(state.campaign.shopId==='clinic'&&getCat(state).status==='captured')return receptionShell(state,'clinic','こんにちは。\nまずは体調を見てみましょう。',`<div class="clinic-commands"><button data-first="exam"><strong>初診 <span>›</span></strong><small>検査・ワクチン</small></button><button data-clinic="examine" disabled><strong>健康チェック</strong><small>体調の確認</small></button><button data-action="go-surgery" disabled><strong>避妊手術</strong><small>地域猫の準備</small></button></div>`,'');
+ if(state.campaign.shopId==='clinic'&&getCat(state).status==='captured')return receptionShell(state,'clinic','こんにちは。\nまずは体調を見てみましょう。',`<div class="clinic-commands"><button data-first="exam"><strong>初診 <span>›</span></strong><small>検査・ワクチン</small></button><button data-clinic="examine" disabled><strong>健康チェック</strong><small>体調の確認</small></button><button data-action="go-surgery" disabled><strong>不妊去勢手術</strong><small>地域猫の準備</small></button></div>`,'');
  const html=firstShop(state);
  if(state.campaign.shopId==='clinic'&&state.campaign.clinicReception&&!state.campaign.clinicExamined){const t=document.createElement('template');t.innerHTML=html;const commands=t.content.querySelector('.clinic-commands');commands?.insertAdjacentHTML('afterbegin','<button data-first="exam" disabled><strong>初診</strong><small>保護した直後の検査・ワクチン</small></button>');return t.innerHTML;}
  return html;
@@ -170,7 +170,10 @@ const firstClinic=renderClinic;
 function publicCoatLabel(cat){return (cat.coatLabel||'—').replace(/\s*[A-ZＡ-Ｚ](?=（|$)/g,'').replace(/（レア）/g,'').split(' / ')[0];}
 function firstExamArt(){const t=document.createElement('template');t.innerHTML=receptionArt('doctor');const staff=t.content.querySelector('.reception-staff');return `<svg viewBox="0 0 450 300" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><path fill="#d7ddcc" d="M0 0h450v300H0Z"/><path fill="#b5c9bf" stroke="#f5efd9" stroke-width="6" d="M25 50h130v130H25Z"/><path stroke="#f5efd9" stroke-width="5" d="M90 50v130M25 115h130"/>${staff.outerHTML}</svg>`;}
 renderClinic=function(state,cat){
- if(state.campaign.clinicStep==='exam')return renderCampaignShell(state,'動物病院',`<section class="first-exam"><div class="first-doctor">${firstExamArt()}</div><div class="first-exam-bed"></div><div class="first-exam-cat">${renderCatArt(cat).replace('200 55 320 320','190 245 310 160')}</div></section>`,'');
+ if(state.campaign.clinicStep==='exam'){
+  const elapsed=Math.max(0,Date.now()-(state.campaign.firstExamAt||Date.now()));
+  return renderCampaignShell(state,'動物病院',`<section class="first-exam"><div class="first-doctor">${firstExamArt()}</div><div class="first-exam-bed"></div><div class="first-exam-cat">${renderCatArt(cat).replace('200 55 320 320','190 245 310 160')}</div><div class="exam-doctor-words" aria-label="先生の診察中のひと言"><p style="animation-delay:${200-elapsed}ms">どれどれ…</p><p style="animation-delay:${1550-elapsed}ms">ふむふむ</p></div></section>`,'');
+ }
  if(cat.status!=='captured')return renderMapShop({...state,campaign:{...state.campaign,shopId:'clinic',clinicReception:true,clinicExamined:true}});
  const condition=cat.rescueProfile?.condition,invoice=initialExamInvoice(cat);
  const explaining=firstActive(state)&&['healthy','stats','receipt','pay'].includes(state.onboarding.guide),coat=publicCoatLabel(cat);
@@ -183,7 +186,7 @@ renderIntake=function(state,cat){const t=document.createElement('template');t.in
 
 const firstTownTutorial=currentTownTutorial;
 currentTownTutorial=s=>firstActive(s)&&s.onboarding.guide?null:firstTownTutorial(s);
-let firstFrame,firstTimer,shopExitTimer,firstMapGuide;
+let firstFrame,firstTimer,shopExitTimer,firstMapGuide,examWordsObserver;
 function fitFirstPortrait(svg){
  const inverse=svg.getScreenCTM()?.inverse();if(!inverse)return;const points=[];
  const outlines=[...svg.querySelectorAll('.part-outline')].map(n=>[n,n.style.display]);outlines.forEach(([n])=>n.style.display='inline');
@@ -210,11 +213,16 @@ render=function(state){
  const emerging=app.querySelector('.intake-emerging-cat');if(emerging&&state.campaign.firstCalledAt)emerging.getAnimations().forEach(a=>{a.currentTime=Math.min(1250,Date.now()-state.campaign.firstCalledAt)});
  app.querySelectorAll('.first-chart-cat .game-cat-svg').forEach(fitFirstPortrait);
  if(emerging){const scale=getCatPoint(state).scale||1;emerging.style.setProperty('--intake-cat-scale',scale);emerging.querySelector('svg').style.transform='scale(1.3)';}
+ examWordsObserver?.disconnect();
+ const examScene=app.querySelector('.first-exam'),examWords=examScene?.querySelector('.exam-doctor-words');
+ if(examWords){
+  const align=()=>{const scene=examScene.getBoundingClientRect(),head=examScene.querySelector('.reception-staff-head').getBoundingClientRect(),scale=scene.height/examScene.clientHeight||1;examWords.style.top=Math.max(8,(head.top-scene.top)/scale-54)+'px';};
+  align();examWordsObserver=new ResizeObserver(align);examWordsObserver.observe(examScene);
+ }
  if(state.campaign.phase==='clinic'&&getCat(state).status==='captured'&&state.campaign.clinicStep==='exam')firstTimer=setTimeout(()=>dispatch({type:'FINISH_EXAM'}),Math.max(0,3000-(Date.now()-(state.campaign.firstExamAt||Date.now()))));
  if(state.ui.storeThanks&&state.campaign.phase==='shop')shopExitTimer=setTimeout(()=>dispatch({type:'BACK_TO_TOWN'}),Math.max(0,(state.ui.storeLeaveAt||Date.now()+3000)-Date.now()));
  if(state.ui.firstName){const panel=document.createElement('div');panel.className='first-name modal-layer';panel.innerHTML=`<section><div class="first-name-cat">${renderCatArt(getCat(state))}</div><h2>なまえ決まった？</h2><input maxlength="8" aria-label="ネコの名前"><button data-first="name">決定</button></section>`;panel.querySelector('input').value=state.campaign.nameDraft||'';app.append(panel);mountGameCats();return;}
  if(!firstActive(state)||titleScreenOpen)return;
- if(state.onboarding.guide==='clinicScroll'){const hint=document.createElement('div');hint.className='first-down-hint';hint.innerHTML='<span class="town-swipe-arrows"><i></i><i></i><i></i></span>';app.append(hint);}
  const spec=FIRST_GUIDES[state.onboarding.guide];if(!spec)return;
  if(state.onboarding.guide==='chartReview'){const cue=document.createElement('div');cue.className='chart-pay-cue';cue.innerHTML=guideHand();app.querySelector('.campaign-actions')?.append(cue);return;}
  const selector=typeof spec.target==='function'?spec.target():spec.target,target=app.querySelector(selector)||app.querySelector('.stage');if(!target)return;
@@ -249,3 +257,4 @@ window.addEventListener('keydown',gateFirstInput,true);
 const firstGate=renderStageGate;
 renderStageGate=function(state){if(getCat(state).status!=='candidate')return `<div class="modal-layer"><section class="modal-card"><h2>いまいるネコを大切に</h2><p>複数のネコを同時に迎えると、感染症や相性の問題、お世話の負担が増えます。いまいる子を見送ってから、次の保護へ進みましょう。</p><button data-action="close-modal">もどる</button></section></div>`;return firstGate(state);};
 if(checkMode&&checkScenario==='naming'){gameState={...gameState,cats:gameState.cats.map(c=>({...c,status:'intake',name:'',named:false})),campaign:{...gameState.campaign,phase:'intake',nameDraft:''},ui:{...gameState.ui,firstName:true}};}
+

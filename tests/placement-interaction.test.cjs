@@ -30,3 +30,5 @@ for(const [width,height]of [[320,568],[375,812]]){
  }
  console.log('PASS',width,'12 randomized layouts, accessible items, reload, valid/invalid drag, fixed cart and four trap edges');
 }assert.deepEqual(errors,[]);}finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});
+
+

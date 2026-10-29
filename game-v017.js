@@ -299,7 +299,10 @@ function animateGameCats(now){
       let model=CatSVG.poseModel(pose,poseTime);
       if(entry.previous&&pose!=='jump'&&now-entry.changed<180)model=CatSVG.mixModel(entry.previous,model,(now-entry.changed)/180);
       if(pose==='jump')model.lift=0;
+      const discovery=svg.closest('.cat-object')&&typeof discoveryScene==='function'&&discoveryScene(gameState)&&!lifeCue;
+      if(discovery){const motion=discoveryContactMotion((now-entry.since)/1000);model=motion.model;entry.discoveryContact=motion;}
       entry.lastModel=model;CatSVG.applyPose(entry.rig,model,poseTime,pose);svg.dataset.pose=pose;
+      if(discovery)positionDiscoveryCoin(entry);
       // The room owns dirt and toys; the cat renderer supplies only the animal.
       if(svg.closest('.cat-object')){entry.rig.nodes.props.innerHTML='';entry.rig.nodes.effects.innerHTML='';}
     }

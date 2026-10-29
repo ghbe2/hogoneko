@@ -18,7 +18,7 @@ function seniorHintPages(s){
  return groups.flatMap(([label,items],i)=>{const kinds=[...new Set(items.map(x=>x.affinityType).filter(Boolean))];kinds.sort((a,b)=>seniorAffinity(cat,b).score-seniorAffinity(cat,a).score||a.localeCompare(b));const words=kinds.slice(0,3).map(t=>TYPE_LABELS[t]||t).join('・');return ACTIVITY_DIALOGUE.seniorTaste.copy.replace('{分野}',label).replace('{候補}',words).match(/[^。]+。?/g).map((text,j)=>({key:'taste-'+cat.id+'-'+i+'-'+j,text}));});
 }
 const seniorPages=centerReviewPages;
-centerReviewPages=function(kind,s){return kind==='taste'?seniorHintPages(s):seniorPages(kind,s);};
+centerReviewPages=function(kind,s){return kind==='taste'&&s.ui.centerReview?.question===5?seniorHintPages(s):seniorPages(kind,s);};
 const seniorReducer=reduceGameState;
 reduceGameState=function(s,a){
  const c=getCat(s);

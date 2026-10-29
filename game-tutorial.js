@@ -37,7 +37,7 @@ reduceGameState=function(state,action){
   const nextStep={home:'swipe',swipe:'area',area:'goal',goal:'rescue'}[step];
   return {...state,onboarding:{...state.onboarding,townStep:nextStep}};
  }
- if(action.type==='NEXT_STORY'&&state.campaign.phase==='story'&&state.onboarding.storyIndex===2){
+ if(action.type==='NEXT_STORY'&&state.campaign.phase==='story'&&state.onboarding.storyIndex===INTRODUCTION_PAGES.length-1){
   townScrollTop=null;
   return tutorialCheckpoint({...state,onboarding:{...state.onboarding,townStep:'home'},campaign:{...state.campaign,phase:'town'}},'introduction');
  }

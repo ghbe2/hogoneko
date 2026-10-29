@@ -67,7 +67,7 @@ renderMapShop=function(state){
  if(c.shopId!=='clinic'||!c.clinicReception)return clinicShop(state);
  const examined=c.clinicExamined&&cat.status==='raising';
  const speech=!examined?'こんにちは。\nご用件を伺います。':cat.body.sick?'治療をして、\n少し休ませましょう。':'診察が終わりました。\nお大事にしてください。';
- const body=cat.status!=='raising'?'<h2>健康チェック・避妊手術</h2><p>ネコを迎えたら、<br>こちらでご案内します。</p>':!examined?`<div class="clinic-commands"><button data-clinic="examine"><strong>健康チェック <span>›</span></strong><small>病気やケガを確認する</small></button><button data-action="go-surgery"><strong>避妊手術 <span>›</span></strong><small>${cat.surgery?.status==='done'?'手術済み・記録を見る':'TNRに向けた準備・耳カット'}</small></button></div>`:`<h2>健康チェックの結果</h2><p>${cat.body.sick?'病気やケガの治療が必要です。<br>治療して休ませましょう。':'病気やケガは見られません。'}</p><div class="reception-status">体重 ${Math.round(cat.body.weight)}g</div>`;
+ const body=cat.status!=='raising'?'<h2>健康チェック・不妊去勢手術</h2><p>ネコを迎えたら、<br>こちらでご案内します。</p>':!examined?`<div class="clinic-commands"><button data-clinic="examine"><strong>健康チェック <span>›</span></strong><small>病気やケガを確認する</small></button><button data-action="go-surgery"><strong>不妊去勢手術 <span>›</span></strong><small>${cat.surgery?.status==='done'?'手術済み・記録を見る':'TNRに向けた準備・耳カット'}</small></button></div>`:`<h2>健康チェックの結果</h2><p>${cat.body.sick?'病気やケガの治療が必要です。<br>治療して休ませましょう。':'病気やケガは見られません。'}</p><div class="reception-status">体重 ${Math.round(cat.body.weight)}g</div>`;
  const actions=!examined?'':cat.body.sick?`<button class="campaign-button" data-action="treat-cat">治療をお願いする <span>${CONFIG.care.clinic.cost}コイン</span></button>`:'<button class="campaign-button" data-clinic="menu">受付にもどる <span>›</span></button>';
  return receptionShell(state,'clinic',speech,body,actions);
 };

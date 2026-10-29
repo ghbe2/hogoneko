@@ -16,6 +16,8 @@
 .guide-gesture[data-kind="tap"] .guide-hand{animation:guide-tap 1.6s ease-in-out infinite}
 .guide-gesture .tap-rays{animation:guide-rays 1.6s ease-in-out infinite}
 .guide-gesture[data-kind="swipe"] .guide-hand{animation:guide-swipe 2s ease-in-out infinite}
+.guide-gesture[data-kind="move-furniture"] .guide-hand{animation:guide-move-furniture 2.8s ease-in-out infinite}
+@keyframes guide-move-furniture{0%,8%{opacity:0;transform:translate(0,0)}18%,32%{opacity:1;transform:translate(0,0)}72%,84%{opacity:1;transform:translate(calc(var(--move-direction,1) * 24px),-9px)}100%{opacity:0;transform:translate(calc(var(--move-direction,1) * 24px),-9px)}}
 .guide-gesture[data-kind="drag"] .guide-hand{animation:guide-drag 2s ease-in-out infinite}
 .guide-gesture[data-kind="swipe-down"] .guide-hand{animation:guide-down 2s ease-in-out infinite}
 @keyframes guide-tap{0%,65%,100%{transform:translateY(9px);opacity:.65}25%,42%{transform:translateY(0);opacity:1}}

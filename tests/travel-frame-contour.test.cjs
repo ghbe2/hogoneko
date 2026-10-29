@@ -1,0 +1,8 @@
+const{chromium}=require('playwright'),assert=require('node:assert/strict'),path=require('node:path'),{pathToFileURL}=require('node:url');
+(async()=>{const b=await chromium.launch({channel:'chrome'});try{const p=await b.newPage({viewport:{width:375,height:812}});await p.goto(pathToFileURL(path.resolve('index.html')).href+'?check=1');
+ const art=await p.evaluate(()=>[roomMapArt(false),roomHomeArt()]);
+ const preview=await b.newPage({viewport:{width:720,height:460}});await preview.setContent(`<style>body{margin:0;padding:20px;background:#eee7d0;display:grid;grid-template-columns:repeat(6,110px);gap:12px}svg{width:110px;height:110px}.travel-frame{transform-origin:54px 46px}small{display:block;text-align:center;color:#645c48}</style>`+art.flatMap(svg=>[0,7,15,90,180,270].map(angle=>`<div>${svg.replace('class="travel-frame"',`class="travel-frame" style="transform:rotate(${angle}deg)"`)}<small>${angle}°</small></div>`)).join(''));
+ await preview.screenshot({path:'tests/screenshots/travel-frame-full-turn.png'});
+ for(let angle=0;angle<=360;angle+=5){await preview.locator('.travel-frame').evaluateAll((ns,a)=>ns.forEach(n=>n.style.transform=`rotate(${a}deg)`),angle);const bounded=await preview.locator('.travel-frame').evaluateAll(ns=>ns.every(n=>{const polygon=n.querySelector("polygon"),m=polygon.getScreenCTM(),s=n.ownerSVGElement.getBoundingClientRect();return Array.from(polygon.points).every(pt=>{const v=new DOMPoint(pt.x,pt.y).matrixTransform(m);return v.x>=s.left&&v.x<=s.right&&v.y>=s.top&&v.y<=s.bottom-15;});}));assert(bounded,`clipped at ${angle}`);}
+ console.log('PASS both original illustrations stay fixed; rotating frame contained through 360 degrees');}finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
+

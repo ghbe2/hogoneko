@@ -5,6 +5,13 @@
 .first-name{z-index:100;display:grid;place-items:center;background:#29382d99;padding:16px}.first-name>section{width:100%;max-width:340px;display:grid;grid-template-rows:160px 28px 46px 46px;gap:12px;background:#fff7e5;padding:18px;border-radius:24px;box-sizing:border-box}.first-name-cat{min-height:0}.first-name-cat svg{height:100%;width:100%;overflow:hidden}.first-name h2{font-size:18px;margin:0;text-align:center}.first-name input{min-width:0;font-size:18px;border:1px solid #c7b68e;border-radius:12px;padding:10px;background:#fffdf4}.first-name button{float:none}
 .store-farewell:empty{display:none}
 .modal-layer:has(>.modal-card){display:grid;place-items:center;padding:16px;background:#29382d99}.modal-layer>.modal-card{width:100%;max-width:340px;box-sizing:border-box;background:#fff7e5;border-radius:22px;padding:20px;color:#554c38}.modal-card h2{font-size:18px;margin:0 0 16px}.modal-card p{font-size:14px;line-height:1.8;margin:0 0 20px}.modal-card button{width:100%;min-height:44px;border:0;border-radius:24px;background:#657d57;color:#fff7e5;font-size:14px}
-.first-down-hint{position:absolute;bottom:30px;left:calc(50% - 14px);transform:rotate(180deg);pointer-events:none;z-index:80}
+
 .bait-direction{position:absolute;bottom:55px;display:flex;gap:3px;pointer-events:none;color:#748a60}.bait-direction.is-left{right:calc(50% + 40px)}.bait-direction.is-right{left:calc(50% + 40px);transform:rotate(180deg)}.bait-direction i{width:7px;height:7px;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);animation:first-bait-cue 1.5s ease-in-out infinite}.bait-direction i:nth-child(2){animation-delay:.15s}.bait-direction i:nth-child(3){animation-delay:.3s}@keyframes first-bait-cue{0%,100%{opacity:.25}50%{opacity:1}}.bait-luck{visibility:hidden}@media(prefers-reduced-motion:reduce){.bait-direction i{animation:none}}
 .store-scene.is-thanks:after{content:'';position:absolute;inset:0;background:#18261d;z-index:30;pointer-events:none;animation:first-store-dark 3s linear both}@keyframes first-store-dark{0%,80%{opacity:0}100%{opacity:1}}
+/* Short observations follow the examination timeline, including after a redraw. */
+.exam-doctor-words{position:absolute;right:8%;top:22%;width:132px;height:46px;pointer-events:none;color:#52654e;font-size:15px;line-height:22px;text-align:center}
+.exam-doctor-words p{position:absolute;inset:0;margin:0;padding:11px 8px;box-sizing:border-box;border:1px solid #bdc6aa;border-radius:18px;background:#fff7e5;opacity:0;visibility:hidden;animation:exam-doctor-phrase 1250ms linear both}
+.exam-doctor-words p:after{content:'';position:absolute;right:26px;bottom:-8px;width:12px;height:9px;background:#fff7e5;clip-path:polygon(0 0,100% 0,100% 100%)}
+@keyframes exam-doctor-phrase{0%,100%{opacity:0;visibility:hidden}10%,90%{opacity:1;visibility:visible}}
+@media(prefers-reduced-motion:reduce){.exam-doctor-words p{animation-timing-function:steps(1,end)}}
+

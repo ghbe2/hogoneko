@@ -81,7 +81,7 @@ function paintAdoption(view,time){
   if(phase==='suspense')text=['譲渡会・閉会','人の流れが、落ち着いた。','かごの中で、静かに待つこの子。\n今日の出会いは、どうだっただろう。','見守っています','',true];
   if(phase==='approach')text=['譲渡会・帰り際','こちらへ、歩いてくる人。','さっき、足を止めていた人が\nこの子のところへ戻ってきました。','見守っています','',true];
   if(phase==='request')text=['来場者の声','「この子を、家族に。」','かごのそばに、もう一度。\nその人は、あなたに声をかけました。','話を聞いています','',true];
-  if(phase==='result')text=['これからの暮らしへ',adopted?'新しい家族と、出発。':'元いた街へ、返そう。',adopted?'立ち止まった人との、小さな出会い。\n家族へつなぐことができました。':'今日は、ご縁につながりませんでした。\n元いた街で、これからも見守ります。',adopted?'自宅へ帰る':'元いた場所へ戻る','HOME_FROM_ADOPTION',false];
+  if(phase==='result')text=['これからの暮らしへ',adopted?'新しい家族と、出発。':'これからの暮らしへ。',adopted?'足を止めてくれた人との出会い。\n大切な命を、新しい家族へ。':'今回は、ご縁がありませんでした。\n元いた街で、この子を見守りましょう。',adopted?'自宅へ帰る':'元いた場所へ戻る','HOME_FROM_ADOPTION',false];
   find('step').textContent=text[0];find('heading').textContent=text[1];find('copy').textContent=text[2];find('copy').style.whiteSpace='pre-line';find('next').textContent=text[3];find('next').dataset.adoptionAction=text[4];find('next').disabled=text[5];
   view.root.querySelector('.adoption-panel').inert=!['ready','result'].includes(phase);
   const secondary=find('secondary');secondary.hidden=phase!=='ready';secondary.disabled=false;secondary.textContent='←';secondary.setAttribute('aria-label','おうちへ戻る');secondary.dataset.adoptionAction='POSTPONE_EVENT';

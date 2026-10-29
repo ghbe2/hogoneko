@@ -1,6 +1,9 @@
 'use strict';
 // One furniture library; selection and placement are separate interactions.
 let furnitureUndo=[];
+let furnitureStoredNotice=null;
+function furnitureStorageArt(){return `<svg viewBox="0 0 80 64" aria-hidden="true"><path d="M10 22L40 13 70 22 40 34Z" fill="#776045"/><g class="storage-flaps"><path d="M10 22L3 12 31 4 40 13Z" fill="#d5b982"/><path d="M40 13L50 4 78 13 70 22Z" fill="#c5a16c"/></g><path d="M10 22L40 32 40 60 10 48Z" fill="#be9863"/><path d="M40 32L70 22 70 48 40 60Z" fill="#a87e50"/><path d="M10 22L40 32 70 22" fill="none" stroke="#ead4a7" stroke-width="2"/><path d="M18 31L33 36 33 48 18 43Z" fill="#efe0ba"/><path d="M22 36L28 38" stroke="#9b885e" stroke-width="2"/><path d="M46 48L63 42M15 46L35 53" stroke="#cfac77" stroke-width="1"/></svg>`;}
+function updateFurnitureStorage(draft){const target=draft.storage;if(!target?.classList.contains('layout-store-target'))return;target.dataset.state=draft.store?'over':'drag';target.querySelector('.storage-copy').textContent=draft.store?'離してしまう':'ここへドラッグしてしまう';}
 const ROOM_CONTROL_RESERVE=128;
 const ROOM_MENU_RESERVE=94;
 function layoutWallStart(height=app.clientHeight||window.innerHeight){return ROOM_MENU_RESERVE/height*100;}
@@ -53,7 +56,7 @@ reduceGameState=function(state,action){
   return {...next,ui:{...next.ui,layoutTrayOpen:false,lastLayoutItem:item.id}};
  }
  if(action.type==='UNDO_FURNITURE')return furnitureUndo.length?{...state,rooms:furnitureUndo.pop(),ui:{...state.ui,lastLayoutItem:null}}:state;
- if(action.type==='DROP_LAYOUT_ITEM')furnitureUndo.push(structuredClone(state.rooms));
+ if(action.type==='DROP_LAYOUT_ITEM'){furnitureUndo.push(structuredClone(state.rooms));if(action.store)furnitureStoredNotice=action.itemId;}
  if(action.type==='TOGGLE_LAYOUT'&&!state.ui.layoutMode){furnitureUndo=[];const next=furnitureReducer(state,action);return {...next,ui:{...next.ui,layoutTrayOpen:false}};}
  return furnitureReducer(state,action);
 };
@@ -72,9 +75,11 @@ render=function(state){state=keepFurnitureAboveControls(state);if(state.campaign
   frame.querySelectorAll('[data-layout-item]').forEach(n=>n.classList.toggle('layout-selected',n.dataset.layoutItem===state.ui.lastLayoutItem));
   frame.querySelectorAll('.layout-tray-toggle:not(.layout-store-target)').forEach(n=>n.remove());
   if(!frame.querySelector('.layout-workbar')){
-   const stage=frame.querySelector('.stage');stage.insertAdjacentHTML('beforeend',`<div class="layout-workbar"><button data-action="undo-furniture" ${furnitureUndo.length?'':'disabled'} aria-label="配置を戻す">↶</button><button data-action="toggle-layout-tray">＋ 家具を追加</button><button class="layout-done" data-action="toggle-layout">完了</button></div><button class="layout-tray-toggle layout-store-target" aria-label="家具をしまう">ここにしまう</button>`);
+   const stage=frame.querySelector('.stage');stage.insertAdjacentHTML('beforeend',`<div class="layout-workbar"><button data-action="undo-furniture" ${furnitureUndo.length?'':'disabled'} aria-label="配置を戻す">↶</button><button data-action="toggle-layout-tray">＋ 家具を追加</button><button class="layout-done" data-action="toggle-layout">完了</button></div><div class="layout-tray-toggle layout-store-target" role="region" aria-label="家具の収納先" data-state="idle">${furnitureStorageArt()}<span class="storage-copy" role="status">ここへドラッグしてしまう</span></div>`);
   }
  }
+ const storage=frame.querySelector('.layout-store-target');
+ if(storage&&furnitureStoredNotice){const id=furnitureStoredNotice;furnitureStoredNotice=null;storage.dataset.state='stored';storage.querySelector('.storage-copy').textContent='しまいました';const receipt=document.createElement('span');receipt.className='storage-receipt';receipt.innerHTML=bookIcons[id]?bookImage(bookIcons[id]):'';storage.append(receipt);if(!matchMedia('(prefers-reduced-motion: reduce)').matches)receipt.animate([{transform:'translateY(-22px) scale(1)',opacity:1},{transform:'translateY(8px) scale(.2)',opacity:0}],{duration:420,easing:'ease-in',fill:'forwards'});setTimeout(()=>{receipt.remove();if(storage.isConnected&&storage.dataset.state==='stored'){storage.dataset.state='idle';storage.querySelector('.storage-copy').textContent='ここへドラッグしてしまう';}},1000);}
 };
 app.addEventListener('click',event=>{const b=event.target.closest('[data-action]');if(!b||b.disabled)return;if(b.dataset.action==='pick-furniture')dispatch({type:'PICK_FURNITURE',itemId:b.dataset.item});if(b.dataset.action==='undo-furniture')dispatch({type:'UNDO_FURNITURE'});});
 const roomInterfaceStyle=document.createElement('style');roomInterfaceStyle.textContent=`
@@ -93,8 +98,17 @@ const roomInterfaceStyle=document.createElement('style');roomInterfaceStyle.text
 #app [data-layout-item].layout-selected{outline:2px dashed #637d59;outline-offset:5px}
 #app .intake-layout .layout-workbar{bottom:82px}
 #app .guided-intake .layout-workbar{bottom:18px}
-#app .layout-store-target{display:none;left:50%;right:auto;bottom:84px;transform:translateX(-50%);min-width:150px;min-height:52px;background:#fff8e9;z-index:28}
-#app .layout-dragging .layout-store-target{display:block}
+#app .layout-store-target{display:flex;align-items:center;gap:7px;left:50%;right:auto;bottom:84px;transform:translateX(-50%);width:218px;min-width:0;height:44px;min-height:44px;box-sizing:border-box;padding:0 8px 0 2px;border:1px solid #b8a27a;border-radius:10px;background:#f3e7cdee;color:#66513b;box-shadow:0 3px 8px #60472e18;z-index:28;font-size:12px;font-weight:600;pointer-events:none}
+#app .layout-store-target>svg{width:50px;height:42px;flex:none;overflow:visible}
+#app .layout-store-target .storage-copy{line-height:1.5;max-width:154px;text-wrap:balance}
+#app .layout-store-target .storage-flaps{transform-origin:40px 22px;transition:transform .18s ease}
+#app .layout-store-target[data-state="drag"] .storage-flaps{transform:translateY(-3px)}
+#app .layout-store-target[data-state="over"]{border:2px solid #617a53;background:#f7efd9;box-shadow:0 0 0 3px #617a532b}
+#app .layout-store-target[data-state="over"] .storage-flaps{transform:translateY(-6px)}
+#app .layout-store-target[data-state="stored"]{border-color:#617a53}
+#app .storage-receipt{position:absolute;left:17px;top:0;width:34px;height:34px;pointer-events:none}
+#app .storage-receipt .book-icon{width:100%;height:100%}
+@media(prefers-reduced-motion:reduce){#app .layout-store-target .storage-flaps{transition:none}}
 #app .guided-intake .layout-store-target{display:none}
 #app .guided-intake .wall-zone,#app .guided-intake .layout-zone span{display:none}
 #app .layout-dragging .layout-workbar{visibility:hidden}
@@ -293,24 +307,40 @@ reduceGameState=function(state,action){
  return {...next,coins:next.coins+(CONFIG.economy.discoveryCoins||5),dailyDiscovery:{lastDay:discoveryDay(),visits:(state.dailyDiscovery?.visits||0)+1},ui:{...next.ui,coinDiscovery:{id:Date.now()+Math.random(),until:Date.now()+2200}}};
 };
 const discoveryPose=scenePose;
-scenePose=function(svg){const pose=discoveryPose(svg);if(svg.closest('.cat-object')&&discoveryScene(gameState)&&!gameState.ui.playMode&&!['walk','jump'].includes(pose[0]))return [Date.now()%4500<2900?'punch':'sit','neutral'];return pose;};
+scenePose=function(svg){const pose=discoveryPose(svg);if(svg.closest('.cat-object')&&discoveryScene(gameState)&&!gameState.ui.playMode&&!['walk','jump'].includes(pose[0]))return ['punch','neutral'];return pose;};
 const discoveryRender=render;let lastDiscovery=null;
 render=function(state){
- const coinTime=app.querySelector('.discovery-pickup span')?.getAnimations()[0]?.currentTime,coinAt=performance.now();
  discoveryRender(state);const cat=app.querySelector('.cat-object'),stage=app.querySelector('.stage');if(!cat||!stage||state.ui.modal||state.ui.layoutMode)return;
  const c=cat.getBoundingClientRect(),s=stage.getBoundingClientRect();
  if(discoveryScene(state)){const clue=document.createElement('button');clue.type='button';clue.className='discovery-pickup';clue.dataset.action='pick-discovery-coin';clue.innerHTML='<span>●</span>';clue.setAttribute('aria-label','ネコが遊んでいるコインを拾う');stage.appendChild(clue);positionDiscoveryCoin();}
- const coinMotion=app.querySelector('.discovery-pickup span')?.getAnimations()[0];if(coinMotion&&coinTime!=null)coinMotion.currentTime=coinTime+performance.now()-coinAt;
  const found=state.ui.coinDiscovery;if(!found||found.id===lastDiscovery||found.until<Date.now())return;lastDiscovery=found.id;
  const coin=document.createElement('span');coin.className='discovery-coin';coin.textContent='● +'+(CONFIG.economy.discoveryCoins||5);coin.setAttribute('role','status');coin.setAttribute('aria-label',(CONFIG.economy.discoveryCoins||5)+'コインを見つけた');const x=Math.max(30,Math.min(s.width-50,c.left-s.left+c.width/2)),y=Math.max(35,c.top-s.top+c.height*.5);coin.style.left=x+'px';coin.style.top=y+'px';stage.appendChild(coin);
  // The app button is created by the outer room renderer later in this frame.
  requestAnimationFrame(()=>{if(!coin.isConnected)return;const target=app.querySelector('.room-icon-menu [data-action="open-notebook"]'),r=target?.getBoundingClientRect(),from=coin.getBoundingClientRect();const dx=r?r.left+r.width/2-from.left-from.width/2:0,dy=r?r.top+r.height/2-from.top-from.height/2:-25;coin.dataset.destination='app';coin.animate([{translate:'0 0',opacity:0,scale:.5},{offset:.2,translate:'0 -25px',opacity:1,scale:1.1},{offset:.6,translate:'0 -25px',opacity:1,scale:1},{translate:`${dx}px ${dy}px`,opacity:0,scale:.45}],{duration:1600,fill:'forwards'});setTimeout(()=>coin.remove(),1700);});
 };
 const discoveryStyle=document.createElement('style');discoveryStyle.textContent='.discovery-glint{position:absolute;pointer-events:none;color:#d6ac54;font-size:20px;animation:discovery-glint 3s ease-in-out infinite}.discovery-coin{position:absolute;z-index:90;pointer-events:none;color:#ba872d;font:bold 16px system-ui;text-shadow:0 2px #fff8}@keyframes discovery-glint{50%{opacity:.2;scale:.7}}@media(prefers-reduced-motion:reduce){.discovery-glint{animation:none}}';document.head.appendChild(discoveryStyle);
-function positionDiscoveryCoin(){const coin=app.querySelector('.discovery-pickup'),cat=app.querySelector('.cat-object'),stage=app.querySelector('.stage');if(!coin||!cat||!stage)return;const c=cat.getBoundingClientRect(),s=stage.getBoundingClientRect();coin.style.left=Math.max(24,Math.min(s.width-24,c.left-s.left+c.width*.67))+'px';coin.style.top=Math.max(24,Math.min(s.height-24,c.bottom-s.top-12))+'px';}
+// The paw and coin share one clock and the cat's ground-space coordinates.
+function discoveryContactMotion(t){
+ const smooth=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
+ const u=t%2.8,back=Math.floor(t/2.8)%2===1,from=back?-67:-34,dir=back?1:-1;
+ const push=smooth((u-.55)/.16),roll=1-Math.pow(1-Math.max(0,Math.min(1,(u-.71)/.65)),3);
+ const x=from+dir*(10*push+23*roll),m=CatSVG.poseModel('sit',t),approach=smooth(u/.45),release=smooth((u-.71)/.55);
+ const contact=from+dir*10*push-dir*6;
+ const px=(-19+(contact+19)*approach)*(1-release)-19*release;
+ const py=-28*Math.sin(Math.PI*approach)*(1-release)-20*Math.sin(Math.PI*release);
+ m.legs[1]=[-19,-110,px,py];m.hx=-8;m.hy=-187;m.hr=-7;m.bend=-2*push*(1-release);
+ return {model:m,x,y:0,contact:u>=.55&&u<=.71,rotation:x*7};
+}
+function positionDiscoveryCoin(entry){
+ const coin=app.querySelector('.discovery-pickup'),svg=app.querySelector('.cat-object .game-cat-svg'),stage=app.querySelector('.stage');
+ entry=entry?.rig?entry:svgRigs.get(svg);if(!coin||!entry?.discoveryContact||!stage)return;
+ const motion=entry.discoveryContact,matrix=entry.rig.nodes.age.getScreenCTM();if(!matrix)return;
+ const point=new DOMPoint(motion.x,motion.y).matrixTransform(matrix),s=stage.getBoundingClientRect();
+ coin.style.left=(point.x-s.left)*stage.offsetWidth/s.width+'px';coin.style.top=(point.y-s.top)*stage.offsetHeight/s.height+'px';
+ coin.style.visibility='visible';coin.firstElementChild.style.rotate=motion.rotation+'deg';
+}
 app.addEventListener('click',event=>{if(event.target.closest('[data-action="pick-discovery-coin"]'))dispatch({type:'PICK_DISCOVERY_COIN'});});
-discoveryStyle.textContent+='.discovery-pickup{position:absolute;z-index:76;width:48px;height:48px;padding:0;border:0;background:none;transform:translate(-50%,-50%);touch-action:manipulation}.discovery-pickup span{display:block;color:#dca735;font-size:14px;text-shadow:0 1px #8d631f,0 0 2px #fff;animation:coin-roll 4.5s ease-in-out infinite}@keyframes coin-roll{0%,65%,100%{translate:-7px 0;rotate:-20deg}32%{translate:7px -3px;rotate:30deg}}@media(prefers-reduced-motion:reduce){.discovery-pickup span{animation:none}}';
-setInterval(positionDiscoveryCoin,100);
+discoveryStyle.textContent+='.discovery-pickup{position:absolute;z-index:76;width:48px;height:48px;padding:0;border:0;background:none;transform:translate(-50%,-50%);touch-action:manipulation;visibility:hidden;display:grid;place-items:center}.discovery-pickup span{display:block;width:9px;height:9px;border-radius:50%;background:#dca735;border:1px solid #a77c29;box-shadow:inset 1px 0 #f8dc83,0 1px 1px #71563340;font-size:0}.discovery-pickup span:after{content:"";display:block;width:1px;height:5px;margin:1px auto;background:#b78a32}';
 
 // Short-lived presentation cues: never save a backlog of offline animations.
 let catLifeCues=[],coinRestPoint=null;
@@ -348,7 +378,7 @@ scenePose=function(svg){
  const holder=svg.closest('.cat-object');if(!holder)return expressivePose(svg);
  const cue=currentLifeCue();if(cue?.catId===getCat(gameState).id){if(holder._travelAnimation?.playState==='running')return [holder.classList.contains('jumping')?'jump':'walk','neutral'];return [Date.now()<cue.started?'sit':cue.pose,cue.pose==='vomit'?'wary':'neutral'];}
  const playing=['cat','play'].includes(commandDraft?.command)?commandDraft:playDraft;
- if(discoveryScene(gameState)){holder._travelAnimation?.cancel();holder.classList.remove('walking','jumping');return [Date.now()%4500<2900?'punch':'sit','neutral'];}
+ if(discoveryScene(gameState)){holder._travelAnimation?.cancel();holder.classList.remove('walking','jumping');return ['punch','neutral'];}
  if(playing){
   if(holder.classList.contains('jumping'))return ['jump','neutral'];
   if(holder.classList.contains('walking'))return ['walk','neutral'];

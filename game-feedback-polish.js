@@ -45,7 +45,7 @@ function syncActivityAffordances(state){
  if(phase==='room'&&state.onboarding.appIntro==='prompt'&&!state.ui.modal){
   const target=app.querySelector('[data-action="open-notebook"]');if(!target)return;
   const a=app.getBoundingClientRect(),r=target.getBoundingClientRect(),layer=document.createElement('section');layer.className='app-launch-guide';
-  layer.innerHTML='<span class="first-guide-ring"></span><p>アプリで、体調とこれからの予定を確認しましょう。</p>'+guideHand();app.append(layer);
+  layer.innerHTML='<span class="first-guide-ring"></span><p>右上のスマホのマークを押して、体調とこれからの予定を確認しましょう。</p>'+guideHand();app.append(layer);
   const size=Math.max(r.width,r.height)*1.2;
   Object.assign(layer.querySelector('.first-guide-ring').style,{left:r.x-a.x+(r.width-size)/2+'px',top:r.y-a.y+(r.height-size)/2+'px',width:size+'px',height:size+'px'});
   Object.assign(layer.querySelector('.guide-gesture').style,{left:r.x-a.x+r.width/2+'px',top:r.y-a.y+r.height/2+'px'});

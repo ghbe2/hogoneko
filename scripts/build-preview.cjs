@@ -23,6 +23,7 @@ let source = readSource(path.join(root, relativePage)).replace(/<script src="([^
   return '<script>\n' + readSource(file).replace(/<\/script/gi, '<\\/script') + '\n</script>';
 });
 // Embed the town artwork as well; encrypted releases must not depend on loose assets.
+source=source.replaceAll('src="assets/tsuguneko-logo.png"','src="data:image/png;base64,'+fs.readFileSync(path.join(root,'assets/tsuguneko-logo.png')).toString('base64')+'"');
 source=source.replaceAll('src="assets/town-map.svg"', 'src="data:image/svg+xml;charset=utf-8,'+encodeURIComponent(readSource(path.join(root,'assets/town-map.svg')))+'"');
 source=source.replaceAll('href="assets/town-map.svg"', 'href="data:image/svg+xml;charset=utf-8,'+encodeURIComponent(readSource(path.join(root,'assets/town-map.svg')))+'"');
 source=source.replace(/<link rel="stylesheet" href="([^"]+)">/g,(_,relative)=>{
