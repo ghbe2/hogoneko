@@ -1964,7 +1964,7 @@ const initialCat = {
   status: "candidate",
 };
 
-const SAVE_KEY = new URLSearchParams(location.search).get('check') === '1' ? 'hogoneko_check_save' : 'hogoneko_mock_save';
+const SAVE_KEY = new URLSearchParams(location.search).has('palette-review') ? 'hogoneko_palette_review' : new URLSearchParams(location.search).get('check') === '1' ? 'hogoneko_check_save' : 'hogoneko_mock_save';
 if (SAVE_KEY === 'hogoneko_check_save' && new URLSearchParams(location.search).has('scenario')) localStorage.removeItem(SAVE_KEY);
 const SAVE_SCHEMA_VERSION = 1;
 
@@ -2073,6 +2073,7 @@ function normalizeLoadedState(state) {
 }
 
 function loadSavedGameState(defaultState) {
+  if (SAVE_KEY === 'hogoneko_palette_review') return JSON.parse(JSON.stringify(defaultState));
   try {
     const raw = window.localStorage.getItem(SAVE_KEY);
     if (!raw) return JSON.parse(JSON.stringify(defaultState));
@@ -2089,6 +2090,7 @@ function loadSavedGameState(defaultState) {
 }
 
 function saveGameState(state) {
+  if (SAVE_KEY === 'hogoneko_palette_review') return true;
   try {
     const saveState = normalizeLoadedState(state);
     window.localStorage.setItem(SAVE_KEY, JSON.stringify({ version:SAVE_SCHEMA_VERSION, savedAt:Date.now(), state:saveState }));
@@ -5265,6 +5267,7 @@ triggerAutoEvent=function(){
 <script src="alpha-report-config.js"></script>
 <script src="game-alpha-report.js"></script>
 <script src="game-alpha-meeting.js"></script>
+<script src="game-palette-review.js"></script>
 <script>
 // Render only after every module has installed its current rules and artwork.
 document.addEventListener('DOMContentLoaded', () => render(gameState), {once:true});

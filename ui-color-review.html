@@ -1,7 +1,20 @@
-<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>つぐねこ｜案内色の比較</title>
-<style>body{margin:0;background:#ece7d9;color:#504b3f;font:15px/1.6 Meiryo,sans-serif}header{max-width:1120px;margin:28px auto;padding:0 18px}h1{font-size:24px;margin:0}main{display:flex;gap:24px;justify-content:center;align-items:start;padding:0 18px 36px;flex-wrap:wrap}article{width:320px}h2{font-size:17px;margin:0 0 4px}p{margin:0 0 12px}article>p{min-height:52px}iframe{display:block;width:320px;height:568px;border:0;border-radius:20px;box-shadow:0 8px 25px #504b3f20}.swatch{display:inline-block;width:16px;height:16px;border-radius:50%;vertical-align:-2px;margin-right:8px}small{display:block;margin-top:10px}</style>
-<header><h1>操作の案内色を比べる</h1><p>背景・配置・アイコンは同じ。左上の回る枠、操作ボタン、タップの手を比較します。</p></header><main></main>
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>つぐねこ｜案内色の3案</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eeeadd;color:#484839;font:14px/1.6 Meiryo,sans-serif}header{max-width:1056px;margin:24px auto 18px;padding:0 16px}h1{font-size:23px;margin:0 0 6px}p{margin:0 0 12px;color:#666453}nav{display:flex;flex-wrap:wrap;gap:8px}button{font:inherit;cursor:pointer;border:1px solid #ccc7b4;border-radius:24px;background:#faf8ef;padding:9px 18px;color:#514e41;min-height:44px}button[aria-pressed=true]{background:#4c5548;color:white;border-color:#4c5548}main{display:flex;justify-content:center;gap:24px;padding:0 16px 32px}article{width:320px;flex:none}h2{font-size:17px;margin:0}.caption{margin:3px 0 12px;font-size:12px}i{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:8px}iframe{display:block;width:320px;height:568px;border:0;border-radius:18px;box-shadow:0 8px 24px #41433320;pointer-events:none;background:#e7e3d1}.colors{display:none;margin-top:12px}footer{max-width:1056px;margin:0 auto 24px;padding:0 16px;color:#6e6a5e;font-size:12px}@media(max-width:1050px){main{gap:12px;padding:0 8px 24px}}@media(max-width:990px){header{margin-top:16px}.colors{display:flex}.colors button{padding:8px 12px;flex:1}main article{display:none}main article.active{display:block}main{padding:0 0 20px}article,iframe{width:min(375px,100vw)}iframe{height:812px}h2,.caption{padding-left:16px}}@media(max-width:340px){iframe{height:568px}}
+</style></head><body>
+<header><h1>案内色の3案</h1><p>実際の画面で、回る枠・ボタン・矢印・指の見やすさを比較。</p>
+<nav class="scenes" aria-label="比較する場面"></nav><nav class="colors" aria-label="配色"></nav></header>
+<main></main><footer>比較専用です。画面内の操作と保存は無効。本編の配色は変更していません。</footer>
 <script>
-const palettes=[['赤茶','#9d5341','部屋の緑から分かれ、木や布の色ともつながる。'],['黄土','#926125','暖かく、道具やコインにもなじむ。'],['くすみ紫','#77516e','背景から明確に分かれ、案内を見つけやすい。']];
-for(const [name,color,copy]of palettes){const article=document.createElement('article');article.innerHTML=`<h2><i class="swatch" style="background:${color}"></i>${name}</h2><p>${copy}</p><iframe title="${name}の配色" src="index.html?check=1&scenario=room&palette-review=${color.slice(1)}"></iframe><small>本編の配色は、選定後に統一します。</small>`;document.querySelector('main').append(article);}
-</script></html>
+const palettes=[['A｜赤茶','9d5341','温かみを残しながら、緑と分ける。'],['B｜黄土','926125','落ち着いた金茶。背景とのなじみを優先。'],['C｜くすみ紫','77516e','部屋や街の色から、案内をはっきり分ける。']];
+const scenes=[['room','部屋'],['guide','お世話の説明'],['map','マップの矢印'],['clinic','病院のタップ案内']];
+let scene='room',active=0;
+function show(){document.querySelectorAll('article').forEach((a,i)=>a.classList.toggle('active',i===active));document.querySelectorAll('.colors button').forEach((b,i)=>b.setAttribute('aria-pressed',i===active));}
+for(const [i,[name,color,caption]]of palettes.entries()){
+ const a=document.createElement('article');a.innerHTML=`<h2><i style="background:#${color}"></i>${name}</h2><p class="caption">${caption}</p><iframe title="${name}のゲーム画面" sandbox="allow-scripts allow-same-origin"></iframe>`;document.querySelector('main').append(a);
+ const b=document.createElement('button');b.textContent=name;b.onclick=()=>{active=i;show()};document.querySelector('.colors').append(b);
+}
+function load(){document.querySelectorAll('iframe').forEach((f,i)=>{f.src=`index.html?check=1&scenario=room&palette-review=${palettes[i][1]}&palette-scene=${scene}`});document.querySelectorAll('.scenes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.scene===scene));}
+for(const [key,label]of scenes){const b=document.createElement('button');b.dataset.scene=key;b.textContent=label;b.onclick=()=>{if(scene!==key){scene=key;load()}};document.querySelector('.scenes').append(b)}show();load();
+</script></body></html>

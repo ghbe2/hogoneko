@@ -38,7 +38,7 @@ if(checkMode && checkScenario){
   gameState=reconcileVisit(gameState);
   if(['result','tnr-result'].includes(checkScenario))for(const type of ['OPEN_OUTING','OPEN_REQUIRED_VISIT','SEND_EVENT'])gameState=reduceGameState(gameState,{type});
   const palette=new URLSearchParams(location.search).get('palette-review');
-  history.replaceState(null,'',location.pathname+'?check=1'+(palette?'&palette-review='+encodeURIComponent(palette):''));
+  history.replaceState(null,'',location.pathname+'?check=1'+(palette?'&palette-review='+encodeURIComponent(palette)+'&palette-scene='+encodeURIComponent(new URLSearchParams(location.search).get('palette-scene')||'room'):''));
   gameState=reduceGameState(gameState,{type:'CLEAR_MESSAGE'});
 }
 const checkStyle=document.createElement('style');checkStyle.textContent='.check-hub-link{display:inline-block;flex-shrink:0;background:#514940;color:white;padding:6px 8px;border-radius:20px;font:10px var(--game-font);text-decoration:none;margin-left:5px}.check-hub-link.floating{position:fixed;left:12px;top:12px;z-index:20000}';document.head.append(checkStyle);

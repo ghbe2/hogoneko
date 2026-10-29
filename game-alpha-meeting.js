@@ -115,9 +115,3 @@ gameState=reduceGameState({...gameState,ui:{...gameState.ui,alphaTasteStarted:nu
 
 for(const type of ['pointerdown','click','keydown'])window.addEventListener(type,e=>{if(e.target.closest('[data-alpha-report],.alpha-report,.alpha-layer'))return;if(app.querySelector('.alpha-layer')){e.preventDefault();e.stopImmediatePropagation();}},true);
 
-// A local comparison page runs inside each frame, without file-origin cross-frame access.
-const alphaPalette=new URLSearchParams(location.search).get('palette-review');
-if(['9d5341','926125','77516e'].includes(alphaPalette)){
- const color='#'+alphaPalette,style=document.createElement('style');style.textContent=`#app .travel-frame polygon{fill:${color}!important}#app .palette-example{position:absolute;left:55px;right:55px;top:45%;height:44px;border:0;border-radius:24px;background:${color};color:#fff8e9;font:16px var(--game-font);z-index:220}#app .palette-example .guide-gesture{position:absolute;right:8px;top:24px;width:48px}#app .palette-example:after{content:'›';position:absolute;right:16px}`;document.head.append(style);
- const paletteRender=render;render=function(s){titleScreenOpen=false;s={...s,alpha:{firstCatId:'review'},onboarding:{status:'done',homeTour:'done',appIntro:null},ui:{...s.ui,modal:null,layoutMode:false,alphaNotice:null},campaign:{...s.campaign,phase:'room',requiredVisit:null}};paletteRender(s);const b=document.createElement('button');b.className='palette-example';b.innerHTML='つぎへ'+guideHand();app.append(b);};
-}
