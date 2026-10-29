@@ -204,6 +204,7 @@ function fitFirstPortrait(svg){
 const firstRender=render;
 render=function(state){
  cancelAnimationFrame(firstFrame);clearTimeout(firstTimer);clearTimeout(shopExitTimer);state=repairIntakePlacement(state);if(guidedIntake(state))gameState=state;firstRender(state);
+ if(titleScreenOpen)return;
  if(state.campaign.phase==='intake'){
   if(guidedIntake(state))app.querySelector('.intake-layout')?.classList.add('guided-intake');
   const r=intakePlacementFrame(state).carrier,cage=app.querySelector('.room-carrier'),emerging=app.querySelector('.intake-emerging-cat');
