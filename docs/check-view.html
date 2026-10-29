@@ -5,32 +5,32 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="theme-color" content="#efe1d6">
-  <title>ホゴネコ｜プレビュー</title>
+  <title>つぐねこ｜アルファテスト用</title>
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#efe1d6;color:#75594f;font-family:"Yu Gothic",Meiryo,sans-serif}
     body{min-height:100svh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 32%,#fffaf4,transparent 75%),#efe1d6}
     main{width:min(100%,340px);padding:34px 24px;text-align:center;background:#fffaf4e8;border:1px solid #ead4cc;border-radius:28px;box-shadow:0 18px 45px #60472d10}
-    .paw{font-size:36px}h1{font-size:32px;letter-spacing:.13em;margin:12px 0}p{font-size:12px;line-height:1.9;color:#998078}
+    h1{font-size:32px;letter-spacing:.13em;margin:12px 0}p{font-size:12px;line-height:1.9;color:#998078}
     label{display:block;text-align:left;font-size:11px;margin:26px 0 8px}input,button{width:100%;font:inherit;border-radius:12px;min-height:48px;padding:12px}
-    input{font-size:16px;border:1px solid #dfc8c0;background:#fff;color:#473b3a}input:focus{outline:2px solid #d67d90;outline-offset:2px}
-    button{border:0;background:#d47c90;color:white;font-weight:bold;margin-top:16px;box-shadow:0 4px 0 #ae6173;cursor:pointer}button:disabled{opacity:.6;cursor:wait}
+    input{font-size:16px;border:1px solid #dfc8c0;background:#fff;color:#473b3a}input:focus{outline:2px solid #9d5341;outline-offset:2px}
+    button{border:0;background:#9d5341;color:white;font-weight:bold;margin-top:16px;box-shadow:0 4px 0 #743e31;cursor:pointer}button:disabled{opacity:.6;cursor:wait}
     #error{min-height:36px;margin:14px 0 0;color:#b14c65;font-size:11px}small{font-size:9px;color:#ad958c}
   </style>
 </head>
 <body>
   <main>
-    <div class="paw" aria-hidden="true">🐾</div><h1>ホゴネコ</h1>
-    <p>クライアント向けプレビュー<br>お知らせしたパスワードでお入りください。</p>
+    <h1>つぐねこ</h1>
+    <p>アルファテスト用<br>お知らせしたパスワードでお入りください。</p>
     <form id="entry">
       <label for="password">閲覧用パスワード</label>
       <input id="password" type="password" required autocomplete="current-password" autocapitalize="none" spellcheck="false" aria-describedby="error">
-      <button id="enter" type="submit">プレビューを開く</button>
+      <button id="enter" type="submit">ゲームをはじめる</button>
       <p id="error" role="status" aria-live="polite"></p>
     </form>
-    <small>開発中のモックです</small>
+    <small>開発中のアルファテスト版です</small>
   </main>
   <script>
-    const payload = {"salt":"HkpuCZu3hEnLGyaAnN4dXQ==","iv":"1Xc6v71wwa3SCDus","data":"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","iterations":210000};
+    const payload = {"salt":"Q6KYdCQMQwvSG4+uFMHgQw==","iv":"wDqsRFeDajFYmvVP","data":"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","iterations":210000};
     const bytes = value => Uint8Array.from(atob(value), char => char.charCodeAt(0));
     const sessionKey='hogoneko-preview-key:'+payload.salt;
     let gateOpening=false;
@@ -49,7 +49,7 @@
       gateOpening=true;
       const button=document.querySelector('#enter'), input=document.querySelector('#password'), error=document.querySelector('#error');
       button.disabled=true;button.textContent='開いています…';error.textContent='';
-      if(!globalThis.crypto?.subtle){error.textContent='HTTPSのURLを、最新のブラウザで開いてください。';button.disabled=false;button.textContent='プレビューを開く';return;}
+      if(!globalThis.crypto?.subtle){error.textContent='HTTPSのURLを、最新のブラウザで開いてください。';button.disabled=false;button.textContent='ゲームをはじめる';return;}
       try {
         const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(input.value),'PBKDF2',false,['deriveKey']);
         const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:bytes(payload.salt),iterations:payload.iterations,hash:'SHA-256'},material,{name:'AES-GCM',length:256},true,['decrypt']);
@@ -60,7 +60,7 @@
       }catch{
         gateOpening=false;
         error.textContent='パスワードが違います。もう一度お試しください。';
-        button.disabled=false;button.textContent='プレビューを開く';input.focus();input.select();
+        button.disabled=false;button.textContent='ゲームをはじめる';input.focus();input.select();
       }
     });
   </script>
