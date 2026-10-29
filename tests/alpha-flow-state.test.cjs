@@ -85,7 +85,7 @@ console.log('PASS map destination cleared after arrival and on later outings');
 s=fresh();s.alpha.firstCatId='previous';
 s=reduceGameState(s,{type:'FAMILY_CLOSE'});assert(!s.ui.alphaAlbumPrompt);
 s.letter={claimed:false};s=reduceGameState(s,{type:'FAMILY_CLOSE'});assert(!s.ui.alphaAlbumPrompt);
-s.letter.claimed=true;s=reduceGameState(s,{type:'FAMILY_CLOSE'});assert(s.ui.alphaAlbumPrompt);
+s.ui.alphaGift={at:Date.now()};s.letter.claimed=true;s=reduceGameState(s,{type:'FAMILY_CLOSE'});assert(s.ui.alphaAlbumPrompt);assert.equal(s.ui.alphaGift,null);
 s=reduceGameState(s,{type:'ALPHA_ALBUM_DONE'});assert.equal(s.ui.modal,'notebook');assert.equal(s.ui.alphaAlbumPrompt,false);
 s=fresh();s.alpha.firstCatId='previous';s.campaign={phase:'shop',shopId:'clinic'};
 s=reduceGameState(s,{type:'TEST_PAY'});assert.equal(s.ui.alphaNotice.key,'debt');
