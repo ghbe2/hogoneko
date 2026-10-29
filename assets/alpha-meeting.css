@@ -32,3 +32,4 @@
 #app .reception-scene .clinic-commands{grid-template-columns:1fr;gap:8px}#app .reception-scene .clinic-commands button{min-height:64px;text-align:left;padding:10px 32px 10px 14px}#app .reception-scene .clinic-commands small{color:inherit;opacity:.85}.capture-temper{animation-duration:4.3s!important}
 
 .alpha-reserve-target{position:relative}.alpha-reserve-cue{position:absolute;right:20px;top:65%;pointer-events:none;width:44px;height:56px;z-index:50}.alpha-reserve-cue .guide-gesture{width:44px!important}.alpha-town-cue .guide-gesture{width:48px!important}
+.alpha-practice-target{outline:2px solid var(--guide-accent);outline-offset:3px}.alpha-practice-cue{position:absolute;width:48px;height:64px;z-index:190;pointer-events:none}.alpha-practice-cue .guide-gesture{inset:0}

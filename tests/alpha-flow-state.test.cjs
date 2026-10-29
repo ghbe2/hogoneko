@@ -10,6 +10,7 @@ const isGraduationReady=()=>true, splitGuideText=t=>[t];
 let surgeryEligibility, pendingVisit, reconcileVisit;
 let reduceGameState=(s,a)=>{
  if(a.type==='OPEN_OUTING')return {...s,campaign:{...s.campaign,phase:'town'}};
+ if(a.type==='CLOSE_MODAL')return {...s,ui:{...s.ui,modal:null}};
  if(a.type==='OPEN_NOTEBOOK')return {...s,ui:{...s.ui,modal:'notebook'}};
  if(a.type==='TEST_ARRIVE')return {...s,campaign:{...s.campaign,phase:'shop',shopId:'clinic'}};
  if(a.type==='TEST_HOME')return {...s,campaign:{...s.campaign,phase:'room'}};
@@ -29,11 +30,14 @@ vm.runInContext(`
 // Daily notices: one basic message per calendar day, no second-cat replay.
 let s=fresh();assert.equal(alphaLesson(s)[0],'food');
 s=reduceGameState({...s,ui:{alphaNotice:{key:'food',text:'food'}}},{type:'ALPHA_NOTICE_NEXT'});
-assert.equal(alphaLesson(s),undefined);
+assert(!alphaLesson(s));
+assert.equal(alphaPracticeTask(s).part,'water');s.cats[0].body.waterLevel=100;s=alphaPracticeProgress(s,s,{type:'FINISH_CARE'});assert.equal(alphaPracticeTask(s),null);
 now+=86400000;s.cats[0].body.days=1;assert.equal(alphaLesson(s)[0],'taste');
-s.alpha.seen.taste=true;s.alpha.lastMessageDay=ALPHA_DAY();assert.equal(alphaLesson(s),undefined);
+s.alpha.seen.taste=true;s.alpha.practice.taste=true;s.alpha.lastMessageDay=ALPHA_DAY();assert.equal(alphaLesson(s),undefined);
 now+=86400000;s.cats[0].body.days=2;assert.equal(alphaLesson(s)[0],'reward');
 s.alpha.firstCatId='previous';assert.equal(alphaLesson(s),null);
+let later=fresh(4);later.ui.alphaNotice={key:'ready',text:'ready'};later=reduceGameState(later,{type:'ALPHA_NOTICE_NEXT'});assert(!later.alpha.seen.food);assert(!later.alpha.seen.taste);assert(!later.alpha.seen.reward);
+let optional=fresh(3);optional.alpha.seen={food:true,taste:true,reward:true};optional.alpha.practice={food:true,water:true,taste:true};optional.ui.modal='notebook';optional=reduceGameState(optional,{type:'CLOSE_MODAL'});assert(optional.alpha.practice.reward);assert.equal(optional.coins,20);
 console.log('PASS daily messages, same-day suppression, second-cat exclusion');
 
 // Booking is possible on day 4 for surgery on day 5; fasting starts only on booking.
