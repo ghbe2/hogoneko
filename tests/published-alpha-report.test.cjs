@@ -1,0 +1,21 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
+(async()=>{const b=await chromium.launch({channel:'chrome',headless:true});const p=await b.newPage({viewport:{width:375,height:812}});try{
+ await p.goto('https://ghbe2.github.io/hogoneko/?check=1&report-test=20261029');
+ await p.locator('#password').fill(process.env.MOCK_VIEW_PASSWORD);await p.locator('#enter').click();
+ await p.locator('[data-action="start-game"]').click();await p.locator('.introduction-scene').waitFor();
+ await p.evaluate(()=>document.fonts.ready);await p.click('[data-action="next-story"]');await p.waitForFunction(()=>!app.querySelector('[data-reading="true"]'));await p.waitForTimeout(800);
+ await p.screenshot({path:'tests/screenshots/published-report-before.png'});
+ await p.click('[data-alpha-report]');await p.locator('.alpha-report img').waitFor();
+ assert(await p.locator('.alpha-report img').evaluate(n=>n.naturalWidth>=300));
+ await p.locator('[name="category"]').selectOption({label:'感想・提案'});
+ await p.locator('[name="steps"]').fill('接続確認テスト：2026/10/29 公開ゲームで開始し、「報告する」を押しました。');
+ await p.locator('[name="description"]').fill('実ブラウザからの送信確認です。ゲームが自動撮影した画像とこの文章を確認してください。不具合報告ではありません。');
+ const request=p.waitForRequest(r=>r.method()==='POST'&&r.url().includes('script.google.com/macros/'));
+ await p.locator('.alpha-report [type="submit"]').click();
+ const payload=(await request).postDataJSON();assert(payload.screenshot.startsWith('data:image/jpeg;base64,'));
+ await p.locator('.report-status').filter({hasText:'報告を受け付けました'}).waitFor({timeout:30000});
+ await p.locator('.report-status').scrollIntoViewIfNeeded();await p.screenshot({path:'tests/screenshots/published-report-success.png'});
+ fs.writeFileSync('tests/screenshots/published-report-receipt.json',JSON.stringify({id:payload.id,phase:payload.phase,createdAt:payload.createdAt,steps:payload.steps,viewport:payload.viewport,imageBytes:payload.screenshot.length},null,2));
+ console.log('PASS actual game screenshot and form submission',payload.id,payload.phase,payload.screenshot.length);
+ await p.click('[data-report-close]');assert.equal(await p.locator('.alpha-report').count(),0);assert(await p.locator('[data-action="next-story"]').isEnabled());
+}catch(e){console.log(await p.locator('body').innerText());await p.screenshot({path:'tests/screenshots/published-report-failure.png'});throw e;}finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1});
