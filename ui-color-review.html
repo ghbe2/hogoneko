@@ -15,6 +15,6 @@ for(const [i,[name,color,caption]]of palettes.entries()){
  const a=document.createElement('article');a.innerHTML=`<h2><i style="background:#${color}"></i>${name}</h2><p class="caption">${caption}</p><iframe title="${name}のゲーム画面" sandbox="allow-scripts allow-same-origin"></iframe>`;document.querySelector('main').append(a);
  const b=document.createElement('button');b.textContent=name;b.onclick=()=>{active=i;show()};document.querySelector('.colors').append(b);
 }
-function load(){document.querySelectorAll('iframe').forEach((f,i)=>{f.src=`index.html?check=1&scenario=room&palette-review=${palettes[i][1]}&palette-scene=${scene}`});document.querySelectorAll('.scenes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.scene===scene));}
+function load(){document.querySelectorAll('iframe').forEach((f,i)=>{if(f.contentDocument?.documentElement?.dataset.paletteReview){f.contentWindow.postMessage({type:"palette-scene",scene},location.origin)}else{f.src=`index.html?check=1&scenario=room&palette-review=${palettes[i][1]}&palette-scene=${scene}`}});document.querySelectorAll('.scenes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.scene===scene));}
 for(const [key,label]of scenes){const b=document.createElement('button');b.dataset.scene=key;b.textContent=label;b.onclick=()=>{if(scene!==key){scene=key;load()}};document.querySelector('.scenes').append(b)}show();load();
 </script></body></html>
