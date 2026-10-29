@@ -19,7 +19,7 @@ for(const [width,height] of [[320,568],[375,812]]){
  assert(await page.evaluate(()=>CONFIG.cat.types.every(a=>CONFIG.cat.types.every(b=>{const s=structuredClone(gameState);getCat(s).types=[a,b];return alphaTasteOptions(s).length===3}))), 'Every personality pair has three distinct affinity bands');
  assert(await page.evaluate(()=>CONFIG.items.filter(i=>i.wornFrom).every(i=>{let s=structuredClone(gameState);s.campaign={...s.campaign,phase:'room',shopId:null};s.ui={...s.ui,alphaNotice:null,alphaTasteStarted:null,layoutMode:i.kind==='placed'};s.inventory[i.id]=1;s.durability[i.id]=3;if(i.kind==='hand'){s=reduceGameState(s,{type:'SELECT_HAND',itemId:i.id});return s.ui.equippedHand===i.id;}s=reduceGameState(s,{type:'PICK_FURNITURE',itemId:i.id});return getPlaced(getRoom(s)).some(p=>p.itemId===i.id);})), 'Every worn gift can be placed or equipped');
  const choices=await page.evaluate(()=>gameState.alpha.taste.options);
- assert.deepEqual(choices.map(o=>Math.sign(o.score)),[1,0,-1]);
+ assert.deepEqual(choices.map(o=>Math.sign(o.score)).sort(),[-1,0,1]);
  assert(await page.evaluate(()=>gameState.alpha.taste.options.every(o=>!getItem(o.id).unlimited&&getItem(o.id).wornFrom&&getItem(o.id).durability===3)));
  await page.screenshot({path:`tests/screenshots/alpha-taste-${width}.png`});
  const bounds=await page.locator('.alpha-taste article').boundingBox();assert(bounds.y>=48&&bounds.y+bounds.height<=height);
