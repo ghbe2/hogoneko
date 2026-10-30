@@ -43,7 +43,16 @@ function guidePresentation(state){
  function setTextPage(){
   const nav=note.querySelector('nav');nav.replaceChildren();
   if(page<pages.length-1){const b=document.createElement('button');b.textContent='つぎへ';b.dataset.copyPage='';nav.append(b);}
-  else nav.append(...savedControls);
+  else {
+   nav.append(...savedControls);
+   if(['swipe','clinicScroll'].includes(key)){
+    const hint=document.createElement('small');hint.className='guide-action-hint';
+    const pc=matchMedia('(pointer:fine)').matches;
+    hint.textContent=key==='swipe'?(pc?'地図を下にドラッグ':'地図を下にスワイプ'):(pc?'地図を上にドラッグ':'地図を上にスワイプ');
+    if(pc)hint.append(document.createElement('br'),key==='swipe'?'ホイールを上へ':'ホイールを下へ');
+    nav.append(hint);
+   }
+  }
   next=nav.querySelector('button');chars=Array.from(pages[page]);
  }
  setTextPage();

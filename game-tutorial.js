@@ -65,11 +65,11 @@ render=function(state){
  const spec=currentTownTutorial(state);if(!spec)return;
  const target=app.querySelector(spec.target);if(!target)return;
  const layer=document.createElement('section');layer.className='tutorial-focus';
- layer.innerHTML='<div class="tutorial-ring"></div><aside class="tutorial-note shared-guide-note" aria-label="せんぱいの案内"><strong class="senior-dialogue-name">保護主のせんぱい</strong><p></p><button type="button">つぎへ</button><span></span></aside>';
+ layer.innerHTML='<div class="tutorial-ring"></div><aside class="tutorial-note shared-guide-note" aria-label="せんぱいの案内"><strong class="senior-dialogue-name">保護主のせんぱい</strong><p></p>'+(spec.action?'':'<button type="button">つぎへ</button>')+'<span></span></aside>';
  layer.querySelector('p').textContent=spec.copy;
- const button=layer.querySelector('button');button.hidden=!!spec.action;
+ const button=layer.querySelector('button');
  layer.querySelector('span').textContent=spec.action||'';
- button.onclick=()=>dispatch({type:'TUTORIAL_TOWN_NEXT'});
+ if(button)button.onclick=()=>dispatch({type:'TUTORIAL_TOWN_NEXT'});
  app.append(layer);
  const scroller=app.querySelector('.town-map-scroll');
  if(['area','goal','rescue'].includes(state.onboarding.townStep))scroller.scrollTop=scroller.clientHeight*1.5;

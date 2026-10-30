@@ -8,6 +8,7 @@
 .shared-guide-note nav{grid-row:3;display:flex;align-items:end;justify-content:flex-end;min-height:44px;gap:8px}
 .shared-guide-note button{grid-row:3;justify-self:end;align-self:end;margin:0;float:none;width:112px;min-width:112px;height:44px;min-height:44px;box-sizing:border-box;padding:4px 6px;background:var(--guide-accent, #9d5341);color:#fff7e5;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:12px}
 .shared-guide-note small{grid-row:3}.shared-guide-note:after{display:none}.shared-guide-note button:disabled{opacity:.4}
+.shared-guide-note .guide-action-hint{font-size:12px;line-height:20px;color:#665442;text-align:right;align-self:center}
 .shared-guide-note button[hidden]{display:none}
 .first-guide .shared-guide-note,.tutorial-focus .shared-guide-note{left:50%;right:auto;width:calc(100% - 20px);max-width:420px;transform:translateX(-50%)}
 #app{-webkit-tap-highlight-color:transparent}#app button,#app [role="button"]{user-select:none}
