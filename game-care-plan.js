@@ -66,7 +66,7 @@ render=function(state){
  carePlanRender(state);
  if(!state.ui.careBookingOpen||titleScreenOpen)return;
  const cat=getCat(state),layer=document.createElement('section');layer.className='care-booking modal-layer';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','手術の予約');
- layer.innerHTML=`<article><h2>明日、手術を受けますか？</h2><p>今の体重は <strong>${Math.round(cat.body.weight).toLocaleString()}g</strong>。</p><p>予約すると、ごはんをしまいます。絶食で体重が減るので、2,000gぎりぎりなら、もう1日育ててからにしましょう。</p><p>手術当日も、2,000g以上・体調良好が条件です。予約はアプリから取り消せます。</p><small>ゲーム内のルールです。現実の絶食は獣医師の指示に従ってください。</small><button data-care-booking="confirm">明日の手術を予約する</button><button data-care-booking="cancel">もう1日育てる</button></article>`;
+ layer.innerHTML=`<article><h2>明日、手術を受けますか？</h2><p>今の体重は <strong>${Math.round(cat.body.weight).toLocaleString()}g</strong>。</p><p>手術の前はごはんをあげられないので、予約するとお皿をしまいます。絶食で体重が減るので、2,000gぎりぎりなら、もう1日育ててからにしましょう。</p><p>手術当日も、2,000g以上・体調良好が条件です。予約はアプリから取り消せます。</p><small>現実の絶食は獣医師の指示に従ってください。</small><button data-care-booking="confirm">明日の手術を予約する</button><button data-care-booking="cancel">もう1日育てる</button></article>`;
  for(const child of app.children)child.inert=true;
  app.append(layer);
 };

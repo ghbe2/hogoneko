@@ -1,0 +1,10 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
+(async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{for(const [width,height]of [[320,568],[375,812]]){
+ const p=await b.newPage({viewport:{width,height}}),errors=[];p.on('pageerror',e=>errors.push(e.message));
+ await p.addInitScript(entries=>{for(const e of entries)localStorage.setItem(e.name,e.value)},JSON.parse(fs.readFileSync('tests/screenshots/published-care-state-'+width+'.json','utf8')).origins[0].localStorage);
+ await p.goto(process.env.GAME_URL+'?check=1');if(await p.locator('#password').count()){await p.fill('#password',process.env.MOCK_VIEW_PASSWORD);await p.click('#enter');}await p.click('[data-action="start-game"]');
+ await p.evaluate(()=>{gameState.ui={...gameState.ui,modal:null,alphaNotice:{key:'review',kind:'visit',text:'おじゃまします。元気にしていましたか？',page:0}};render(gameState)});
+ await p.waitForTimeout(200);const held=p.locator('.alpha-visit .senior-held-cat');assert.equal(await held.count(),1);const a=await held.innerHTML();await p.screenshot({path:'tests/screenshots/senior-motion-'+width+'-a.png'});await p.waitForTimeout(2600);assert.notEqual(await held.innerHTML(),a);await p.screenshot({path:'tests/screenshots/senior-motion-'+width+'-b.png'});
+ for(const familyIndex of [0,1,2,3]){await p.evaluate(i=>{const c=getCat(gameState);gameState={...gameState,campaign:{...gameState.campaign,phase:'graduation',adoptionRun:{version:1,catId:c.id,status:'playing',startedAt:Date.now()-34500,outcome:'adopted',grade:'high',familyIndex:i}},ui:{...gameState.ui,modal:null,alphaNotice:null}};render(gameState)},familyIndex);await p.waitForTimeout(900);assert(await p.locator('.adoption-main .adoption-held-cat').count());await p.screenshot({path:'tests/screenshots/family-'+width+'-'+familyIndex+'.png'});}
+ assert.deepEqual(errors,[]);console.log('PASS held cat motion and four family compositions',width);await p.close();
+}}finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});

@@ -5,7 +5,7 @@ let furnitureStoredNotice=null;
 function furnitureStorageArt(){return `<svg viewBox="0 0 80 64" aria-hidden="true"><path d="M10 22L40 13 70 22 40 34Z" fill="#776045"/><g class="storage-flaps"><path d="M10 22L3 12 31 4 40 13Z" fill="#d5b982"/><path d="M40 13L50 4 78 13 70 22Z" fill="#c5a16c"/></g><path d="M10 22L40 32 40 60 10 48Z" fill="#be9863"/><path d="M40 32L70 22 70 48 40 60Z" fill="#a87e50"/><path d="M10 22L40 32 70 22" fill="none" stroke="#ead4a7" stroke-width="2"/><path d="M18 31L33 36 33 48 18 43Z" fill="#efe0ba"/><path d="M22 36L28 38" stroke="#9b885e" stroke-width="2"/><path d="M46 48L63 42M15 46L35 53" stroke="#cfac77" stroke-width="1"/></svg>`;}
 function updateFurnitureStorage(draft){const target=draft.storage;if(!target?.classList.contains('layout-store-target'))return;target.dataset.state=draft.store?'over':'drag';target.querySelector('.storage-copy').textContent=draft.store?'離してしまう':'ここへドラッグしてしまう';}
 const ROOM_CONTROL_RESERVE=128;
-const ROOM_MENU_RESERVE=94;
+const ROOM_MENU_RESERVE=118;
 function layoutWallStart(height=app.clientHeight||window.innerHeight){return ROOM_MENU_RESERVE/height*100;}
 // The painted skirting is at y=429 in the 760-unit room artwork.
 function roomPlacementBounds(height=app.clientHeight||window.innerHeight,state=gameState){const intake=state.campaign.phase==='intake'&&state.onboarding?.status==='active'&&state.onboarding.flowVersion===1;return {wallTop:ROOM_MENU_RESERVE,wallBottom:height*429/760-8,floorTop:height*429/760+8,floorBottom:height-(intake?76:ROOM_CONTROL_RESERVE)};}
@@ -20,7 +20,7 @@ function layoutFloorLimit(itemId,height=app.clientHeight||window.innerHeight){
  const itemHeight=itemId==='tower'?150:['bowl','water'].includes(itemId)?45:['shelf','decor_sun','litter'].includes(itemId)?65:84;
  return Math.max(8,(height-ROOM_CONTROL_RESERVE-itemHeight)/height*100);
 }
-function keepFurnitureAboveControls(state){return {...state,rooms:state.rooms.map(room=>({...room,wall:room.wall.map(p=>({...p,y:constrainFurnitureY(p.itemId,p.y)})),floor:room.floor.map(p=>({...p,y:constrainFurnitureY(p.itemId,p.y)}))}))};}
+function keepFurnitureAboveControls(state){if(typeof guidedIntake==='function'&&guidedIntake(state))return state;return {...state,rooms:state.rooms.map(room=>({...room,wall:room.wall.map(p=>({...p,y:constrainFurnitureY(p.itemId,p.y)})),floor:room.floor.map(p=>({...p,y:constrainFurnitureY(p.itemId,p.y)}))}))};}
 const dragBeforeControlZone=moveLayoutDrag;
 moveLayoutDrag=function(draft,x,y){dragBeforeControlZone(draft,x,y);if(draft.moved&&draft.ghost&&!draft.store){const r=draft.stageRect,b=roomPlacementBounds(r.height),wall=draft.zone==='wall',raw=y-r.top-draft.offsetY,bottom=raw+draft.height;
  draft.y=constrainFurnitureY(draft.itemId,raw/r.height*100,r.height,draft.height);draft.ghost.style.top=draft.y+'%';
@@ -32,7 +32,7 @@ moveLayoutDrag=function(draft,x,y){dragBeforeControlZone(draft,x,y);if(draft.mov
   draft.ghost.style.left=draft.x+'%';draft.ghost.style.top=draft.y+'%';
   draft.valid=intakePositionClear({itemId:draft.itemId,x:draft.x,y:draft.y},getPlaced(getRoom(gameState)),frame);
  }
- draft.ghost.classList.toggle('invalid',!draft.valid);draft.hint.textContent=draft.valid?'離してここに置く':typeof guidedIntake==='function'&&guidedIntake(gameState)?'保護器や家具から少し離してね':wall?'壁の枠内に置く':'家具の足元を床の枠内に置く';}};
+ draft.ghost.classList.toggle('invalid',!draft.valid);}};
 function daylightAt(date=new Date(gameNow())){
  const hour=date.getHours()+date.getMinutes()/60;
  if(hour<6||hour>=19)return null;
@@ -45,7 +45,7 @@ getAvailableRoamPoints=function(state){const points=roamingBeforeSun(state),sun=
 const furnitureReducer=reduceGameState;
 reduceGameState=function(state,action){
  state=keepFurnitureAboveControls(state);
- if(action.type==='DROP_LAYOUT_ITEM'&&!action.store){action={...action,y:constrainFurnitureY(action.itemId,action.y)};if(typeof guidedIntake==='function'&&guidedIntake(state)&&!intakePositionClear(action,getPlaced(getRoom(state)),intakePlacementFrame(state)))return state;}
+ if(action.type==='DROP_LAYOUT_ITEM'&&!action.store){if(typeof guidedIntake==='function'&&guidedIntake(state)){if(!intakePositionClear(action,getPlaced(getRoom(state)),intakePlacementFrame(state)))return state;}else action={...action,y:constrainFurnitureY(action.itemId,action.y)};}
  if(action.type==='ROAM_CAT'&&daylightAt()&&getAffinity(getCat(state),{affinityType:'sun'}).score>0&&Math.random()<.65)action={...action,index:990};
  if(action.type==='PICK_FURNITURE'){
   const item=getItem(action.itemId);if(!item||!owned(state,item.id)||getDurability(state,item.id)<=0)return state;
@@ -63,7 +63,7 @@ reduceGameState=function(state,action){
 renderLayoutPalette=function(state){
  const filter=state.ui.layoutFilter||'all',placed=new Set(getPlaced(getRoom(state)).map(p=>p.itemId));
  const ids=CONFIG.stage1.placedItems.filter(id=>owned(state,id)&&(filter==='all'||getItem(id).zone===filter));
- return `<div class="layout-library modal-layer" role="dialog" aria-label="家具を選ぶ"><section class="furniture-sheet"><header><h2>家具を選ぶ</h2><button data-action="toggle-layout-tray" aria-label="閉じる">×</button></header><nav>${[['all','すべて'],['floor','床'],['wall','壁']].map(([id,label])=>`<button data-action="set-layout-filter" data-filter="${id}" aria-pressed="${filter===id}">${label}</button>`).join('')}</nav><div class="furniture-grid">${ids.map(id=>`<button data-action="pick-furniture" data-item="${id}" ${getDurability(state,id)>0?'':'disabled'}>${bookIcons[id]?bookImage(bookIcons[id]):TOOL_META[id]?.emoji||''}<strong>${getItem(id).label}</strong><small>${placed.has(id)?'配置済み':getItem(id).zone==='wall'?'壁に置く':'床に置く'}</small>${renderDurability(state,id)}</button>`).join('')}</div><button class="furniture-close" data-action="toggle-layout-tray">部屋へ戻る</button></section></div>`;
+ return `<div class="layout-library modal-layer" role="dialog" aria-label="家具を選ぶ"><section class="furniture-sheet"><header><h2>家具を選ぶ</h2><button data-action="toggle-layout-tray" aria-label="閉じる">×</button></header><nav>${[['all','すべて'],['floor','床'],['wall','壁']].map(([id,label])=>`<button data-action="set-layout-filter" data-filter="${id}" aria-pressed="${filter===id}">${label}</button>`).join('')}</nav><div class="furniture-grid">${ids.map(id=>`<button data-action="pick-furniture" data-item="${id}" data-placed="${placed.has(id)}" aria-label="${getItem(id).label}${placed.has(id)?'・配置済み':'・部屋に置く'}" ${getDurability(state,id)>0?'':'disabled'}>${bookIcons[id]?bookImage(bookIcons[id]):TOOL_META[id]?.emoji||''}<strong>${getItem(id).label}</strong><svg class="furniture-placement-mark" viewBox="0 0 20 20" aria-hidden="true"><path d="${placed.has(id)?'M4 10L8 14L16 5':'M10 4V16M4 10H16'}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>${renderDurability(state,id)}</button>`).join('')}</div><button class="furniture-close" data-action="toggle-layout-tray">部屋へ戻る</button></section></div>`;
 };
 const roomInterfaceRender=render;
 render=function(state){state=keepFurnitureAboveControls(state);if(state.campaign.phase==='room'||state.campaign.phase==='intake')gameState=state;roomInterfaceRender(state);const frame=app.querySelector('.game-frame');if(!frame)return;
@@ -96,8 +96,6 @@ const roomInterfaceStyle=document.createElement('style');roomInterfaceStyle.text
 #app .layout-workbar .layout-done{background:#637d59;color:#fffdf5}
 #app .layout-workbar button:disabled{opacity:.4}
 #app [data-layout-item].layout-selected{outline:2px dashed #637d59;outline-offset:5px}
-#app .intake-layout .layout-workbar{bottom:82px}
-#app .guided-intake .layout-workbar{bottom:18px}
 #app .layout-store-target{display:flex;align-items:center;gap:7px;left:50%;right:auto;bottom:84px;transform:translateX(-50%);width:218px;min-width:0;height:44px;min-height:44px;box-sizing:border-box;padding:0 8px 0 2px;border:1px solid #b8a27a;border-radius:10px;background:#f3e7cdee;color:#66513b;box-shadow:0 3px 8px #60472e18;z-index:28;font-size:12px;font-weight:600;pointer-events:none}
 #app .layout-store-target>svg{width:50px;height:42px;flex:none;overflow:visible}
 #app .layout-store-target .storage-copy{line-height:1.5;max-width:154px;text-wrap:balance}
@@ -120,9 +118,9 @@ const roomInterfaceStyle=document.createElement('style');roomInterfaceStyle.text
 #app .furniture-sheet nav button{flex:1}
 #app .furniture-sheet [aria-pressed=true]{background:#637d59;color:#fffdf5}
 #app .furniture-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;overflow-y:auto;min-height:0;flex:1;align-content:start;touch-action:pan-y}
-#app .furniture-grid button{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:110px;gap:5px}
+#app .furniture-grid button{position:relative;border:2px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:110px;gap:5px}
 #app .furniture-grid .book-icon{width:58px;height:48px;object-fit:contain}
-#app .furniture-grid small{font-size:11px}
+#app .furniture-grid button[data-placed="true"]{border-color:#758e63;background:#e4e8d6}#app .furniture-grid .furniture-placement-mark{position:absolute;right:4px;top:4px;width:18px;height:18px;color:#637d59}
 #app .furniture-close{margin-top:12px;flex:none}
 #app .stage:has(.layout-library) .layout-workbar{visibility:hidden}
 #app .intake-layout:has(.layout-library)>.intake-footer{visibility:hidden}
@@ -337,7 +335,7 @@ function positionDiscoveryCoin(entry){
  const motion=entry.discoveryContact,matrix=entry.rig.nodes.age.getScreenCTM();if(!matrix)return;
  const point=new DOMPoint(motion.x,motion.y).matrixTransform(matrix),s=stage.getBoundingClientRect();
  coin.style.left=(point.x-s.left)*stage.offsetWidth/s.width+'px';coin.style.top=(point.y-s.top)*stage.offsetHeight/s.height+'px';
- coin.style.visibility='visible';coin.firstElementChild.style.rotate=motion.rotation+'deg';
+ coin.style.visibility='visible';const disc=coin.querySelector('.paw-coin')||coin.firstElementChild;disc.style.rotate=motion.rotation+'deg';
 }
 app.addEventListener('click',event=>{if(event.target.closest('[data-action="pick-discovery-coin"]'))dispatch({type:'PICK_DISCOVERY_COIN'});});
 discoveryStyle.textContent+='.discovery-pickup{position:absolute;z-index:76;width:48px;height:48px;padding:0;border:0;background:none;transform:translate(-50%,-50%);touch-action:manipulation;visibility:hidden;display:grid;place-items:center}.discovery-pickup span{display:block;width:9px;height:9px;border-radius:50%;background:#dca735;border:1px solid #a77c29;box-shadow:inset 1px 0 #f8dc83,0 1px 1px #71563340;font-size:0}.discovery-pickup span:after{content:"";display:block;width:1px;height:5px;margin:1px auto;background:#b78a32}';

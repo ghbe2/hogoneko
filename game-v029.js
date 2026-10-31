@@ -95,6 +95,7 @@ render=function(state){
  if(key!==surgeryTimerKey){clearTimeout(surgeryTimer);surgeryTimerKey=key;if(key)surgeryTimer=setTimeout(()=>dispatch({type:'FINISH_SURGERY'}),Math.max(0,SURGERY_MS-(gameNow()-medical.startedAt))+50);}
  const room=app.querySelector('.surgery-room');
  if(room){room.style.setProperty('--clinic-wall',state.season==='winter'?'#d6ddd0':'#d4dcc6');room.insertAdjacentHTML('afterbegin','<div class="surgery-setting" aria-hidden="true"><span class="surgery-poster">診察室<i></i><i></i><i></i></span><span class="surgery-window"></span><span class="surgery-table"></span></div>');}
+ if(room){const camera=document.createElement('div');camera.className='surgery-camera';for(const n of [...room.querySelectorAll(':scope>.surgery-setting,:scope>.surgery-cat')])camera.append(n);room.prepend(camera);if(medical?.startedAt)camera.style.animationDelay=`-${Math.max(0,gameNow()-medical.startedAt)}ms`;}
  const snip=app.querySelector('.surgery-snip');
  if(snip&&medical?.startedAt){
   const art=room.querySelector('.surgery-cat');if(art)art.style.animationDelay=`-${Math.max(0,gameNow()-medical.startedAt)}ms`;

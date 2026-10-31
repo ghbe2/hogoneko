@@ -11,7 +11,7 @@ const TOWN_TUTORIAL={
 const FIRST_GUIDES={
  fieldHello:{target:'.encounter-trap',copy:'おや、猫の気配がしますね。無理に追いかけず、保護器を使って保護しましょう。',next:'bait'},
  bait:{target:'.bait-carousel',copy:'保護器の中に、ごはんを入れて誘います。私が用意した「ウェットフード」を選んでください。',hint:'餌を横にスワイプ'},
- trap:{target:'.encounter-trap',copy:'選べましたね。次は保護器をドラッグして、猫がいそうな場所に置いてみましょう。'},
+ trap:{target:'.encounter-trap',copy:'選べましたね。次は保護器を持ち上げて、猫がいそうな場所にそっと置いてみましょう。'},
  trapReady:{target:'.illustrated-trap',copy:'あっ、保護器が揺れていますよ！猫が入ったようですね。見に行ってみましょう。',hint:'保護器をタップ'},
  captured:{target:'.capture-message',copy:'猫が入ってくれましたね！驚いていることもあるので、落ち着いて対応してあげましょう。',next:'toClinic'},
  toClinic:{target:'[data-action="go-clinic"]',copy:'帰る前に、まずは健康状態を確認しましょう。見た目だけではわからない体調の変化もあります。'},
@@ -47,7 +47,7 @@ const FIRST_GUIDES={
  essentials:{target:'[data-action="toggle-layout-tray"]',copy:'ごはんとお水をいつでも用意できて、トイレも安心して使えるようにしてあげましょうね。',next:'cardboard'},
  cardboard:{target:'[data-action="toggle-layout-tray"]',copy:'初心者セットの段ボールも、気に入るかもしれませんね。こういう箱が好きな猫も多いんですよ。',next:'cutCardboard'},
  cutCardboard:{target:'[data-action="toggle-layout-tray"]',copy:'ちょきちょき……入口を作ってみましたよ。猫の隠れ家になりそうですね。置いてみましょう。'},
- moveFurniture:{target:'.placed-item.item-box',copy:'段ボールに触れたまま、指を動かしてみましょう。指を離すと、その場所に置けますよ。'},
+ moveFurniture:{target:'.placed-item.item-box',copy:'段ボールを持ち上げて、置き場所を変えてみましょう。この子が落ち着けそうな場所を探してみてね。'},
  callFirst:{target:'.intake-footer-call',copy:'名前が決まりましたね！さっそく呼んでみましょう。'},
  callWait:{target:'.room-carrier',copy:'……'},
  callAgain:{target:'.intake-footer-call',copy:'まだ少し警戒しているのかな？焦らなくて大丈夫。何度か、優しく名前を呼んでみましょう。'},
@@ -68,7 +68,7 @@ const INTRODUCTION_PAGES=[
 ];
 
 const ACTIVITY_DIALOGUE={
- firstScheduleSurgery:{copy:'体重2,000g以上で体調が整い、おうちに慣れたらアプリで手術を予約できます。ごはんをあげて育てましょう。'},
+ firstScheduleSurgery:{copy:'手術は、この暮らしに慣れてから。まずは5日間、一緒に過ごしましょう。体重2,000g以上と、健康を保つことも大切です。'},
  firstScheduleEvent:{copy:'手術を終えた２日後が譲渡会です。たくさん遊んで人馴れさせれば、いい里親さんに巡り合えるかも。'},
  careNotice_ready:{copy:'目標の2,000gに届きましたね！右上のスマホのマークから、手術の予定を確認しましょう。'},
  careNotice_surgery:{copy:'今日は予約した手術の日です。ごはんはお休み中。左上の地図から動物病院へ行きましょう。'},
@@ -89,9 +89,9 @@ const HOME_TOUR=[
  ['calendar','.app-calendar','スケジュール','手術と譲渡会の予定です。手術に向けて、ごはんをあげて体重と体調を整えましょう。'],
  ['pay','.app-pay','ミャオペイ','持っているコインを確認できます。広告を見てコインを受け取ることもできます。'],
  ['close','.home-phone-close','お部屋にもどろう','右上の×でアプリを閉じて、お世話の道具を見てみましょう。'],
- ['play','.main-command-row [data-tab="play"]','あそぶ','おもちゃをネコの近くへドラッグして、一緒に遊びましょう。'],
- ['clean','.main-command-row [data-tab="clean"]','そうじ','掃除道具を汚れのところへドラッグ。お部屋をきれいに保ちましょう。'],
- ['food','.room-preparation [data-tab="food"]','ごはん','ごはんを選んで、お皿をタップしましょう。好みや体調を見ながら用意してあげてくださいね。'],
+ ['play','.main-command-row [data-tab="play"]','あそぶ','おもちゃを猫の近くで動かして、一緒に遊びましょう。'],
+ ['clean','.main-command-row [data-tab="clean"]','そうじ','掃除道具で汚れを落として、お部屋をきれいに保ちましょう。'],
+ ['food','.room-preparation [data-tab="food"]','ごはん','ごはんを選んで、お皿に用意しましょう。好みや体調を見ながら用意してあげてくださいね。'],
  ['items','.room-preparation [data-tab="touch"]','もちもの','使いたいケア用品を選んで持ち替えられます。左端の引き出しを押すと、収納棚を開けますよ。']
 ];
 for(const [key,,title,copy]of HOME_TOUR)ACTIVITY_DIALOGUE['homeTour_'+key]={title,copy};

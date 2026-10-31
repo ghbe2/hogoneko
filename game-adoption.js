@@ -15,7 +15,7 @@ reduceGameState=function(state,action){
   const entered={...state,cats:state.cats.map(c=>c.id===cat.id?{...c,eventVisitDay:c.body.days+1}:c),campaign:{...state.campaign,requiredVisit:null}};
   const next=adoptionBaseReducer(entered,{type:'SEND_EVENT'});
   if(next.campaign.phase!=='result'||next.album.length!==state.album.length+1)return next;
-  return {...next,campaign:{...next.campaign,phase:'graduation',adoptionRun:{version:1,catId:cat.id,status:'playing',startedAt:Date.now(),outcome:next.campaign.outcome,grade:cat.heart>=80?'high':cat.heart>=CONFIG.graduation.adoptScoreGood?'mid':'low'}},ui:{...next.ui,modal:null,adoptionRecord:false}};
+  return {...next,campaign:{...next.campaign,phase:'graduation',adoptionRun:{version:1,catId:cat.id,status:'playing',familyIndex:Math.floor(Math.random()*ADOPTION_COLORS.length),startedAt:Date.now(),outcome:next.campaign.outcome,grade:cat.heart>=80?'high':cat.heart>=CONFIG.graduation.adoptScoreGood?'mid':'low'}},ui:{...next.ui,modal:null,adoptionRecord:false}};
  }
  if(action.type==='ADOPTION_RECORD')return run?.status==='done'?{...state,ui:{...state.ui,adoptionRecord:true}}:state;
  if(action.type==='FINISH_ADOPTION')return state;
@@ -30,24 +30,23 @@ let adoptionView=null;
 function createAdoptionView(root){
  const find=id=>root.querySelector('#adoption-'+id),cat=getCat(gameState),dna=phenotypeFor(cat),svg=find('cat');
  const rig=CatSVG.buildCat(svg,'adoption',dna,375,dna.age==='adult'?1.25:1);svg.querySelector('.floor')?.remove();
- const neighbors=[0,1].map(i=>{const basket=root.querySelector('.adoption-basket').cloneNode(true);basket.classList.add('adoption-neighbor',i?'is-right':'is-left');basket.setAttribute('aria-hidden','true');basket.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));basket.querySelector('.adoption-basket-tag')?.remove();const image=basket.querySelector('.adoption-cat svg'),neighborDNA={...CatSVG.sampleDNA(401+i*83),age:'adult',earCut:'none',mood:'neutral'};const neighborRig=CatSVG.buildCat(image,'adoption-neighbor-'+i,neighborDNA,375,1.25);image.querySelector('.floor')?.remove();root.querySelector('.adoption-stage').append(basket);return neighborRig;});
+ const neighbors=[0,1].map(i=>{const basket=root.querySelector('.adoption-basket').cloneNode(true);basket.classList.add('adoption-neighbor',i?'is-right':'is-left');basket.setAttribute('aria-hidden','true');basket.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));const tag=basket.querySelector('.adoption-basket-tag');if(tag)tag.textContent=['むぎ','こはく','あずき','そら','もも','まる','ゆず','きなこ','くるみ','しお','はる','りん'][((stableCatSeed(cat.id)||0)+i*5)%12];const image=basket.querySelector('.adoption-cat svg'),neighborDNA={...CatSVG.sampleDNA(401+i*83),age:'adult',earCut:'none',mood:'neutral'};const neighborRig=CatSVG.buildCat(image,'adoption-neighbor-'+i,neighborDNA,375,1.25);image.querySelector('.floor')?.remove();root.querySelector('.adoption-stage').append(basket);return neighborRig;});
  for(const side of ['left','right']){const table=root.querySelector('.adoption-display').cloneNode(true);table.classList.add('is-neighbor','is-'+side);root.querySelector('.adoption-stage').append(table);}
  const walkers=ADOPTION_COLORS.map((_,i)=>{const n=document.createElement('div');n.className='adoption-person';n.innerHTML=adoptionPerson(i);find('walkway').append(n);return n});
- const family=walkers[4],held=document.createElementNS('http://www.w3.org/2000/svg','g');held.classList.add('adoption-held');held.innerHTML='<path d="M37 104Q22 127 45 144M78 104Q94 127 80 144" fill="none" stroke="'+ADOPTION_COLORS[4]+'" stroke-width="15" stroke-linecap="round"/><svg class="adoption-held-cat" x="23" y="70" width="76" height="78" viewBox="200 55 320 320" preserveAspectRatio="xMidYMax meet"></svg><path d="M44 144Q56 150 67 144M80 143L71 145" fill="none" stroke="#dfbb98" stroke-width="8" stroke-linecap="round"/>';
- (family.querySelector('.adoption-torso > .actor-breath')||family.querySelector('.adoption-torso')).append(held);const heldRig=CatSVG.buildCat(held.querySelector('svg'),'adoption-held',dna,375,dna.age==='adult'?1.25:1);held.querySelector('.floor')?.remove();
+ const familyIndex=adoptionRunFor(gameState)?.familyIndex??stableCatSeed(cat.id)%walkers.length,family=walkers[familyIndex],held=document.createElementNS('http://www.w3.org/2000/svg','g');held.classList.add('adoption-held');held.setAttribute('transform','translate(60 90) scale(1.7 1.62) translate(-60 -90)');held.innerHTML='<path d="M37 104Q22 127 45 144M78 104Q94 127 80 144" fill="none" stroke="'+ADOPTION_COLORS[familyIndex]+'" stroke-width="15" stroke-linecap="round"/><svg class="adoption-held-cat" x="23" y="70" width="76" height="78" viewBox="200 55 320 320" preserveAspectRatio="xMidYMax meet"></svg><path d="M44 144Q56 150 67 144M80 143L71 145" fill="none" stroke="#dfbb98" stroke-width="8" stroke-linecap="round"/>';
+ (family.querySelector('.adoption-main .adoption-torso > .actor-breath')||family.querySelector('.adoption-main .adoption-torso')).append(held);const heldRig=CatSVG.buildCat(held.querySelector('svg'),'adoption-held',dna,375,dna.age==='adult'?1.25:1);held.querySelector('.floor')?.remove();
  const speech=document.createElement('p');speech.className='adoption-request-speech';speech.style.whiteSpace='pre-line';root.querySelector('.adoption-stage').append(speech);
- return {root,find,rig,heldRig,neighbors,walkers,speech,comment:root.querySelector('.adoption-visitor-comment'),key:null};
+ return {root,find,rig,heldRig,neighbors,walkers,familyIndex,speech,comment:root.querySelector('.adoption-visitor-comment'),key:null};
 }
 function adoptionPosition(n,x,stopped,left=false,distance=0,amount=1,lane=0){
- n.style.visibility='visible';n.classList.toggle('adoption-stopped',stopped);n.dataset.stopped=String(stopped);n.style.transform=`translate(${x}px,${lane}px)`;n.style.zIndex=String(30+lane);n.querySelector('.adoption-figure').setAttribute('transform',left?'translate(120 0) scale(-1 1)':'');
- // Facing-local stance moves backward on the ground; the forward return stroke lifts.
- // There are no independent CSS leg timers to drift or restart on a redraw.
- const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,m=stopped||reduced?0:amount,phase=distance/33*Math.PI;
- for(const [side,hip,offset] of [['a',53,0],['b',67,Math.PI]]){const p=phase+offset,footX=hip+Math.cos(p)*15*m,footY=233-Math.max(0,-Math.sin(p))*8*m,kneeX=(hip+footX)/2+Math.max(0,-Math.sin(p))*8*m;
-  n.querySelector('.adoption-leg-'+side+' .adoption-leg-line').setAttribute('d',`M${hip} 154Q${kneeX} 192 ${footX} ${footY}`);
-  n.querySelector('.adoption-leg-'+side+' .adoption-shoe').setAttribute('d',`M${footX-8} ${footY-3}h15l8 7q0 4-6 4h-19z`);
- }
- n.querySelector('.adoption-arm').setAttribute('transform',`rotate(${Math.sin(phase)*7*m} 75 101)`);
+ n.style.visibility='visible';n.classList.toggle('adoption-stopped',stopped);n.dataset.stopped=String(stopped);n.style.transform=`translate(${x}px,${lane}px)`;n.style.zIndex=String(30+lane);n.querySelectorAll('.adoption-figure').forEach(figure=>figure.setAttribute('transform',left?'translate(120 0) scale(-1 1)':''));
+ // Match travel in screen pixels to the shared rig's planted-foot speed.
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ n.querySelectorAll('svg[data-visitor-hip]').forEach(svg=>{
+  const height=svg.getBoundingClientRect().height||n.clientHeight;
+  const localHeight=svg.viewBox.baseVal.height;
+  drawVisitorLegs(svg,distance*localHeight/Math.max(1,height)/48,!stopped&&!reduced&&amount>0,1);
+ });
 }
 function adoptionShowComment(view,node,text){
  const bubble=view.comment;if(bubble.textContent!==text)bubble.textContent=text;
@@ -65,7 +64,7 @@ function adoptionVisitors(view,seconds,grade){
  });
  if(speaker)adoptionShowComment(view,speaker.n,speaker.text);else view.comment.classList.remove('is-visible');
 }
-function adoptionPhase(run,seconds){if(!run)return 'ready';if(run.status==='done')return 'result';if(seconds<23)return 'walking';if(seconds<25)return 'suspense';if(run.outcome==='tnr')return 'result';if(seconds<28)return 'approach';if(seconds<32)return 'request';if(seconds<34)return 'handover';if(seconds<38)return 'thanks';if(seconds<42)return 'departure';return 'result';}
+function adoptionPhase(run,seconds){if(!run)return 'ready';if(run.status==='done')return 'result';if(seconds<2)return 'arrival';if(seconds<23)return 'walking';if(seconds<25)return 'suspense';if(run.outcome==='tnr')return 'result';if(seconds<28)return 'approach';if(seconds<32)return 'request';if(seconds<34)return 'handover';if(seconds<38)return 'thanks';if(seconds<42)return 'departure';return 'result';}
 function paintAdoption(view,time){
  const state=gameState,cat=getCat(state),run=adoptionRunFor(state),seconds=run?Math.max(0,(Date.now()-run.startedAt)/1000):0,phase=adoptionPhase(run,seconds),adopted=run?.outcome==='adopted',name=cat.name||'この子',find=view.find;
  const key=[phase,name,state.coins,isGraduationReady(state)].join('|');
@@ -89,24 +88,24 @@ function paintAdoption(view,time){
   find('aside').textContent='';
   find('result-kicker').textContent=adopted?'この出会いが、未来になった':'保護活動の、ひとつの区切り';find('result-word').textContent=adopted?'譲渡成立':'元いた街へ';
  }
- if(phase==='walking')adoptionVisitors(view,seconds,run.grade);
- else {view.comment.classList.remove('is-visible');view.walkers.forEach(n=>n.style.visibility='hidden');if(['approach','request','handover','thanks','departure'].includes(phase)&&adopted){const n=view.walkers[4],w=find('walkway').clientWidth,target=w*.87-n.clientWidth/2,leaving=phase==='departure',p=leaving?Math.min(1,(seconds-38)/4):phase==='approach'?Math.min(1,Math.max(0,(seconds-25)/3)):1,ease=p*p*(3-2*p),origin=leaving?target:w+30,x=leaving?target+(w+n.clientWidth-target)*ease:origin+(target-origin)*ease;adoptionPosition(n,x,!leaving&&p>=1,!leaving,Math.abs(x-origin),leaving?Math.min(1,p*5):Math.min(1,(1-p)*6));}}
- if(['request','thanks'].includes(phase)){const head=view.walkers[4].querySelector('.adoption-head').getBoundingClientRect(),stage=view.root.querySelector('.adoption-stage').getBoundingClientRect();view.speech.style.top=Math.max(8,head.top-stage.top-view.speech.offsetHeight-18)+'px';}
- const carrier=view.walkers[4],carrying=adopted&&['thanks','departure','result'].includes(phase),source=view.root.querySelector('.adoption-basket:not(.adoption-neighbor) .adoption-cat');carrier.classList.toggle('adoption-carrying',carrying);
+ if(phase==='walking')adoptionVisitors(view,seconds-2,run.grade);
+ else {view.comment.classList.remove('is-visible');view.walkers.forEach(n=>n.style.visibility='hidden');if(['approach','request','handover','thanks','departure'].includes(phase)&&adopted){const n=view.walkers[view.familyIndex],w=find('walkway').clientWidth,target=w*.82-n.clientWidth/2,leaving=phase==='departure',p=leaving?Math.min(1,(seconds-38)/4):phase==='approach'?Math.min(1,Math.max(0,(seconds-25)/3)):1,ease=p*p*(3-2*p),origin=leaving?target:w+30,x=leaving?target+(w+n.clientWidth-target)*ease:origin+(target-origin)*ease;adoptionPosition(n,x,!leaving&&p>=1,!leaving,Math.abs(x-origin),leaving?Math.min(1,p*5):Math.min(1,(1-p)*6),48);}}
+ if(['request','thanks'].includes(phase)){const head=view.walkers[view.familyIndex].querySelector('.adoption-main .adoption-head').getBoundingClientRect(),stage=view.root.querySelector('.adoption-stage').getBoundingClientRect();view.speech.style.top=Math.max(8,head.top-stage.top-view.speech.offsetHeight-18)+'px';}
+ const carrier=view.walkers[view.familyIndex],carrying=adopted&&['thanks','departure','result'].includes(phase),source=view.root.querySelector('.adoption-basket:not(.adoption-neighbor) .adoption-cat');carrier.classList.toggle('adoption-carrying',carrying||phase==='handover');carrier.querySelector('.adoption-held-cat').style.opacity=carrying?'1':'0';
  source.style.opacity=carrying?'0':'1';source.style.transform='';
  if(phase==='handover'){
   // Nested SVG bounds include invisible rig parts, not just its viewport. Map the
   // shared drawing coordinates instead, so the cat never grows during transfer.
-  const p=Math.min(1,Math.max(0,(seconds-32)/2)),ease=p*p*(3-2*p),a=source.querySelector('svg').getScreenCTM(),b=carrier.querySelector('.adoption-held-cat').getScreenCTM(),from=new DOMPoint(360,215).matrixTransform(a),to=new DOMPoint(360,215).matrixTransform(b),scale=Math.hypot(b.a,b.b)/Math.hypot(a.a,a.b);
-  source.style.transform=`translate(${(to.x-from.x)*ease}px,${(to.y-from.y)*ease}px) scale(${1+(scale-1)*ease})`;
+  const p=Math.min(1,Math.max(0,(seconds-32.4)/.8)),ease=p*p*(3-2*p),a=source.querySelector('svg').getScreenCTM(),b=carrier.querySelector('.adoption-held-cat').getScreenCTM(),from=new DOMPoint(360,215).matrixTransform(a),to=new DOMPoint(360,215).matrixTransform(b),scale=Math.hypot(b.a,b.b)/Math.hypot(a.a,a.b);
+  source.style.transform=`translate(${(to.x-from.x)*ease}px,${(to.y-from.y)*ease-Math.sin(p*Math.PI)*48}px) scale(${1+(scale-1)*ease})`;source.style.opacity=p>=1?'0':'1';carrier.querySelector('.adoption-held-cat').style.opacity=p>=1?'1':'0';
  }
- const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,t=reduced?0:time/1000,model=CatSVG.poseModel('sit',t);if(phase==='walking'&&!reduced){model.hr=Math.sin(t*.65)*4;model.hx=Math.sin(t*.65)*5;}if(['approach','request','result'].includes(phase)&&adopted){model.hr=5;model.hx=8;}CatSVG.applyPose(view.rig,model,t,'sit');
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,t=reduced?0:time/1000,pose=phase==='handover'&&seconds>=32.4&&seconds<33.2?'jump':'sit',poseTime=pose==='jump'?Math.min(.9,(seconds-32.4)/.8):t,model=CatSVG.poseModel(pose,poseTime);if(pose==='jump')model.lift=0;if(phase==='walking'&&!reduced){model.hr=Math.sin(t*.65)*4;model.hx=Math.sin(t*.65)*5;}if(['approach','request','result'].includes(phase)&&adopted){model.hr=5;model.hx=8;}CatSVG.applyPose(view.rig,model,poseTime,pose);
  if(run?.status==='playing'&&seconds>=adoptionDuration(run))dispatch({type:'FINISH_ADOPTION'});
  view.neighbors.forEach((rig,i)=>CatSVG.applyPose(rig,CatSVG.poseModel('sit',t+i),t+i,'sit'));
  CatSVG.applyPose(view.heldRig,CatSVG.poseModel('sit',t),t,'sit');
 }
 const adoptionPreviousRender=render;
-render=function(state){const old=adoptionView?.root,motion=storeCaptureMotion(old);adoptionPreviousRender(state);let root=app.querySelector('.adoption-scene');if(root){if(old&&old.dataset.catId===root.dataset.catId){root.replaceWith(old);root=old;storeRestoreMotion(motion);}else adoptionView=createAdoptionView(root);paintAdoption(adoptionView,performance.now());}else adoptionView=null;
+render=function(state){const old=adoptionView?.root,motion=storeCaptureMotion(old);adoptionPreviousRender(state);let root=app.querySelector('.adoption-scene');if(root){if(old&&old.dataset.catId===root.dataset.catId&&adoptionView.familyIndex===(adoptionRunFor(state)?.familyIndex??stableCatSeed(getCat(state).id)%ADOPTION_COLORS.length)){root.replaceWith(old);root=old;storeRestoreMotion(motion);}else adoptionView=createAdoptionView(root);paintAdoption(adoptionView,performance.now());}else adoptionView=null;
  if(adoptionRunFor(gameState)?.status==='playing')app.querySelectorAll('button').forEach(button=>{if(!button.closest('.adoption-scene'))button.disabled=true;});
 };
 app.addEventListener('click',event=>{const button=event.target.closest('[data-adoption-action]');if(button&&!button.disabled&&button.dataset.adoptionAction)dispatch({type:button.dataset.adoptionAction});});

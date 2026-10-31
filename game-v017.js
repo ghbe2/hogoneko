@@ -263,6 +263,12 @@ function mountGameCats(){
     CatSVG.applyPose(rig,CatSVG.poseModel(initialPose,0),0,initialPose);
     svgRigs.set(svg,{rig,pose:initialPose,since:performance.now(),previous:null,changed:0,roomCat:svg.closest('.held-cat')?'held':svg.closest('.cat-object')?'room':null});
   });
+  app.querySelectorAll('.senior-held-cat').forEach(svg=>{
+    if(svgRigs.has(svg))return;
+    const rig=CatSVG.buildCat(svg,'companion-'+svg.dataset.instance,{...SENIOR_CAT_DNA});
+    svg.querySelector('.floor')?.remove();svg.querySelectorAll('.part-outline').forEach(n=>n.remove());
+    svgRigs.set(svg,{rig,seniorHeld:true,since:0});
+  });
 }
 function scenePose(svg){
   const holder=svg.closest('.cat-object');
@@ -289,6 +295,13 @@ function animateGameCats(now){
     for(const [svg,entry] of svgRigs){
       if(!svg.isConnected){svgRigs.delete(svg);continue;}
       if(svg.dataset.staticPhoto==='true')continue;
+      if(entry.seniorHeld){
+        const t=now/1000,m={...CatSVG.poseModel('sit',t),hy:-150+Math.sin(t*1.3)*1.2,hs:1.15,by:-65,bh:.75,hr:Math.sin(t*.55)*2};
+        CatSVG.applyPose(entry.rig,m,t,'sit');
+        if(typeof CatFaceDepth!=='undefined')CatFaceDepth.apply(entry.rig,Math.sin(t*.55)*.24);
+        continue;
+      }
+      if(svg.dataset.motionResumeAt){if(Date.now()<Number(svg.dataset.motionResumeAt))continue;delete svg.dataset.motionResumeAt;entry.since=now;entry.previous=null;}
       let [pose,mood]=scenePose(svg),t=(now-entry.since)/1000;
       if(pose!==entry.pose){entry.previous=entry.lastModel||CatSVG.poseModel(entry.pose,t);entry.pose=pose;entry.since=now;entry.changed=now;t=0;}
       entry.rig.d.mood=mood;

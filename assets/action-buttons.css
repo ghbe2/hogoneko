@@ -10,7 +10,7 @@
  content:'›';position:absolute;right:20px;top:50%;margin-top:-10px;display:block;font-size:19px;line-height:20px;animation:none;
 }
 #app :is(.campaign-button,.intake-footer-call:not(:where(.room-call-icon)),.senior-help-trigger,.store-primary,.store-heading button,.store-exit,.store-add,.family-letter-actions button,.tnr-note button,.adoption-panel button,.surgery-actions button,[data-care-booking],.first-name button,.furniture-close,.album-return,.photo-phone>button,.bag-shop,.palette-shop,.app-cancel,.app-pay button,.modal-card>button,.shared-guide-note button):disabled{background:var(--action-green);color:var(--action-ink);opacity:.45;cursor:default}
-#app .shared-guide-note button{height:var(--dialogue-action-height);min-height:var(--dialogue-action-height);padding:4px 26px;gap:0;white-space:normal}
+#app .shared-guide-note button{height:var(--dialogue-action-height);min-height:var(--dialogue-action-height);padding:4px 26px;gap:0;white-space:nowrap;flex-shrink:0}
 #app .shared-guide-note button::after{right:12px}
 #app .shared-guide-note [data-center-back]::after{content:none}
 #app .shared-guide-note .guide-next-ready::after{animation:guide-next 1.25s ease-in-out infinite}
@@ -20,3 +20,10 @@
 #app .app-pay button::after{right:10px}
 #app .first-name>section{grid-template-rows:160px 28px 46px var(--action-height)}
 @media(prefers-reduced-motion:reduce){#app .shared-guide-note .guide-next-ready::after{animation:none}}
+
+/* Geometric close mark stays centered independently of the Japanese typeface. */
+#app :is(.home-phone-close,.furniture-sheet>header>button,.senior-dialog-close){font-size:0!important;padding:0;display:grid;place-items:center}
+#app :is(.home-phone-close,.furniture-sheet>header>button,.senior-dialog-close)::before,#app :is(.home-phone-close,.furniture-sheet>header>button,.senior-dialog-close)::after{content:"";position:absolute;width:14px;height:2px;top:50%;left:50%;margin:-1px 0 0 -7px;background:currentColor;transform:rotate(45deg);border-radius:1px}
+#app :is(.home-phone-close,.furniture-sheet>header>button,.senior-dialog-close)::after{transform:rotate(-45deg)}
+
+#app .furniture-sheet>header>button{position:relative;width:44px;height:44px;flex:0 0 44px}

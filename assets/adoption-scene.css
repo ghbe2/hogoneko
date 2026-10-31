@@ -20,6 +20,8 @@
 .adoption-floor{position:absolute;inset:44% 0 0;background:repeating-linear-gradient(0deg,transparent 0 67px,#ae95611c 68px 69px),linear-gradient(#d4c4a1,#c5ae81)}
 .adoption-floor:after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 12%,#f7ecd726 12% 43%,transparent 43%)}
 .adoption-walkway{position:absolute;inset:0;pointer-events:none;z-index:2}
+.adoption-scene:is([data-phase="approach"],[data-phase="request"],[data-phase="handover"],[data-phase="thanks"],[data-phase="departure"]) .adoption-walkway{z-index:6}
+.adoption-scene .adoption-request-speech{z-index:7}
 .adoption-person{position:absolute;left:0;top:calc(var(--display-y) + 98px - var(--person-h));width:calc(var(--person-h)*120/248);height:var(--person-h);visibility:hidden;will-change:transform}
 .adoption-person>svg{height:100%;width:100%;overflow:visible}
 .adoption-face-front{opacity:0}.adoption-face-profile{opacity:1}
@@ -44,7 +46,7 @@
 .adoption-display.is-neighbor.is-left{left:4%}.adoption-display.is-neighbor.is-right{left:96%}
 .adoption-display.is-neighbor .adoption-table-cloth span{display:none}
 .adoption-aside{display:none}
-.adoption-panel{box-sizing:border-box;position:absolute;left:10px;right:10px;bottom:12px;height:178px;border:1px solid #e7dac0;border-radius:20px;background:var(--paper);box-shadow:0 3px 0 #a78c6020;padding:13px 15px;display:grid;grid-template-rows:14px 28px 44px 44px;gap:6px;z-index:7}
+.adoption-panel{box-sizing:border-box;position:absolute;left:10px;right:10px;bottom:12px;height:182px;border:1px solid #e7dac0;border-radius:20px;background:var(--paper);box-shadow:0 3px 0 #a78c6020;padding:13px 15px;display:grid;grid-template-rows:14px 28px 44px 48px;gap:6px;z-index:7}
 .adoption-eyebrow{font-size:10px;line-height:14px;letter-spacing:.14em;color:#8a7b60}
 .adoption-panel h1{margin:0;font-weight:500;font-size:18px;line-height:28px;white-space:nowrap}
 .adoption-panel p{margin:0;font-size:13px;line-height:22px;overflow-wrap:anywhere}
@@ -52,11 +54,13 @@
 .adoption-panel button:disabled{background:#eee6d2;color:#8c7f63;cursor:default}
 .adoption-actions{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px}
 #adoption-next{grid-column:2;grid-row:1}
+.adoption-actions:has(.adoption-secondary[hidden]){grid-template-columns:minmax(0,1fr)}
+.adoption-actions:has(.adoption-secondary[hidden]) #adoption-next{grid-column:1}
 .adoption-panel .adoption-secondary{grid-column:1;grid-row:1;height:44px;padding:0;border:1px solid #e5d8bb;border-radius:50%;background:#f0e6cc;color:#746349;font-size:13px}
 .adoption-secondary[hidden]{display:none}
 .adoption-scene[data-phase="walking"] .adoption-panel,.adoption-scene[data-phase="suspense"] .adoption-panel,.adoption-scene[data-phase="approach"] .adoption-panel,.adoption-scene[data-phase="request"] .adoption-panel{display:none}
 .adoption-scene[data-phase="handover"] .adoption-panel,.adoption-scene[data-phase="thanks"] .adoption-panel,.adoption-scene[data-phase="departure"] .adoption-panel{display:none}
-.adoption-held{opacity:0;pointer-events:none}.adoption-carrying .adoption-held{opacity:1}.adoption-carrying .adoption-arm{visibility:hidden}
+.adoption-held{opacity:0;pointer-events:none}.adoption-carrying .adoption-held{opacity:1}.adoption-carrying .adoption-main .adoption-arm,.adoption-carrying .adoption-main .visitor-arm-far{visibility:hidden}
 .adoption-handover .adoption-basket:not(.adoption-neighbor) .adoption-basket-front{transform:scaleX(.12);transform-origin:7% center;transition:transform .7s}
 .adoption-scene[data-phase="handover"] .adoption-basket:not(.adoption-neighbor){z-index:6}
 .adoption-cat{transform-origin:center}

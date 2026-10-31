@@ -10,8 +10,8 @@ function splitGuideText(text,limit=44){
 }
 let guidePresentationFrame=0;
 function guideHand(kind='tap'){
- if(kind==='move-furniture')return `<span class="guide-gesture" data-kind="move-furniture" aria-hidden="true"><svg viewBox="0 0 64 80"><g class="guide-hand"><path d="M17 40V28q0-5 5-5t5 5v-8q0-5 5-5t5 5v2q2-5 6-3 3 1 3 6v2q4-3 7 1 2 2 2 7v15q0 13-12 17H29q-6-3-9-9L11 45q-3-5 1-8 3-2 5 3Z" fill="#fff8e9" stroke="var(--guide-accent, #9d5341)" stroke-width="3" stroke-linejoin="round"/><path d="M27 28v12m10-18v17m9-12v13M17 40l8 9" fill="none" stroke="var(--guide-accent, #9d5341)" stroke-width="2" stroke-linecap="round"/></g></svg></span>`;
- const tap=kind==='tap',vertical=['drag','swipe-down'].includes(kind),effect=tap?'M28 3V10M44 13L38 16M12 13L18 16':vertical?'M28 3V48':'M5 20H51';
+ if(kind==='move-furniture')return `<span class="guide-gesture" data-kind="move-furniture" aria-hidden="true"><svg viewBox="0 0 64 80"><g class="guide-hand"><path d="M24 65L22 53Q14 50 13 42Q12 36 16 31Q19 28 23 32V25Q23 19 28 19Q32 19 33 23V21Q33 16 38 17Q42 17 43 23Q47 20 50 24Q52 26 52 31V42Q52 50 46 54L44 65Z" fill="#fff8e9" stroke="var(--guide-accent, #9d5341)" stroke-width="3" stroke-linejoin="round"/><path d="M23 32L21 41M33 24V31M43 24V32M23 53Q33 56 46 54" fill="none" stroke="var(--guide-accent, #9d5341)" stroke-width="2" stroke-linecap="round"/></g></svg></span>`;
+ const tap=kind==='tap',vertical=['drag','swipe-down','swipe-up'].includes(kind),effect=tap?'M28 3V10M44 13L38 16M12 13L18 16':vertical?'M28 3V48':'M5 20H51';
  return `<span class="guide-gesture" data-kind="${kind}" aria-hidden="true"><svg viewBox="0 0 64 80"><g class="guide-trace ${tap?'tap-rays':''}" fill="none" stroke-linecap="round"><path d="${effect}" stroke="#fffdf3" stroke-width="7"/><path d="${effect}" stroke="var(--guide-accent, #9d5341)" stroke-width="3"/></g><g class="guide-hand"><path d="M22 46V27q0-7 6-7t6 7v15q3-5 7-1 4-2 7 2 5 0 5 6v11q0 12-12 12H32q-5 0-8-5L13 49q-3-5 2-7 3-1 7 4Z" fill="#fff8e9" stroke="var(--guide-accent, #9d5341)" stroke-width="3" stroke-linejoin="round"/></g></svg></span>`;
 }
 // The same speaker, companion, typography and controls are used outside the tutorial too.
@@ -45,22 +45,16 @@ function guidePresentation(state){
   if(page<pages.length-1){const b=document.createElement('button');b.textContent='つぎへ';b.dataset.copyPage='';nav.append(b);}
   else {
    nav.append(...savedControls);
-   if(['swipe','clinicScroll'].includes(key)){
-    const hint=document.createElement('small');hint.className='guide-action-hint';
-    const pc=matchMedia('(pointer:fine)').matches;
-    hint.textContent=key==='swipe'?(pc?'地図を下にドラッグ':'地図を下にスワイプ'):(pc?'地図を上にドラッグ':'地図を上にスワイプ');
-    if(pc)hint.append(document.createElement('br'),key==='swipe'?'ホイールを上へ':'ホイールを下へ');
-    nav.append(hint);
-   }
+
   }
   next=nav.querySelector('button');chars=Array.from(pages[page]);
  }
  setTextPage();
  layer.dataset.copyPending=String(page<pages.length-1);
  layer.addEventListener('click',e=>{if(!e.target.closest('[data-copy-page]'))return;e.preventDefault();e.stopImmediatePropagation();page++;guideTextPages.set(id,page);start=performance.now();setTextPage();layer.dataset.copyPending=String(page<pages.length-1);},true);
- const cue=['swipe','clinicScroll'].includes(key)?'swipe-down':key==='bait'?(encounterFoods(state).length===1?'tap':'swipe'):key==='moveFurniture'?'move-furniture':key==='trap'?'drag':['rescue','trapReady','toClinic','clinicBuilding','firstCommand','receipt','pay','shopBuilding','tools','starter','addCart','purchase','homeBuilding','layout','addFurniture','chooseFurniture','addMore','cutCardboard','name','callFirst','callAgain'].includes(key)?'tap':null;
+ const cue=['swipe','clinicScroll'].includes(key)?'swipe-down':key==='bait'?(encounterFoods(state).length===1?'tap':'swipe'):['moveFurniture','trap'].includes(key)?'move-furniture':['rescue','trapReady','toClinic','clinicBuilding','firstCommand','receipt','pay','shopBuilding','tools','starter','addCart','purchase','homeBuilding','layout','addFurniture','chooseFurniture','addMore','cutCardboard','name','callFirst','callAgain'].includes(key)?'tap':null;
  const noFocus=(!!cue&&! ['swipe','clinicScroll'].includes(key))||['area','fieldHello','captured','clinicHello','healthy','stats','shopHello','shopHelloDetail','homeHello','roomExplain','roomReady','farewell','lifeStarts','askSenior','goodLuck','essentials','cardboard','callWait'].includes(key);
- if(cue)layer.insertAdjacentHTML('beforeend',guideHand(cue));
+ if(cue)layer.insertAdjacentHTML('beforeend',guideHand(key==='clinicScroll'?'swipe-up':cue));
  const hand=layer.querySelector('.guide-gesture');
  ring.hidden=noFocus;
  const selector=typeof spec.target==='function'?spec.target():spec.target;
@@ -80,14 +74,14 @@ function guidePresentation(state){
    Object.assign(ring.style,{left:Math.max(2,Math.min(a.width-w-2,r.left-a.left+(r.width-w)/2))+'px',top:Math.max(2,Math.min(a.height-h-2,r.top-a.top+(r.height-h)/2))+'px',width:w+'px',height:h+'px',borderRadius:wide?'20px':'50%'});
    if(!guideFocusSeen.has(id)){guideFocusSeen.add(id);if(!matchMedia('(prefers-reduced-motion: reduce)').matches)ring.animate([{transform:'scale(1.65)',opacity:0},{transform:'scale(1)',opacity:1}],{duration:420,easing:'ease-out'});}
   }
-  const a=app.getBoundingClientRect(),r=target?.getBoundingClientRect();
+  const a=app.getBoundingClientRect(),r=(key==='homeBuilding'?target?.querySelector('.town-home-picture'):null)?.getBoundingClientRect()||target?.getBoundingClientRect();
   if(hand&&cue==='move-furniture')hand.style.setProperty('--move-direction',r&&r.left+r.width/2>a.left+a.width/2?-1:1);
   if(hand){hand.hidden=!ready||!lastPage||!r||target.disabled||getComputedStyle(target).visibility==='hidden';if(r)Object.assign(hand.style,{left:Math.max(cue==='swipe'?34:4,Math.min(a.width-(cue==='swipe'?82:52),(cue==='tap'?(r.width>100?r.right-28:r.left+r.width*.82):r.left+r.width*.5)-21-a.left))+'px',top:Math.max(cue==='drag'?44:4,Math.min(a.height-66,r.top+r.height*.5-15-a.top))+'px'});}
   if(hand&&cue==='move-furniture'&&app.querySelector('.layout-drag-preview'))hand.hidden=true;
   note.style.top=r&&r.top+r.height/2>a.top+a.height/2?'12px':'auto';note.style.bottom=note.style.top==='auto'?'12px':'auto';
   if(['field','trapInspect','clinic'].includes(state.campaign.phase)){note.style.top='18px';note.style.bottom='auto';}
   if(state.campaign.phase==='shop'){note.style.top='12px';note.style.bottom='auto';}
-  if(['swipe','clinicScroll'].includes(key)){note.style.top='92px';note.style.bottom='auto';if(hand){hand.style.left=(a.width*.72)+'px';hand.style.top=(a.height*.66)+'px';hand.dataset.kind=key==='swipe'?'swipe-down':'swipe-up';}}
+  if(['swipe','clinicScroll'].includes(key)){note.style.top=key==='swipe'?'auto':'18px';note.style.bottom=key==='swipe'?'12px':'auto';if(hand&&r){hand.style.left=Math.min(a.width-52,r.right-a.left+8)+'px';hand.style.top=Math.max(4,Math.min(a.height-66,r.top-a.top))+'px';}}
   if(state.campaign.phase==='intake'){note.style.top=INTAKE_GUIDE_TOP+'px';note.style.bottom='auto';}
   guidePresentationFrame=requestAnimationFrame(tick);
  };tick();

@@ -13,6 +13,14 @@
 @keyframes actor-breathe{0%,100%{transform:scale(1,1)}45%{transform:scale(1.006,1.009)}}
 @keyframes actor-look{0%,18%,67%,100%{transform:skewY(0deg) scaleX(1)}30%,44%{transform:skewY(-1.8deg) scaleX(.98)}79%,88%{transform:skewY(1deg) scaleX(.992)}}
 @keyframes actor-senior-look{0%,15%,64%,100%{transform:rotate(0deg) skewY(0deg)}27%,39%{transform:rotate(-2deg) skewY(-1.5deg)}76%,85%{transform:rotate(1.5deg) skewY(1deg)}}
+.senior-nose-mouth,.senior-eye-left,.senior-eye-right{transform-box:view-box;animation-duration:10.7s;animation-timing-function:ease-in-out;animation-iteration-count:infinite;animation-delay:var(--actor-delay)}
+.senior-nose-mouth{transform-origin:109px 75px;animation-name:senior-nose-depth}
+.senior-eye-left{transform-origin:91px 64px;animation-name:senior-eye-near}
+.senior-eye-right{transform-origin:127px 64px;animation-name:senior-eye-far}
+@keyframes senior-nose-depth{0%,15%,64%,100%{transform:translateX(0)}27%,39%{transform:translateX(-2px)}76%,85%{transform:translateX(2px)}}
+@keyframes senior-eye-near{0%,15%,64%,100%{transform:scaleX(1)}27%,39%{transform:translateX(1px) scaleX(.88)}76%,85%{transform:translateX(1px) scaleX(1.04)}}
+@keyframes senior-eye-far{0%,15%,64%,100%{transform:scaleX(1)}27%,39%{transform:translateX(-1px) scaleX(1.04)}76%,85%{transform:translateX(-1px) scaleX(.88)}}
+@media(prefers-reduced-motion:reduce){.senior-nose-mouth,.senior-eye-left,.senior-eye-right{animation:none!important}}
 @keyframes actor-bird-look{0%,16%,52%,100%{transform:rotate(0deg)}23%,32%{transform:rotate(-8deg)}68%,77%{transform:rotate(5deg)}}
 @keyframes actor-blink{0%,39%,43%,72%,76%,100%{transform:scaleY(1)}41%,74%{transform:scaleY(.1)}}
 @keyframes actor-ear-back{0%,18%,38%,68%,100%{transform:rotate(0deg)}24%,29%{transform:rotate(5deg)}77%,82%{transform:rotate(-3deg)}}

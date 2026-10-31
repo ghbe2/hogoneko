@@ -2,7 +2,7 @@
 .app-photo-view.home-phone-layer{z-index:140!important}.app-album-layer.home-phone-layer{z-index:139!important}
 .home-phone.album-phone,.home-phone.photo-phone{--album-paper:#f7f1e6;background:#ded3bd;color:#514d43;gap:12px;max-height:none}
 .home-phone.album-phone{grid-template-rows:52px minmax(0,1fr) var(--action-height)}
-.home-phone.photo-phone{grid-template-rows:52px minmax(0,1fr) var(--action-height) var(--action-height)}
+.home-phone.photo-phone{grid-template-rows:52px minmax(0,1fr) var(--action-height)}
 .album-phone header,.photo-phone header{padding:2px 8px}.album-phone header small,.photo-phone header small{font-size:10px;letter-spacing:3px;color:#83765f}
 .album-phone h2,.photo-phone h2{font-size:21px;line-height:28px;margin:0}
 .album-photo-list.loop-album-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:12px;padding:4px;overflow-y:auto}
@@ -13,3 +13,5 @@ button.album-print>span{display:block;height:122px;background:#c4b99d}
 .photo-phone>figure{display:grid;grid-template-rows:minmax(0,1fr) 52px;padding:12px;min-height:0}
 .photo-phone>figure>div{min-height:0;background:radial-gradient(ellipse at 50% 30%,#e1d9c8,#b8ad91)}
 .photo-phone figcaption{text-align:center;font-size:16px;padding-top:8px}
+
+.photo-phone>figure{position:relative;touch-action:pan-y;overflow:hidden}.photo-phone>figure>div{overflow:hidden}.photo-arrows{position:absolute;inset:45% 0 auto;display:flex;justify-content:space-between;pointer-events:none}.photo-arrows button{pointer-events:auto;width:44px;height:48px;border:0;border-radius:50%;background:#fff8e9bb;color:#8f4b3b;font:28px/1 sans-serif;padding:0}

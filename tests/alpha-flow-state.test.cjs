@@ -31,14 +31,15 @@ vm.runInContext(`
 let s=fresh();assert.equal(alphaLesson(s)[0],'food');
 s=reduceGameState({...s,ui:{alphaNotice:{key:'food',text:'food'}}},{type:'ALPHA_NOTICE_NEXT'});
 assert(!alphaLesson(s));
-assert.equal(alphaPracticeTask(s).part,'water');s.cats[0].body.waterLevel=100;s=alphaPracticeProgress(s,s,{type:'FINISH_CARE'});assert.equal(alphaPracticeTask(s),null);
+assert.equal(alphaPracticeTask(s),null,'letters do not require performing an action');s.cats[0].body.waterLevel=100;s=alphaPracticeProgress(s,s,{type:'FINISH_CARE'});assert.equal(alphaPracticeTask(s),null);
 now+=86400000;s.cats[0].body.days=1;assert.equal(alphaLesson(s)[0],'taste');
 s.alpha.seen.taste=true;s.alpha.practice.taste=true;s.alpha.lastMessageDay=ALPHA_DAY();assert.equal(alphaLesson(s),undefined);
 now+=86400000;s.cats[0].body.days=2;assert.equal(alphaLesson(s)[0],'reward');
 s.alpha.firstCatId='previous';assert.equal(alphaLesson(s),null);
 let later=fresh(4);later.ui.alphaNotice={key:'ready',text:'ready'};later=reduceGameState(later,{type:'ALPHA_NOTICE_NEXT'});assert(!later.alpha.seen.food);assert(!later.alpha.seen.taste);assert(!later.alpha.seen.reward);
 let optional=fresh(3);optional.alpha.seen={food:true,taste:true,reward:true};optional.alpha.practice={food:true,water:true,taste:true};optional.ui.modal='notebook';optional=reduceGameState(optional,{type:'CLOSE_MODAL'});assert(optional.alpha.practice.reward);assert.equal(optional.coins,20);
-console.log('PASS daily messages, same-day suppression, second-cat exclusion');
+let inbox=fresh();inbox=reduceGameState(inbox,{type:'ALPHA_BOOT'});assert.equal(inbox.ui.alphaNotice,undefined);assert.equal(inbox.alpha.mail.length,1);assert.equal(inbox.alpha.mail[0].read,false);inbox=reduceGameState(inbox,{type:'ALPHA_BOOT'});assert.equal(inbox.alpha.mail.length,1);inbox=reduceGameState(inbox,{type:'ALPHA_MAIL_READ',key:'food'});assert(inbox.ui.alphaNotice);inbox=reduceGameState(inbox,{type:'ALPHA_NOTICE_NEXT'});assert(inbox.ui.alphaMailbox);assert(inbox.alpha.mail[0].read);assert.equal(inbox.campaign.phase,'room');assert.equal(inbox.ui.modal,null);
+console.log('PASS daily inbox delivery, duplicate suppression, reading without travel, second-cat exclusion');
 
 // Booking is possible on day 4 for surgery on day 5; fasting starts only on booking.
 s=fresh(3);assert.equal(surgeryEligibility(s).canBook,false);
@@ -47,6 +48,8 @@ assert.equal(alphaLesson(s)[0],'ready');
 s.ui.modal='notebook';s=reduceGameState(s,{type:'ASK_SURGERY_BOOKING'});
 s=reduceGameState(s,{type:'BOOK_SURGERY'});
 assert.equal(carePlan(getCat(s)).surgeryDay,5);
+assert.equal(s.ui.alphaNotice.key,'booking-done:5');
+assert(s.ui.alphaNotice.text.includes('ごはんはしまって'));
 assert.equal(getCat(s).body.foodLevel,0);assert.equal(getCat(s).body.surgeryFoodStored,2);
 assert.equal(alphaGoal(s).key,'surgery');
 s=reduceGameState(s,{type:'CANCEL_CARE_SURGERY'});
@@ -69,7 +72,7 @@ for(const surgeryDay of [5,8,12]){
  n.cats[0].body.surgeryFoodStored=2;n.cats[0].body.foodLevel=0;
  n=applySurgeryFasting(n);assert.equal(getCat(n).body.foodLevel,2);
  assert.equal(carePlan(getCat(n)).eventDay,surgeryDay+2);
- n.alpha.seen={food:true,taste:true,reward:true,ready:true};
+ n.alpha.seen={food:true,taste:true,reward:true,ready:true,['after-surgery:'+surgeryDay]:true};
  n.cats[0].body.days=surgeryDay;assert.equal(alphaLesson(n)[0],'eve:'+(surgeryDay+2));
  n.cats[0].body.days=surgeryDay+1;assert.equal(alphaLesson(n)[0],'event:'+(surgeryDay+2));
  assert.equal(alphaGoal(n).days,0);
@@ -84,6 +87,14 @@ s=reduceGameState(s,{type:'TEST_ARRIVE'});assert.equal(s.ui.alphaDestination,nul
 s=reduceGameState(s,{type:'TEST_HOME'});s=reduceGameState(s,{type:'OPEN_OUTING'});
 assert.equal(s.ui.alphaDestination,null);
 console.log('PASS map destination cleared after arrival and on later outings');
+
+// A visit continues with spoken instructions after reaching the clinic.
+s=fresh(5);s.cats[0].carePlan={version:2,surgeryDay:5,eventDay:null,notices:{}};
+s.alpha.seen={'surgery:5':true};s.campaign.phase='town';
+s=reduceGameState(s,{type:'TEST_ARRIVE'});assert.equal(s.ui.alphaNotice.key,'clinic-arrived:5');
+s=reduceGameState(s,{type:'ALPHA_NOTICE_NEXT'});assert.equal(s.ui.alphaNotice,null);
+assert.equal(s.alpha.seen['clinic-arrived:5'],true);
+console.log('PASS visit continues after arrival without repeating');
 
 // The album prompt requires actually closing a claimed letter.
 s=fresh();s.alpha.firstCatId='previous';

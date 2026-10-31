@@ -19,15 +19,7 @@ function alphaGoal(s){
  return {key:'weight',text:c.body.weight<2000?`目標 2,000g · あと ${Math.ceil(2000-c.body.weight)}g`:!careReady(c)?'体調を整えて、手術に備えよう':`おうちで慣れる時間を。手術は${earliestSurgeryDay(c)}日目から`,action:'alpha-app'};
 }
 // Read receipts and completed actions are deliberately separate, including old saves.
-function alphaPracticeTask(s){
- if(!alphaFirst(s)||getCat(s).status!=='raising'||getCat(s).permanentResident)return null;
- const c=getCat(s),seen=s.alpha?.seen||{},done=s.alpha?.practice||{},p=carePlan(c),day=c.body.days+1;
- if(c.surgery?.status==='done'&&day>=p.eventDay||p.surgeryDay===day||seen.ready&&surgeryEligibility(s).canBook)return null;
- if(seen.food&&(!done.food||!done.water)&&c.body.surgeryFoodStored===undefined)return {key:'food',part:!done.food?'food':'water'};
- if(seen.taste&&!done.taste)return {key:'taste'};
- if(seen.reward&&!done.reward)return {key:'reward'};
- return null;
-}
+function alphaPracticeTask(s){return null;}
 function alphaPracticeProgress(before,s,a){
  if(!alphaFirst(s)||getCat(s).id!==getCat(before).id)return s;
  const done={...s.alpha?.practice},seen=s.alpha?.seen||{},c=getCat(s);
@@ -39,20 +31,21 @@ function alphaPracticeProgress(before,s,a){
  return {...s,alpha:{...s.alpha,practice:done}};
 }
 function alphaLesson(s){
- if(!alphaFirst(s)||s.campaign.phase!=='room'||getCat(s).status!=='raising'||s.onboarding.homeTour!=='done'||s.ui.modal||s.ui.layoutMode||pendingFamilyLetter(s))return null;
- const c=getCat(s),day=c.body.days+1,p=carePlan(c),seen=s.alpha?.seen||{};
+ if(!alphaFirst(s)||s.campaign.phase!=='room'||getCat(s).status!=='raising'||s.onboarding.homeTour!=='done'||s.ui.modal||s.ui.layoutMode||s.ui.alphaMailbox||pendingFamilyLetter(s))return null;
+ const c=getCat(s),day=c.body.days+1,p=carePlan(c),seen={...s.alpha?.seen,...s.alpha?.delivered};
  const cancelled=p.lastCancellation&&c.lifeLog?.filter(x=>x.kind==='appointment-cancelled').length;
  if(cancelled&&!seen['cancelled:'+cancelled])return ['cancelled:'+cancelled,true,'message',p.lastCancellation+' お水とごはんで体調を整えてから、スマホで予約し直しましょう。',null];
  const candidates=[
- ['event:'+p.eventDay,c.surgery?.status==='done'&&day>=p.eventDay,'visit','今日が譲渡会ですね。一緒に保護センターへ行きましょう。','alpha-event'],
+ ['event:'+p.eventDay,c.surgery?.status==='done'&&day>=p.eventDay,'visit','おじゃまします。今日が譲渡会ですね。一緒に保護センターへ行きましょう。','alpha-event'],
  ['surgery:'+p.surgeryDay,c.surgery?.status!=='done'&&p.surgeryDay===day,'visit','迎えに来ました。今日は予約した手術の日ですね。体重と体調を確認して、動物病院へ行きましょう。','alpha-clinic'],
+ ['after-surgery:'+c.surgery?.completedDay,c.surgery?.status==='done','visit','おかえりなさい。手術を終えられましたね。そろそろ、新しい家族を探したり、元いた場所へ戻して見守ったりできます。手術の2日後に譲渡会があります。一緒に参加してみましょう。人に十分慣れていれば、新しい家族が見つかるかもしれません。',null],
  ['eve:'+p.eventDay,c.surgery?.status==='done'&&day===p.eventDay-1,'message','明日は譲渡会です。今日はおうちでゆっくり過ごして、明日に備えましょう。',null],
- ['ready',surgeryEligibility(s).canBook,'visit','そろそろかなと思って、様子を見に来ました。しっかり大きくなっていますね。スマホから明日の手術を予約しましょう。予約すると、ごはんはお休みになりますよ。','alpha-app'],
+ ['ready',surgeryEligibility(s).canBook,'visit','おじゃまします。そろそろかなと思って、様子を見に来ました。しっかり大きくなっていますね。スマホから明日の手術を予約しましょう。予約すると、ごはんはお休みになりますよ。','alpha-app'],
  ['reward',day>=3,'message','スマホのミャオペイでは、広告を見てコインを受け取れます。お世話の助けにしてくださいね。広告を見るかは、自分で選べますよ。今回は見ない場合は、アプリを閉じて戻って大丈夫です。','alpha-app'],
  ['taste',day>=2,'message','保護センターで、この子の好みを一緒に探してみませんか。人に慣れるほど、譲渡会でご縁につながるかもしれません。ご縁がなければ、元いた場所へ戻して見守ります。','alpha-center'],
  ['food',day>=1&&c.body.surgeryFoodStored===undefined,'message','ごはんとお水を用意しましょう。お水は欠かさないようにね。好きなごはんはよく食べて、体重も増えやすくなりますよ。',null]
  ];
- const urgent=candidates.slice(0,4).find(([key,ok])=>ok&&!seen[key]);
+ const urgent=candidates.slice(0,5).find(([key,ok])=>ok&&!seen[key]);
  if(urgent)return urgent;
  if(alphaPracticeTask(s))return null;
  return ['food','taste','reward'].map(key=>candidates.find(c=>c[0]===key)).find(([key,ok])=>ok&&!seen[key]&&s.alpha?.lastMessageDay!==ALPHA_DAY());
@@ -69,12 +62,17 @@ function alphaTasteOptions(s){
 }
 const alphaReduce=reduceGameState;
 reduceGameState=function(s,a){
- if(a.type==='ALPHA_NOTICE_NEXT'){const notice=s.ui.alphaNotice;if(!notice)return s;const pages=splitGuideText(notice.text,42);if((notice.page||0)+1<pages.length)return {...s,ui:{...s.ui,alphaNotice:{...notice,page:(notice.page||0)+1}}};const seen={...s.alpha?.seen,[notice.key]:true};let n={...s,alpha:{...s.alpha,seen,lastMessageDay:ALPHA_DAY()},ui:{...s.ui,alphaNotice:null}};n=alphaPracticeProgress(s,n,a);if(notice.action)n=reduceGameState(n,{type:'ALPHA_ROUTE',route:notice.action});return n;}
+ if(a.type==='ALPHA_NOTICE_NEXT'){const notice=s.ui.alphaNotice;if(!notice)return s;const pages=splitGuideText(notice.text,42);if((notice.page||0)+1<pages.length)return {...s,ui:{...s.ui,alphaNotice:{...notice,page:(notice.page||0)+1}}};const seen={...s.alpha?.seen,[notice.key]:true};let n={...s,alpha:{...s.alpha,seen,lastMessageDay:ALPHA_DAY()},ui:{...s.ui,alphaNotice:null}};n=alphaPracticeProgress(s,n,a);if(notice.mailboxMessage)n={...n,ui:{...n.ui,alphaMailbox:true},alpha:{...n.alpha,mail:(n.alpha?.mail||[]).map(m=>m.key===notice.key?{...m,read:true}:m)}};if(notice.kind==='visit'&&notice.action)n=reduceGameState(n,{type:'ALPHA_ROUTE',route:notice.action});return n;}
+ if(a.type==='ALPHA_MAIL_OPEN')return {...s,ui:{...s.ui,alphaMailbox:true}};
+ if(a.type==='ALPHA_MAIL_CLOSE')return {...s,ui:{...s.ui,alphaMailbox:false}};
+ if(a.type==='ALPHA_MAIL_READ'){const m=(s.alpha?.mail||[]).find(m=>m.key===a.key);return m?{...s,ui:{...s.ui,alphaMailbox:false,alphaNotice:{...m,page:0,kind:'message',action:null,mailboxMessage:true}}}:s;}
+ if(a.type==='ALPHA_FAMILY_READ'){const letter=s.economy?.familyLetters?.[a.id];return letter?{...s,economy:{...s.economy,pendingFamilyLetter:a.id},ui:{...s.ui,alphaMailbox:false,familyLetterOpen:true}}:s;}
  if(a.type==='ALPHA_ROUTE'){const route=a.route;if(route==='alpha-practice'){const task=alphaPracticeTask(s);if(task?.key==='taste')return reduceGameState(s,{type:'ALPHA_ROUTE',route:'alpha-center'});if(task?.key==='reward')return alphaReduce(s,{type:'OPEN_NOTEBOOK'});return alphaReduce(s,{type:'CLOSE_MODAL'});}if(route==='alpha-app')return alphaReduce(s,{type:'OPEN_NOTEBOOK'});if(['alpha-clinic','alpha-center','alpha-event'].includes(route)){let n=alphaReduce(s,{type:'OPEN_OUTING'});return {...n,ui:{...n.ui,alphaDestination:route==='alpha-clinic'?'clinic':'event'}};}return s;}
  if(a.type==='ALPHA_TASTE_OPEN'){if(!['raising','intake'].includes(getCat(s).status))return {...s,ui:{...s.ui,alphaNotice:{key:'no-cat',kind:'message',text:'この子を迎えたら、一緒に好みを探しましょう。'}}};const old=s.alpha?.taste;const taste=old?.day===ALPHA_DAY()&&old.catId===getCat(s).id?(old.orderVersion===2?old:{...old,options:shuffleAlphaTaste(old.options),orderVersion:2}):{day:ALPHA_DAY(),catId:getCat(s).id,options:alphaTasteOptions(s),orderVersion:2,claimed:!!(old?.day===ALPHA_DAY()&&old.claimed)};return {...s,alpha:{...s.alpha,taste},ui:{...s.ui,centerReview:null,alphaTasteStarted:Date.now()}};}
+ if(a.type==='APP_PHOTO')s={...s,alpha:{...s.alpha,showAlbumHint:false}};
  if(a.type==='ALPHA_TASTE_CLOSE')return {...s,ui:{...s.ui,alphaTasteStarted:null,alphaGift:null}};
- if(a.type==='ALPHA_TASTE_CLAIM'){const t=s.alpha?.taste;if(!t||t.day!==ALPHA_DAY()||t.claimed||!s.ui.alphaTasteStarted||Date.now()-s.ui.alphaTasteStarted<3500||t.catId!==getCat(s).id||!t.options.some(o=>o.id===a.itemId))return s;const item=getItem(a.itemId),n=Number(s.inventory[a.itemId])||0;return {...s,inventory:{...s.inventory,[a.itemId]:n+1},durability:{...s.durability,[a.itemId]:n?getDurability(s,a.itemId):Math.min(3,item.durability||3)},alpha:{...s.alpha,practice:{...s.alpha?.practice,taste:true},taste:{...t,claimed:true,chosen:a.itemId}},ui:{...s.ui,alphaGift:{itemId:a.itemId,at:Date.now()}}};}
- if(a.type==='ALPHA_ALBUM_DONE')return {...s,alpha:{...s.alpha,showAlbumHint:true},ui:{...s.ui,alphaAlbumPrompt:false,modal:'notebook'}};
+ if(a.type==='ALPHA_TASTE_CLAIM'){const t=s.alpha?.taste;if(!t||t.day!==ALPHA_DAY()||t.claimed||!s.ui.alphaTasteStarted||Date.now()-s.ui.alphaTasteStarted<3500||t.catId!==getCat(s).id||!t.options.some(o=>o.id===a.itemId))return s;const item=getItem(a.itemId),n=Number(s.inventory[a.itemId])||0;return {...s,inventory:{...s.inventory,[a.itemId]:n+1},durability:{...s.durability,[a.itemId]:n?getDurability(s,a.itemId):Math.min(3,item.durability||3)},alpha:{...s.alpha,practice:{...s.alpha?.practice,taste:true},taste:{...t,claimed:true,chosen:a.itemId}},ui:{...s.ui,alphaTasteStarted:null,alphaGift:{itemId:a.itemId,at:Date.now()}}};}
+ if(a.type==='ALPHA_ALBUM_DONE')return {...s,alpha:{...s.alpha,showAlbumHint:true,albumExplained:true},ui:{...s.ui,alphaAlbumPrompt:false,modal:'notebook'}};
  let n=alphaReduce(s,a);
  // A map cue belongs to the current trip, not every later outing.
  if(s.campaign.phase==='town'&&n.campaign.phase!=='town'&&n.ui.alphaDestination)n={...n,ui:{...n.ui,alphaDestination:null}};
@@ -83,17 +81,33 @@ reduceGameState=function(s,a){
  if(s.coins>=0&&n.coins<0&&(n.campaign.shopId==='clinic'||['clinic','surgery'].includes(n.campaign.phase)))n={...n,ui:{...n.ui,alphaNotice:{key:'debt',kind:'reception',text:'足りない医療費は未払いとして、お預かりします。治療もお世話も続けられますよ。これから受け取るコインで、自動的に未払いが減ります。お支払いのための来院は不要です。残高がマイナスの間は、スマホで広告を見て5コインまで戻すこともできます。残高が足りるまで、お買い物はお休みになります。'}}};
  if(n.ui.alphaNotice?.key==='debt'&&getCat(n).surgery?.status==='in_progress')n={...n,ui:{...n.ui,alphaPendingDebt:n.ui.alphaNotice,alphaNotice:null}};
  if(n.ui.alphaPendingDebt&&getCat(n).surgery?.status!=='in_progress')n={...n,ui:{...n.ui,alphaNotice:n.ui.alphaPendingDebt,alphaPendingDebt:null}};
- if(a.type==='FAMILY_CLOSE'&&pendingFamilyLetter(s)&&!pendingFamilyLetter(n))n={...n,ui:{...n.ui,alphaAlbumPrompt:true,alphaGift:null}};
+ if(a.type==='FAMILY_CLOSE'&&pendingFamilyLetter(s)?.claimed&&!s.alpha?.albumExplained&&!pendingFamilyLetter(n))n={...n,ui:{...n.ui,alphaAlbumPrompt:true,alphaMailbox:false,alphaGift:null}};
  if(['FAMILY_CLAIM','FAMILY_AD_COMPLETE'].includes(a.type)&&n!==s&&n.coins>s.coins)n={...n,ui:{...n.ui,alphaGift:{coins:true,itemId:pendingFamilyLetter(n)?.[a.type==='FAMILY_CLAIM'?'itemId':'bonusItem'],at:Date.now()}}};
  if(a.type==='NEXT_RESCUE'||(getCat(n).id!==getCat(s).id&&(n.album||[]).length))n={...n,onboarding:{...n.onboarding,status:'done',homeTour:'done',appIntro:null,guide:null,farewellSeen:true}};
  n=alphaPracticeProgress(s,n,a);
- const lesson=alphaLesson(n);if(lesson&&!n.ui.alphaNotice)n={...n,ui:{...n.ui,alphaNotice:{key:lesson[0],kind:lesson[2],text:lesson[3],action:lesson[4],page:0}}};
+ if(alphaFirst(n)&&!n.ui.alphaNotice){
+  const p=carePlan(getCat(n)),seen=n.alpha?.seen||{};
+  let follow=null;
+  if(a.type==='BOOK_SURGERY'&&p.surgeryDay&&!carePlan(getCat(s)).surgeryDay)follow=['booking-done:'+p.surgeryDay,'予約できましたね。ごはんはしまっておきました。お水はそのまま用意して、今日はゆっくり過ごしましょう。明日、お迎えに来ますね。'];
+  if(s.campaign.phase==='town'&&n.campaign.phase==='shop'){
+   if(n.campaign.shopId==='clinic'&&seen['surgery:'+p.surgeryDay])follow=['clinic-arrived:'+p.surgeryDay,'着きましたね。受付で手術をお願いしましょう。終わったら、一緒におうちへ帰りましょうね。'];
+   if(n.campaign.shopId==='plaza'&&seen['event:'+p.eventDay])follow=['event-arrived:'+p.eventDay,'会場はこちらです。受付で譲渡会への参加をお願いしましょう。どんな出会いがあるか、この子と一緒に待ちましょうね。'];
+  }
+  if(follow&&!seen[follow[0]])n={...n,ui:{...n.ui,alphaNotice:{key:follow[0],text:follow[1],kind:'visit',page:0}}};
+ }
+ const lesson=alphaLesson(n);if(lesson&&!n.ui.alphaNotice){const notice={key:lesson[0],kind:lesson[2],text:lesson[3],action:lesson[4],page:0};if(notice.kind==='message')n={...n,alpha:{...n.alpha,lastMessageDay:ALPHA_DAY(),delivered:{...n.alpha?.delivered,[notice.key]:true},mail:[...(n.alpha?.mail||[]),{...notice,action:null,receivedAt:gameNow(),read:false}]}};else n={...n,ui:{...n.ui,alphaNotice:notice}};}
  return n;
 };
 // Retain the delayed fallback only when buying a suitable furnishing is unaffordable.
 const alphaCanHelp=seniorCanHelp;
 seniorCanHelp=s=>alphaCanHelp(s)&&!!getCat(s).alphaLayoutTried&&s.coins<alphaFurnitureCost(s);
 function alphaFurnitureCost(s){const prices=CONFIG.items.filter(p=>p.kind==='placed'&&!p.essential&&!p.rescueOnly&&(!s.inventory[p.id]||getDurability(s,p.id)<=0)&&getAffinity(getCat(s),p).score>0).map(p=>productById(p.id)?.price).filter(Number.isFinite)||[];return prices.length?Math.min(...prices):Infinity;}
+function alphaIntakeHelpAction(s){
+ const c=getCat(s),comfort=getRoomComfortBreakdown(s);
+ if(s.campaign.phase!=='intake'||firstActive(s)||!c.named||!c.seniorHelpUnlocked||s.campaign.intakeCalled||comfort.canExit||s.ui.layoutMode||s.ui.modal||s.ui.seniorHelp)return null;
+ if(!c.alphaLayoutTried||comfort.missingEssential.length||c.seniorGift)return 'layout';
+ return s.coins>=alphaFurnitureCost(s)?'shop':'senior';
+}
 const alphaHelpReduce=reduceGameState;
 reduceGameState=function(s,a){let n=alphaHelpReduce(s,a);if(s.campaign.phase==='intake'&&s.ui.layoutMode&&!n.ui.layoutMode)n={...n,cats:n.cats.map(c=>c.id===getCat(n).id?{...c,alphaLayoutTried:true}:c)};return n;};
 let alphaTimer=0,alphaRoomPrevious=null,alphaTownShown=null;
@@ -103,13 +117,19 @@ render=function(s){
  const cat=getCat(s),stage=app.querySelector('.stage');
  app.querySelectorAll('[data-layout-item]').forEach(n=>{const base=getItem(n.dataset.layoutItem)?.wornFrom;if(base)n.classList.add('item-'+base)});
  app.querySelectorAll('.clinic-commands').forEach(n=>{n.classList.add('center-menu');n.querySelectorAll('.clinic-icon').forEach(i=>i.remove());n.querySelectorAll('button').forEach(b=>{if(!b.querySelector('b'))b.insertAdjacentHTML('beforeend','<b aria-hidden="true">›</b>');});});
- const coin=app.querySelector('.discovery-pickup span');if(coin){coin.innerHTML=PAW_COIN;coin.classList.add('alpha-coin');}
+ const coin=app.querySelector('.discovery-pickup span');if(coin){coin.innerHTML=PAW_COIN;coin.style.rotate='none';coin.classList.add('alpha-coin');}
  const pay=app.querySelector('.app-pay strong');if(pay&&!pay.querySelector('.paw-coin'))pay.innerHTML=pay.innerHTML.replace('●',PAW_COIN);
- const intake=s.campaign.phase==='intake';if(intake){const call=app.querySelector('.intake-footer-call');if(call&&cat.named){call.classList.add('alpha-intake-call');call.innerHTML=RoomControlArt.call;call.setAttribute('aria-label','名前を呼ぶ');}if(cat.alphaLayoutTried&&cat.seniorHelpUnlocked&&!cat.seniorGift&&!s.ui.layoutMode&&!s.ui.modal&&s.coins>=alphaFurnitureCost(s)&&!s.campaign.intakeCalled){const n=document.createElement('button');n.className='alpha-buy-furniture';n.dataset.alphaRoute='alpha-center-shop';n.textContent='家具を買い足しにいこう';stage?.append(n);}}
+ const collected=app.querySelector('.discovery-coin');if(collected&&!collected.querySelector('.paw-coin'))collected.innerHTML=collected.innerHTML.replace('●',PAW_COIN);
+ const intake=s.campaign.phase==='intake';if(intake){const call=app.querySelector('.intake-footer-call');if(call&&cat.named){call.classList.add('alpha-intake-call');call.innerHTML=RoomControlArt.call;call.setAttribute('aria-label','名前を呼ぶ');}const help=alphaIntakeHelpAction(s);if(help==='layout'||help==='shop'){app.querySelector('.senior-help-trigger')?.remove();const n=document.createElement('button');n.className='alpha-buy-furniture';if(help==='layout'){n.dataset.action='toggle-layout';n.textContent=cat.seniorGift?'おさがりを部屋に置く':'落ち着ける家具を置く';}else{n.dataset.alphaRoute='alpha-center-shop';n.textContent='家具を買い足しにいこう';}stage?.append(n);}}
  if(s.ui.layoutMode){const storage=app.querySelector('.layout-store-target'),add=app.querySelector('.layout-workbar [data-action="toggle-layout-tray"]');if(storage&&add&&storage.offsetParent){const r=add.getBoundingClientRect(),p=storage.offsetParent.getBoundingClientRect();Object.assign(storage.style,{left:r.left-p.left+'px',top:r.top-p.top+'px',bottom:'auto',width:r.width+'px',height:r.height+'px',transform:'none'});}}
- if(s.campaign.phase==='room'&&!s.ui.modal&&!s.ui.layoutMode&&cat.status==='raising'){app.querySelector('.room-care-status')?.remove();const goal=alphaGoal(s);if(goal){const n=document.createElement('button');n.className='room-care-status alpha-goal';n.dataset.alphaRoute=goal.action;n.innerHTML=goal.days>0?`譲渡会まで あと <b class="day-leaf">${goal.days}</b> 日`:goal.text;stage?.append(n);}if(!s.ui.alphaNotice&&!pendingFamilyLetter(s)&&s.onboarding.homeTour==='done'){const rewards=document.createElement('div');rewards.className='alpha-rewards';if(s.economy?.appRewardDay!==appRewardDay())rewards.innerHTML+='<button data-alpha-route="alpha-app" aria-label="ミャオペイの今日の報酬">'+PAW_COIN+'<i></i></button>';if(s.alpha?.taste?.day!==ALPHA_DAY()||!s.alpha.taste.claimed)rewards.innerHTML+='<button data-alpha-route="alpha-center" aria-label="保護センターのおさがり">✉<i></i></button>';stage?.append(rewards);}}
+ if(s.campaign.phase==='room'&&!s.ui.modal&&!s.ui.layoutMode&&cat.status==='raising'){app.querySelector('.room-care-status')?.remove();const goal=alphaGoal(s);if(goal){const n=document.createElement('button');n.className='room-care-status alpha-goal';n.dataset.alphaRoute=goal.action;n.innerHTML=goal.days>0?`譲渡会まで あと <b class="day-leaf">${goal.days}</b> 日`:goal.text;stage?.append(n);}if(!s.ui.alphaNotice&&!pendingFamilyLetter(s)&&s.onboarding.homeTour==='done'){const rewards=document.createElement('div');rewards.className='alpha-rewards';if(s.economy?.appRewardDay!==appRewardDay())rewards.innerHTML+='<button data-alpha-route="alpha-app" aria-label="ミャオペイの今日の報酬">'+PAW_COIN+'<i></i></button>';stage?.append(rewards);}}
+ if(s.campaign.phase==='room'&&!s.ui.modal&&!s.ui.layoutMode&&s.onboarding.homeTour==='done'){
+ const unread=(s.alpha?.mail||[]).some(m=>!m.read)||Object.values(s.economy?.familyLetters||{}).some(m=>m.kind!=='return'&&!m.claimed);
+ const mail=document.createElement('button');mail.className='room-mail'+(unread?' has-unread':'');mail.dataset.alphaMail='open';mail.setAttribute('aria-label',unread?'メールボックス・新着あり':'メールボックス');mail.innerHTML='<svg viewBox="0 0 40 32" aria-hidden="true"><rect x="3" y="5" width="34" height="24" rx="4" fill="#fff6dc" stroke="#855440" stroke-width="2"/><path d="M4 7L20 19L36 7M4 27L14 17M36 27L26 17" fill="none" stroke="#855440" stroke-width="2"/></svg>'+(unread?'<i></i>':'');const menu=app.querySelector('.room-icon-menu');if(menu){menu.prepend(mail);const rewards=app.querySelector('.alpha-rewards');if(rewards)menu.prepend(rewards);}
+ }
+ if(s.ui.alphaMailbox){const box=document.createElement('section');box.className='alpha-layer alpha-mailbox';box.setAttribute('role','dialog');box.setAttribute('aria-label','メールボックス');box.innerHTML='<article><h2>メールボックス</h2><div class="alpha-mail-list">'+[...(s.alpha?.mail||[])].reverse().map(m=>'<button data-alpha-mail-read="'+surgeryText(m.key)+'"><strong>保護主のせんぱい</strong><span>'+surgeryText(m.text.slice(0,32))+'…</span>'+(!m.read?'<i>未読</i>':'')+'</button>').join('')+Object.entries(s.economy?.familyLetters||{}).filter(([id,m])=>m.kind!=='return').reverse().map(([id,m])=>'<button data-alpha-family-read="'+surgeryText(id)+'"><strong>'+surgeryText(m.name)+'の家族より</strong><span>この子と出会わせてくれて、ありがとう。</span>'+(!m.claimed?'<i>プレゼント</i>':'')+'</button>').join('')+'</div><button class="campaign-button" data-alpha-mail="close">閉じる</button></article>';if(!box.querySelector('.alpha-mail-list button'))box.querySelector('.alpha-mail-list').textContent='届いたお便りは、ここに残ります。';app.append(box);}
  if(s.campaign.phase!=='town')alphaTownShown=null;
- if(s.campaign.phase==='town'&&s.ui.alphaDestination){const target=app.querySelector('.town-destination.'+s.ui.alphaDestination);if(target){const scroll=app.querySelector('.town-map-scroll');if(scroll&&alphaTownShown!==s.ui.alphaDestination){const t=target.getBoundingClientRect(),r=scroll.getBoundingClientRect();scroll.scrollTop=Math.max(0,Math.min(scroll.scrollHeight-scroll.clientHeight,scroll.scrollTop+t.top-r.top-scroll.clientHeight*.5+t.height*.5));alphaTownShown=s.ui.alphaDestination;}target.classList.add('alpha-destination');const n=document.createElement('div');n.className='alpha-town-cue';n.innerHTML=guideHand();Object.assign(n.style,{left:'65%',top:'55%'});target.append(n);}}
+ if(s.campaign.phase==='town'&&s.ui.alphaDestination){const target=app.querySelector('.town-destination.'+s.ui.alphaDestination);if(target){const scroll=app.querySelector('.town-map-scroll');if(scroll&&alphaTownShown!==s.ui.alphaDestination){const t=target.getBoundingClientRect(),r=scroll.getBoundingClientRect();scroll.scrollTop=Math.max(0,Math.min(scroll.scrollHeight-scroll.clientHeight,scroll.scrollTop+t.top-r.top-scroll.clientHeight*.5+t.height*.5));alphaTownShown=s.ui.alphaDestination;}target.classList.add('alpha-destination');target.querySelectorAll('.guide-gesture').forEach(n=>n.remove());const n=document.createElement('div');n.className='alpha-town-cue';n.innerHTML=guideHand();Object.assign(n.style,{left:'65%',top:'55%'});target.append(n);}}
  if(alphaFirst(s)&&s.alpha?.seen?.ready&&surgeryEligibility(s).canBook&&s.ui.modal==='notebook'&&!s.ui.careBookingOpen){const reserve=app.querySelector('[data-action="book-surgery"]');if(reserve){reserve.classList.add('alpha-reserve-target');reserve.insertAdjacentHTML('beforeend','<span class="alpha-reserve-cue">'+guideHand()+'</span>');}}
 
 
@@ -117,20 +137,24 @@ render=function(s){
   const selector=s.campaign.shopId==='clinic'&&s.alpha?.seen?.['surgery:'+carePlan(cat).surgeryDay]?(cat.surgery?.status==='done'?'[data-action="leave-surgery-clinic"]':app.querySelector('[data-action="start-surgery"]')?'[data-action="start-surgery"]':'[data-action="go-surgery"]'):s.campaign.shopId==='plaza'&&s.alpha?.seen?.['event:'+carePlan(cat).eventDay]?'[data-action="go-event"]':null;
   const target=selector&&app.querySelector(selector);if(target&&!target.disabled){target.classList.add('alpha-reserve-target');target.insertAdjacentHTML('beforeend','<span class="alpha-reserve-cue">'+guideHand()+'</span>');}
  }
- if(s.ui.alphaAlbumPrompt===false&&s.ui.modal==='notebook'&&s.alpha?.showAlbumHint){const album=app.querySelector('.home-phone [data-action="open-album"]');album?.classList.add('alpha-destination');}
- if(s.ui.alphaTasteStarted){const t=s.alpha?.taste,elapsed=Date.now()-s.ui.alphaTasteStarted,box=document.createElement('section');box.className='alpha-layer alpha-taste';box.setAttribute('role','dialog');box.innerHTML=`<article><h2>この子を、よく見てみましょう</h2><div class="alpha-observe">${seniorArt()}<div>${renderCatArt(cat)}</div></div>${elapsed<3500?'<p>目の動きや、しぐさを見ています…</p>':`<p>${t.claimed?'今日のおさがりは受け取りました。':'どれが気に入るかは、使ってからのお楽しみ。傷みやすいおさがりですが、1つ選んで試してみてね。'}</p><div class="alpha-taste-options">${t.options.map(o=>{const i=getItem(o.id);return `<button data-alpha-gift="${i.id}" ${t.claimed?'disabled':''}>${bookIcons[i.id]?bookImage(bookIcons[i.id]):''}<strong>${surgeryText(i.label)}</strong></button>`}).join('')}</div>`}<button data-alpha-taste-close>受付へ戻る</button></article>`;app.append(box);mountGameCats();if(elapsed<3500)alphaTimer=setTimeout(()=>render(gameState),3500-elapsed);}
- if(s.ui.alphaNotice){const n=s.ui.alphaNotice,pages=splitGuideText(n.text,42),box=document.createElement('section');box.className='alpha-layer alpha-notice '+n.kind;box.setAttribute('role','dialog');box.innerHTML=`<article>${n.kind==='visit'?'<div class="alpha-visitor">'+seniorArt()+'</div>':''}<h2>${n.kind==='reception'?'病院の受付より':n.kind==='visit'?'せんぱいが訪ねてきました':'せんぱいからのメッセージ'}</h2><p>${pages[n.page||0]}</p><button data-alpha-notice-next>${(n.page||0)<pages.length-1?'つぎへ':n.action?'確認しよう':'閉じる'}</button></article>`;app.append(box);}
+ if(!s.ui.alphaAlbumPrompt&&s.alpha?.showAlbumHint){const target=s.ui.modal==='album'?app.querySelector('.album-print[data-app-photo]'):s.ui.modal==='notebook'?app.querySelector('.app-album i'):null;if(target){target.style.position='relative';target.insertAdjacentHTML('beforeend','<span class="album-guide-cue">'+guideHand()+'</span>');}}
+ if(s.ui.alphaTasteStarted){const t=s.alpha?.taste,elapsed=Date.now()-s.ui.alphaTasteStarted,box=document.createElement('section');box.className='alpha-layer alpha-taste'+(elapsed>=3500?' choosing':'');box.setAttribute('role','dialog');box.innerHTML=`<article><h2>この子を、よく見てみましょう</h2><div class="alpha-observe">${seniorArt()}<div>${renderCatArt(cat)}</div></div>${elapsed<3500?'<p>目の動きや、しぐさを見ています…</p>':`<p>${t.claimed?'今日のおさがりは受け取りました。':'どれが気に入るかは、使ってからのお楽しみ。傷みやすいおさがりですが、1つ選んで試してみてね。'}</p><div class="alpha-taste-options">${t.options.map(o=>{const i=getItem(o.id);return `<button data-alpha-gift="${i.id}" ${t.claimed?'disabled':''}>${bookIcons[i.id]?bookImage(bookIcons[i.id]):''}<strong>${surgeryText(i.label.replace(/（おさがり）$/,''))}</strong></button>`}).join('')}</div>`}<button data-alpha-taste-close>受け取らない</button></article>`;app.append(box);mountGameCats();if(elapsed<3500)alphaTimer=setTimeout(()=>render(gameState),3500-elapsed);}
+ if(s.ui.alphaNotice){const n=s.ui.alphaNotice,pages=splitGuideText(n.text,42),box=document.createElement('section');box.className='alpha-layer alpha-notice '+n.kind;box.setAttribute('role','dialog');box.innerHTML=`<article>${n.kind==='visit'?'<div class="alpha-visitor">'+seniorArt()+'</div>':''}<h2>${n.kind==='reception'?'病院の受付より':n.kind==='visit'?'せんぱいが訪ねてきました':'せんぱいからのメッセージ'}</h2><p>${pages[n.page||0]}</p><button data-alpha-notice-next>${(n.page||0)<pages.length-1?'つぎへ':n.kind==='visit'&&n.action?'確認しよう':'閉じる'}</button></article>`;if(n.kind==='visit'){box.className='alpha-layer alpha-visit';box.innerHTML='<aside class="shared-guide-note">'+seniorDialogueContents(pages[n.page||0],'<button data-alpha-notice-next>'+((n.page||0)<pages.length-1?'つぎへ':'つぎへ')+'</button>')+'</aside>';}app.append(box);}
  if(s.ui.alphaAlbumPrompt){const n=document.createElement('section');n.className='alpha-layer alpha-notice';n.innerHTML='<article><h2>思い出は、アルバムに</h2><p>'+ (cat.permanentResident?'スマホのアルバムから、この子との思い出を見られます。これからも、一緒の時間を重ねていきましょう。':'スマホのアルバムから、あの子の写真を見られます。次の出会いまで、お部屋でひと息つきましょう。')+'</p><button data-alpha-album>アプリを開く</button></article>';app.append(n);}
  const gift=s.ui.alphaGift;if(gift&&Date.now()-gift.at<2200){const n=document.createElement('div');n.className='alpha-gift-reveal';n.style.animationDelay=-(Date.now()-gift.at)+'ms';n.innerHTML=`<div class="gift-box">${furnitureStorageArt()}</div><div class="gift-prize">${gift.coins?PAW_COIN:''}${bookIcons[gift.itemId]?bookImage(bookIcons[gift.itemId]):''}</div>`;app.append(n);alphaTimer=setTimeout(()=>n.remove(),Math.max(0,2200-(Date.now()-gift.at)));}
- app.querySelectorAll('.family-ad-note').forEach(n=>n.remove());
+ app.querySelectorAll('.family-ad-note,.family-receipt').forEach(n=>n.remove());
  const entering=alphaRoomPrevious!=='room'&&s.campaign.phase==='room';alphaRoomPrevious=s.campaign.phase;
  if(s.campaign.phase==='room'&&cat.status==='raising'&&!s.ui.modal&&!s.ui.layoutMode&&!s.ui.alphaNotice&&!currentLifeCue()){
   const pending=['poop','vomit'].filter(p=>{const count=cat.body[p==='poop'?'litter':'vomit'];return count>0&&count>(Number(cat.alphaMessSeen?.[p])||0)});
   if(pending.length){const now=Date.now(),point=getCatPoint(s);cat.alphaMessSeen={...cat.alphaMessSeen};catLifeCues=pending.map((pose,i)=>{cat.alphaMessSeen[pose]=cat.body[pose==='poop'?'litter':'vomit'];const started=now+700+i*3700;return {catId:cat.id,pose,point:pose==='poop'?{...point,...getPlacedPoint(s,'litter',point)}:point,started,reveal:started+1800,until:started+3400,previous:0};});catLifeCues.forEach(scheduleLifeCueRefresh);saveGameState(s);for(const pending of catLifeCues){const node=app.querySelector(pending.pose==='vomit'?'.mess-object':'.book-litter-mark');if(node)node.style.visibility='hidden';}}
  }
  renderAlphaPractice(s);
+ mountGameCats();
 };
 window.addEventListener('click',e=>{
+ const mail=e.target.closest('[data-alpha-mail]');if(mail)dispatch({type:mail.dataset.alphaMail==='open'?'ALPHA_MAIL_OPEN':'ALPHA_MAIL_CLOSE'});
+ const read=e.target.closest('[data-alpha-mail-read]');if(read)dispatch({type:'ALPHA_MAIL_READ',key:read.dataset.alphaMailRead});
+ const family=e.target.closest('[data-alpha-family-read]');if(family)dispatch({type:'ALPHA_FAMILY_READ',id:family.dataset.alphaFamilyRead});
  if(e.target.closest('[data-center="taste"]')){e.preventDefault();e.stopImmediatePropagation();dispatch({type:'ALPHA_TASTE_OPEN'});return;}
  const route=e.target.closest('[data-alpha-route]');if(route){if(route.dataset.alphaRoute==='alpha-center-shop')dispatch({type:'OPEN_OUTING'});else dispatch({type:'ALPHA_ROUTE',route:route.dataset.alphaRoute});}
  if(e.target.closest('[data-alpha-notice-next]'))dispatch({type:'ALPHA_NOTICE_NEXT'});
@@ -140,7 +164,7 @@ window.addEventListener('click',e=>{
 },true);
 
 const alphaNormalize=normalizeLoadedState;
-normalizeLoadedState=function(s){const n=alphaNormalize(s);if(!n)return n;return {...n,ui:{...n.ui,alphaTasteStarted:null,alphaGift:null,alphaNotice:null,alphaAlbumPrompt:false}};};
+normalizeLoadedState=function(s){const n=alphaNormalize(s);if(!n)return n;return {...n,ui:{...n.ui,alphaTasteStarted:null,alphaGift:null,alphaNotice:null,alphaMailbox:false,alphaAlbumPrompt:false}};};
 
 gameState=reduceGameState({...gameState,ui:{...gameState.ui,alphaTasteStarted:null,alphaGift:null}},{type:'ALPHA_BOOT'});
 

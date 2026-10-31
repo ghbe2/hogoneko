@@ -60,7 +60,7 @@ render=function(state){
  const keys=centerReviewPages(review.kind,state),page=review.page,text=keys[page].text,key='center:'+keys[page].key,panel=document.createElement('div');
  panel.className='center-help modal-layer';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');
  panel.setAttribute('aria-label','先輩からのアドバイス');
- panel.innerHTML=`<section class="shared-guide-note senior-review">${seniorDialogueContents('',`<button data-center-next>${page===keys.length-1?'質問へ戻る':'つぎへ'}</button>`)}</section>`;
+ panel.innerHTML=`<section class="shared-guide-note senior-review">${seniorDialogueContents('',`<button data-center-next>${page===keys.length-1?'質問へ':'つぎへ'}</button>`)}</section>`;
  app.append(panel);if(!guideSpeechCache.has(key))guideSpeechCache.set(key,performance.now());
  const tick=()=>{if(!panel.isConnected)return;const count=Math.min(text.length,Math.floor((performance.now()-guideSpeechCache.get(key))/18)),ready=count===text.length;panel.querySelector('p').textContent=text.slice(0,count);const button=panel.querySelector('[data-center-next]');button.disabled=!ready;button.classList.toggle('guide-next-ready',ready);if(!ready)centerReviewFrame=requestAnimationFrame(tick);};tick();
 };

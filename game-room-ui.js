@@ -49,15 +49,17 @@ function roomCallPhrase(cat){return getCallName(cat);}
 // Feedback belongs to the caller, never to the cat or to general tutorial taps.
 const roomCallReducer=reduceGameState;
 reduceGameState=function(state,action){
- const next=roomCallReducer(state,action),calling=action.type==='EXECUTE_CONTACT'&&action.contact==='call'&&state.campaign.phase==='room'&&!state.ui.modal&&!state.ui.layoutMode&&getCat(state).status==='raising',intake=action.type==='CALL_INTAKE_CAT'&&state.campaign.phase==='intake'&&getCat(state).named;
- if(next!==state&&(calling||intake)&&(calling?getCat(next).lastCalledAt!==getCat(state).lastCalledAt:next.campaign.intakeCallCount!==state.campaign.intakeCallCount||next.campaign.intakeCalled!==state.campaign.intakeCalled))return {...next,ui:{...next.ui,roomCallCue:{at:Date.now(),catId:getCat(next).id,text:roomCallPhrase(getCat(next),state.ui.roomCallCue?.text)}}};
+ const next=roomCallReducer(state,action),calling=action.type==='EXECUTE_CONTACT'&&action.contact==='call'&&state.campaign.phase==='room'&&!state.ui.modal&&!state.ui.layoutMode&&getCat(state).status==='raising',intake=action.type==='CALL_INTAKE_CAT'&&state.campaign.phase==='intake'&&getCat(state).named&&!state.campaign.intakeCalled&&!state.ui.modal&&!state.ui.layoutMode;
+ // Calling has feedback even when the cat stays inside. Only the first tutorial
+ // increments intakeCallCount; later cats must not depend on that counter.
+ if(next!==state&&(intake||(calling&&getCat(next).lastCalledAt!==getCat(state).lastCalledAt)))return {...next,ui:{...next.ui,...(intake?{message:''}:{}),roomCallCue:{at:Date.now(),catId:getCat(next).id,text:roomCallPhrase(getCat(next))}}};
  return next;
 };
 let roomCallCueTimer=0;
 function showRoomCallCue(state,stage,call){
  clearTimeout(roomCallCueTimer);const cue=state.ui.roomCallCue,elapsed=Date.now()-(cue?.at||0);if(!cue||cue.catId!==getCat(state).id||elapsed<0||elapsed>=2200||state.ui.modal)return;
- const bubble=document.createElement('output');bubble.className='room-call-feedback';bubble.setAttribute('aria-live','polite');bubble.textContent=roomCallPhrase(getCat(state));bubble.style.animationDelay=-elapsed+'ms';stage.append(bubble);call.classList.add('is-calling');
- roomCallCueTimer=setTimeout(()=>{bubble.remove();call.classList.remove('is-calling');},2200-elapsed);
+ const bubble=document.createElement('output');bubble.className='room-call-feedback';bubble.setAttribute('aria-live','polite');bubble.textContent=roomCallPhrase(getCat(state));bubble.style.animationDelay=-elapsed+'ms';stage.append(bubble);call?.classList.add('is-calling');
+ roomCallCueTimer=setTimeout(()=>{bubble.remove();call?.classList.remove('is-calling');},2200-elapsed);
 }
 function roomTravelArt(home){const cat=home?residentCats(gameState)[0]:null;const frame=RoomControlArt.frame.replace('class="rim"','class="corner-frame"').replace('<polygon','<g class="travel-frame"><polygon').replace('</svg>','</g></svg>');const picture=home?roomHomeArt().replace(/<g class="travel-frame">[\s\S]*?<\/g>/,''):RoomControlArt.map;return frame+'<span class="corner-picture">'+picture+'</span>'+(cat?'<span class="home-travel-cat">'+renderCatArt(cat)+'</span>':'');}
 render=function(state){
@@ -70,6 +72,8 @@ render=function(state){
  const phase=state.campaign.phase,room=phase==='room',intake=phase==='intake';
  if(room||intake){
   const stage=app.querySelector('.stage,.intake-layout');if(!stage)return;stage.classList.add('new-room-ui');
+  if(intake)stage.querySelectorAll('.intake-feedback').forEach(n=>n.remove());
+  if(intake&&state.ui.layoutMode)app.querySelector('.intake-footer')?.remove();
   const menu=app.querySelector('.bottom-menu');
   const top=document.createElement('nav');top.className='room-icon-menu';top.setAttribute('aria-label','部屋のメニュー');
   const appButton=menu?.querySelector('[data-action="open-notebook"]')||(!intake?Object.assign(document.createElement('button'),{type:'button'}):null);if(appButton)appButton.dataset.action='open-notebook';
@@ -79,7 +83,7 @@ render=function(state){
   app.querySelector('.game-frame>.controls')?.remove();
   if(!state.ui.layoutMode){
    const call=app.querySelector('[data-action="call-cat"],.intake-footer-call');
-   if(call&&(!intake||getCat(state).named)){call.classList.add('room-call-icon');call.setAttribute('aria-label','よぶ');call.innerHTML=callPerson;stage.append(call);showRoomCallCue(state,stage,call);}
+   if(call&&(!intake||getCat(state).named)){call.classList.add('room-call-icon');call.setAttribute('aria-label','よぶ');call.innerHTML=callPerson;stage.append(call);showRoomCallCue(state,stage,call);}else if(intake)showRoomCallCue(state,stage,null);
    const dock=app.querySelector('.command-dock');if(dock){
     const food=dock.querySelector('[data-tab="food"]');
     dock.querySelector('.sub-command-row')?.remove();

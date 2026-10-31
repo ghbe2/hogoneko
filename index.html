@@ -1009,7 +1009,6 @@
     .layout-lift-origin { opacity:.2 !important; }
     .layout-edge-palette.drop-storage, .layout-tray-toggle:not(.layout-store-target).drop-storage { outline:3px solid #dc9da9; }
     .layout-edge-palette.drop-storage-active, .layout-tray-toggle:not(.layout-store-target).drop-storage-active { outline:4px solid #bc657c; background:#f8dbe3; }
-    .layout-drop-hint { position:absolute; z-index:75; bottom:12px; left:50%; transform:translateX(-50%); padding:7px 12px; border-radius:20px; background:#fffaf4ee; color:#946c66; font-size:11px; pointer-events:none; white-space:nowrap; }
     .layout-tray-toggle {
       position:absolute;
       right:12px;
@@ -4468,7 +4467,6 @@ function moveLayoutDrag(draft, clientX, clientY) {
     draft.stage.classList.add('layout-dragging');
     draft.storage=draft.stage.querySelector('.layout-edge-palette, .layout-tray-toggle');
     draft.storage?.classList.add('drop-storage');
-    draft.hint=document.createElement('div');draft.hint.className='layout-drop-hint';draft.hint.setAttribute('role','status');draft.stage.appendChild(draft.hint);
   }
   const inside=(rect)=>rect && clientX>=rect.left && clientX<=rect.right && clientY>=rect.top && clientY<=rect.bottom;
   draft.store=Boolean(inside(draft.storage?.getBoundingClientRect()));
@@ -4488,12 +4486,10 @@ function moveLayoutDrag(draft, clientX, clientY) {
   draft.ghost.style.visibility=draft.store?'hidden':'';
   draft.storage?.classList.toggle('drop-storage-active',draft.store);
   if(typeof updateFurnitureStorage==='function')updateFurnitureStorage(draft);
-  draft.hint.hidden=draft.store;
-  draft.hint.textContent=draft.store?'離してしまう':draft.valid?'離してここに置く':`置けるのは${draft.zone==='wall'?'壁':'床'}。収納箱へ運ぶとしまえます`;
 }
 
 function clearLayoutDrag(draft) {
-  draft.ghost?.remove();draft.hint?.remove();
+  draft.ghost?.remove();
   draft.origin?.classList.remove('layout-lift-origin');
   draft.stage.classList.remove('layout-dragging');
   draft.storage?.classList.remove('drop-storage','drop-storage-active');
@@ -5266,6 +5262,14 @@ triggerAutoEvent=function(){
 <script src="game-senior-rescue.js"></script>
 <link rel="stylesheet" href="assets/character-life.css">
 <script src="assets/character-life.js"></script>
+<script src="assets/visitor-body.js"></script>
+<script src="assets/visitor-production.js"></script>
+<script src="assets/reception-fullbody-study.js"></script>
+<script src="assets/senior-proportion-study.js"></script>
+<script src="assets/senior-face-a-refinement.js"></script>
+<script src="assets/senior-face-art.js"></script>
+<script src="assets/npc-proportion-studies.js"></script>
+<script src="assets/npc-production.js"></script>
 <script src="game-room-reactions.js"></script>
 <link rel="stylesheet" href="assets/senior-rescue.css">
 <link rel="stylesheet" href="assets/action-buttons.css">

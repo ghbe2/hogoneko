@@ -22,8 +22,8 @@
    const upper=svg.querySelector('.senior-upper');breathe(upper,'110px 200px');
    joint(svg.querySelector('.senior-head'),'actor-look','109px 96px');
   }else if(kind==='visitor'){
-   breathe(svg.querySelector('.adoption-torso'),'60px 156px');
-   joint(svg.querySelector('.adoption-head'),'actor-look','60px 83px');
+   svg.querySelectorAll('.adoption-torso').forEach(n=>breathe(n,'60px 156px'));
+   svg.querySelectorAll('.adoption-head').forEach(n=>joint(n,'actor-look','60px 83px'));
   }else if(kind==='store'){
    breathe(svg.querySelector('.shop-clerk'),'0px 86px');
    joint(svg.querySelector('.store-clerk-head'),'actor-look','0px 16px');

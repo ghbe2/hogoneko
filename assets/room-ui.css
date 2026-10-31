@@ -1,6 +1,6 @@
-#app .room-icon-menu{position:absolute;right:10px;top:8px;display:flex;gap:8px;z-index:32}
-#app .room-icon-menu button{width:64px;height:76px;border:0;border-radius:0;background:none;box-shadow:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:0}
-#app .room-icon-menu svg{width:64px;height:68px;flex:none}#app .room-icon-menu .label{font-size:12px;line-height:20px;background:none;color:#564b38;white-space:nowrap;font-weight:700;letter-spacing:.06em;text-align:center}
+#app .room-icon-menu{position:absolute;right:8px;top:8px;display:flex;gap:4px;z-index:32}
+#app .room-icon-menu button{width:50px;min-width:0;flex:none;height:60px;border:0;border-radius:0;background:none;box-shadow:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:0}
+#app .room-icon-menu svg{width:50px;height:54px;flex:none}#app .room-icon-menu .label{font-size:12px;line-height:20px;background:none;color:#564b38;white-space:nowrap;font-weight:700;letter-spacing:.06em;text-align:center}
 #app .game-frame>.hud{visibility:hidden;height:0;min-height:0;padding:0}
 #app .room-travel-icon{position:absolute;left:0;top:0;width:84px;height:84px;background:none;border:0;padding:0;z-index:35;text-align:left;color:#564b38}#app .room-travel-icon>.corner-frame{position:absolute;left:-87px;top:-87px;width:174px;height:174px;pointer-events:none}#app .corner-picture{position:absolute;left:0;top:0;width:84px;height:63px;clip-path:circle(76px at 0 0);pointer-events:none}#app .corner-picture>svg{width:100%;height:100%}
 #app .home-travel-cat{position:absolute;left:31px;top:16px;width:34px;height:40px;pointer-events:none}#app .home-travel-cat svg{display:block;width:100%;height:100%;overflow:hidden}
