@@ -10,7 +10,9 @@ function splitGuideText(text,limit=44){
 }
 let guidePresentationFrame=0;
 function guideHand(kind='tap'){
- if(kind==='move-furniture')return `<span class="guide-gesture" data-kind="move-furniture" aria-hidden="true"><svg viewBox="0 0 64 80"><g class="guide-hand"><path d="M24 65L22 53Q14 50 13 42Q12 36 16 31Q19 28 23 32V25Q23 19 28 19Q32 19 33 23V21Q33 16 38 17Q42 17 43 23Q47 20 50 24Q52 26 52 31V42Q52 50 46 54L44 65Z" fill="#fff8e9" stroke="var(--guide-accent, #9d5341)" stroke-width="3" stroke-linejoin="round"/><path d="M23 32L21 41M33 24V31M43 24V32M23 53Q33 56 46 54" fill="none" stroke="var(--guide-accent, #9d5341)" stroke-width="2" stroke-linecap="round"/></g></svg></span>`;
+ // Back of a closed hand: four knuckles above, thumb on the outer edge.
+ // No palm crease or thumb crossing the centre of the hand.
+ if(kind==='move-furniture')return `<span class="guide-gesture" data-kind="move-furniture" aria-hidden="true"><svg viewBox="0 0 64 80"><g class="guide-hand"><path d="M23 65L23 54Q18 51 16 45L13 37Q12 32 16 30Q19 29 21 33L20 28Q19 23 23 21Q27 20 29 24Q28 18 33 18Q38 18 38 24Q39 19 43 21Q47 22 46 28Q48 25 51 28Q53 30 52 35L50 45Q49 51 44 55L44 65Z" fill="#fff8e9" stroke="var(--guide-accent, #9d5341)" stroke-width="3" stroke-linejoin="round"/><path d="M29 25L29 31M38 25L38 31M46 29L45 34M21 34L22 41" fill="none" stroke="var(--guide-accent, #9d5341)" stroke-width="1.8" stroke-linecap="round"/><path d="M28 42L29 48M35 41V48M42 40L41 47" fill="none" stroke="var(--guide-accent, #9d5341)" opacity=".3" stroke-width="1.3" stroke-linecap="round"/></g></svg></span>`;
  const tap=kind==='tap',vertical=['drag','swipe-down','swipe-up'].includes(kind),effect=tap?'M28 3V10M44 13L38 16M12 13L18 16':vertical?'M28 3V48':'M5 20H51';
  return `<span class="guide-gesture" data-kind="${kind}" aria-hidden="true"><svg viewBox="0 0 64 80"><g class="guide-trace ${tap?'tap-rays':''}" fill="none" stroke-linecap="round"><path d="${effect}" stroke="#fffdf3" stroke-width="7"/><path d="${effect}" stroke="var(--guide-accent, #9d5341)" stroke-width="3"/></g><g class="guide-hand"><path d="M22 46V27q0-7 6-7t6 7v15q3-5 7-1 4-2 7 2 5 0 5 6v11q0 12-12 12H32q-5 0-8-5L13 49q-3-5 2-7 3-1 7 4Z" fill="#fff8e9" stroke="var(--guide-accent, #9d5341)" stroke-width="3" stroke-linejoin="round"/></g></svg></span>`;
 }
@@ -77,7 +79,7 @@ function guidePresentation(state){
   const a=app.getBoundingClientRect(),r=(key==='homeBuilding'?target?.querySelector('.town-home-picture'):null)?.getBoundingClientRect()||target?.getBoundingClientRect();
   if(hand&&cue==='move-furniture')hand.style.setProperty('--move-direction',r&&r.left+r.width/2>a.left+a.width/2?-1:1);
   if(hand){hand.hidden=!ready||!lastPage||!r||target.disabled||getComputedStyle(target).visibility==='hidden';if(r)Object.assign(hand.style,{left:Math.max(cue==='swipe'?34:4,Math.min(a.width-(cue==='swipe'?82:52),(cue==='tap'?(r.width>100?r.right-28:r.left+r.width*.82):r.left+r.width*.5)-21-a.left))+'px',top:Math.max(cue==='drag'?44:4,Math.min(a.height-66,r.top+r.height*.5-15-a.top))+'px'});}
-  if(hand&&cue==='move-furniture'&&app.querySelector('.layout-drag-preview'))hand.hidden=true;
+  if(hand&&cue==='move-furniture'&&(app.querySelector('.layout-drag-preview')||(typeof fieldDragDraft!=='undefined'&&fieldDragDraft)))hand.hidden=true;
   note.style.top=r&&r.top+r.height/2>a.top+a.height/2?'12px':'auto';note.style.bottom=note.style.top==='auto'?'12px':'auto';
   if(['field','trapInspect','clinic'].includes(state.campaign.phase)){note.style.top='18px';note.style.bottom='auto';}
   if(state.campaign.phase==='shop'){note.style.top='12px';note.style.bottom='auto';}

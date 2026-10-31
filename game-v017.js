@@ -267,6 +267,7 @@ function mountGameCats(){
     if(svgRigs.has(svg))return;
     const rig=CatSVG.buildCat(svg,'companion-'+svg.dataset.instance,{...SENIOR_CAT_DNA});
     svg.querySelector('.floor')?.remove();svg.querySelectorAll('.part-outline').forEach(n=>n.remove());
+    poseSeniorCompanion(rig,performance.now());
     svgRigs.set(svg,{rig,seniorHeld:true,since:0});
   });
 }
@@ -289,6 +290,11 @@ function scenePose(svg){
   return ['sit','neutral'];
 }
 let svgLast=0;
+function poseSeniorCompanion(rig,now){
+ const t=now/1000,m={...CatSVG.poseModel('sit',t),hy:-150+Math.sin(t*1.3)*1.2,hs:1.15,by:-65,bh:.75,hr:Math.sin(t*.55)*2};
+ CatSVG.applyPose(rig,m,t,'sit');
+ if(typeof CatFaceDepth!=='undefined')CatFaceDepth.apply(rig,Math.sin(t*.55)*.24);
+}
 function animateGameCats(now){
   if(!document.hidden&&now-svgLast>=1000/24){
     svgLast=now;
@@ -296,9 +302,7 @@ function animateGameCats(now){
       if(!svg.isConnected){svgRigs.delete(svg);continue;}
       if(svg.dataset.staticPhoto==='true')continue;
       if(entry.seniorHeld){
-        const t=now/1000,m={...CatSVG.poseModel('sit',t),hy:-150+Math.sin(t*1.3)*1.2,hs:1.15,by:-65,bh:.75,hr:Math.sin(t*.55)*2};
-        CatSVG.applyPose(entry.rig,m,t,'sit');
-        if(typeof CatFaceDepth!=='undefined')CatFaceDepth.apply(entry.rig,Math.sin(t*.55)*.24);
+        poseSeniorCompanion(entry.rig,now);
         continue;
       }
       if(svg.dataset.motionResumeAt){if(Date.now()<Number(svg.dataset.motionResumeAt))continue;delete svg.dataset.motionResumeAt;entry.since=now;entry.previous=null;}
