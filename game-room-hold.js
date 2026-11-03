@@ -31,11 +31,12 @@ window.CatRoomHold=(()=>{
  window.addEventListener('click',e=>{if(active&&e.target instanceof Element&&e.target.closest('.cat-object'))stopEvent(e);},true);
  window.addEventListener('pointercancel',e=>{if(e.isPrimary!==false)cancel();},true);window.addEventListener('blur',cancel);document.addEventListener('visibilitychange',()=>{if(document.hidden)cancel()});
  window.addEventListener('resize',cancel);app.addEventListener('lostpointercapture',e=>{if(pending?.id===e.pointerId)cancel()});
- const reduce=reduceGameState;reduceGameState=function(s,a){if(active&&['ROAM_CAT','TAP_CAT','TOUCH_NOW','EXECUTE_CONTACT','START_PLAY','FINISH_PLAY'].includes(a.type))return s;return reduce(s,a)};
+ const reduce=reduceGameState;reduceGameState=function(s,a){if((active||pending)&&['ROAM_CAT','TAP_CAT','TOUCH_NOW','EXECUTE_CONTACT','START_PLAY','FINISH_PLAY'].includes(a.type))return s;return reduce(s,a)};
  const basePoint=getCatPoint;getCatPoint=function(s){return active&&s.campaign.phase==='room'&&getCat(s).id===active.catId?{...active.point}:basePoint(s)};
  const baseRender=render;render=function(s){
   const a=active;if(a&&(s.campaign.phase!=='room'||s.ui.modal||s.ui.layoutMode||getCat(s).id!==a.catId)){finish(true);s=gameState;}
   baseRender(s);
+  if(pending&&!active){const cat=app.querySelector('.cat-object');if(cat)pending.node=cat;else captureOff();}
   if(active){const fresh=app.querySelector('.cat-object');if(!fresh){finish(true);return;}fresh._travelAnimation?.cancel();fresh.replaceWith(active.node);active.world=active.node.parentElement;svgRigs.set(active.svg,active.entry);}
  };
  // Old long-press saves must never reopen with a detached floating cat.
