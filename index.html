@@ -4421,6 +4421,7 @@ app.addEventListener("pointerup", event => {
 });
 
 app.addEventListener("pointercancel", () => {
+  const hadDrag = !!(fieldDragDraft || commandDraft || playDraft || dragDraft || panDraft);
   if (debugHoldTimer) window.clearTimeout(debugHoldTimer);
   debugHoldTimer = null;
   debugHoldDraft = null;
@@ -4437,7 +4438,7 @@ app.addEventListener("pointercancel", () => {
   dragDraft = null;
   if (panDraft?.world) panDraft.world.classList.remove("dragging");
   panDraft = null;
-  render(gameState);
+  if (hadDrag) render(gameState);
 });
 
 function moveLayoutDrag(draft, clientX, clientY) {

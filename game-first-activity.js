@@ -160,7 +160,7 @@ reduceGameState=function(state,action){
 };
 // Pointer release, snap alignment and a quiet interval must all be complete.
 let baitSettleTimer;
-function settleFirstBait(e){const rail=e.target;if(!rail.matches('.bait-carousel'))return;clearTimeout(baitSettleTimer);baitSettleTimer=setTimeout(()=>{if(rail.dataset.baitInteracted!=='true'||!rail.isConnected||rail.classList.contains('dragging')||!firstActive(gameState)||gameState.onboarding.guide!=='bait'||gameState.campaign.fieldFood!=='food_wet')return;const r=rail.getBoundingClientRect(),o=rail.querySelector('.chosen').getBoundingClientRect();if(Math.abs(o.left+o.width/2-r.left-r.width/2)>2)return;gameState=guideTo(gameState,'trap');saveGameState(gameState);render(gameState);},450);}
+function settleFirstBait(e){const rail=e.target;if(!rail.matches('.bait-carousel'))return;clearTimeout(baitSettleTimer);baitSettleTimer=setTimeout(()=>{if(rail.dataset.baitInteracted!=='true'||!rail.isConnected||rail.classList.contains('dragging')||rail.dataset.baitActive==='true'||!firstActive(gameState)||gameState.onboarding.guide!=='bait'||gameState.campaign.fieldFood!=='food_wet')return;const r=rail.getBoundingClientRect(),o=rail.querySelector('.chosen').getBoundingClientRect();if(Math.abs(o.left+o.width/2-r.left-r.width/2)>2)return;gameState=guideTo(gameState,'trap');saveGameState(gameState);render(gameState);},450);}
 for(const event of ['scroll','scrollend','bait-released'])app.addEventListener(event,settleFirstBait,true);
 
 const firstTown=renderTown;
@@ -264,6 +264,7 @@ function gateFirstInput(event){
 }
 // Gate before any app-level capture handlers can start an unrelated interaction.
 window.addEventListener('pointerdown',gateFirstInput,true);
+window.addEventListener('touchstart',gateFirstInput,{capture:true,passive:false});
 window.addEventListener('click',gateFirstInput,true);
 window.addEventListener('keydown',gateFirstInput,true);
 const firstGate=renderStageGate;
