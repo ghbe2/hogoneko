@@ -33,9 +33,15 @@ reduceGameState=function(state,action){
 };
 fadeActions.add('HOME_FROM_ADOPTION');
 // An interrupted mock ad never grants a reward on startup. It can be retried.
-gameState={...gameState,ui:{...gameState.ui,familyAd:null}};
+function restoreFamilyMailbox(state){
+ if(!state)return state;
+ // Reading is transient; preserve earned gifts and the return-home encounter.
+ const pending=pendingFamilyLetter(state),keepReturn=pending?.kind==='return';
+ return {...state,economy:{...state.economy,pendingFamilyLetter:keepReturn?state.economy.pendingFamilyLetter:null},ui:{...state.ui,familyAd:null,familyLetterOpen:false}};
+}
+gameState=restoreFamilyMailbox(gameState);
 const familyNormalize=normalizeLoadedState;
-normalizeLoadedState=function(...args){const s=familyNormalize(...args);return s?{...s,ui:{...s.ui,familyAd:null}}:s;};
+normalizeLoadedState=function(...args){return restoreFamilyMailbox(familyNormalize(...args));};
 let familyAdTimer=0,familyInertNodes=[];
 const familyLetterRender=render;
 render=function(state){

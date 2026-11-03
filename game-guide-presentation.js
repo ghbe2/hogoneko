@@ -98,7 +98,7 @@ render=function(state){
  if(snapshot){
   snapshot.removeAttribute('id');snapshot.removeAttribute('aria-live');snapshot.className='navigation-snapshot';snapshot.setAttribute('aria-hidden','true');snapshot.inert=true;
   const veil=document.createElement('div');veil.className='navigation-veil';app.append(snapshot,veil);guideNavigationBusy=true;
-  veil.animate([{opacity:0},{opacity:1}],{duration:180,fill:'forwards'}).finished.then(()=>{snapshot.remove();return veil.animate([{opacity:1},{opacity:0}],{duration:260,fill:'forwards'}).finished;}).finally(()=>{snapshot.remove();veil.remove();guideNavigationBusy=false;});
+  veil.animate([{opacity:0},{opacity:1}],{duration:180,fill:'forwards'}).finished.then(()=>{snapshot.remove();return veil.animate([{opacity:1},{opacity:0}],{duration:260,fill:'forwards'}).finished;}).finally(()=>{snapshot.remove();veil.remove();guideNavigationBusy=false;finishFirstSceneTransition();});
  }
 };
 for(const event of ['click','pointerdown','touchstart'])window.addEventListener(event,e=>{if(e.target.closest('[data-alpha-report],.alpha-report,.alpha-layer'))return;if(app.querySelector('[data-reading="true"]')||(app.querySelector('[data-copy-pending="true"]')&&!e.target.closest('[data-copy-page]'))){e.preventDefault();e.stopImmediatePropagation();}},{capture:true,passive:false});
@@ -115,5 +115,5 @@ dispatch=function(action){
  veil.animate([{opacity:0},{opacity:1}],{duration:180,fill:'forwards'}).finished.then(()=>{
   guideNavigationDispatch(action);app.append(veil);
   return veil.animate([{opacity:1},{opacity:0}],{duration:260,fill:'forwards'}).finished;
- }).finally(()=>{veil.remove();guideNavigationBusy=false;});
+ }).finally(()=>{veil.remove();guideNavigationBusy=false;finishFirstSceneTransition();});
 };

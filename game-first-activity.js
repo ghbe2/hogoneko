@@ -58,7 +58,17 @@ const firstBenefit=productBenefit;
 productBenefit=id=>id==='starter_set'?'これがあれば初心者保護主デビュー！':firstBenefit(id);
 const firstActive=s=>s.onboarding?.flowVersion===1&&s.onboarding.status==='active';
 const guideTo=(s,guide)=>({...s,onboarding:{...s.onboarding,guide,guideEnteredAt:s.onboarding.guide===guide?s.onboarding.guideEnteredAt:Date.now()}});
-const firstGuidePause=s=>Math.max(0,({fieldHello:2000,trapReady:1100,captured:800,clinicHello:700,shopHello:700,homeHello:700,callWait:900}[s.onboarding.guide]||0)-(Date.now()-(s.onboarding.guideEnteredAt||0)));
+// A scene gets one quiet beat after its navigation fade, not after every line.
+let firstScenePresentation={key:null,until:0};
+function syncFirstScenePresentation(s){
+ if(!firstActive(s)||titleScreenOpen){firstScenePresentation={key:null,until:0};return;}
+ const c=s.campaign,key=[getCat(s).id,c.phase,c.phase==='shop'?c.shopId:'',c.phase==='clinic'?c.clinicStep:''].join(':');
+ if(firstScenePresentation.key!==key)firstScenePresentation={key,until:Date.now()+1440,pending:true};
+}
+function finishFirstSceneTransition(){
+ if(firstScenePresentation.pending){firstScenePresentation.until=Date.now()+1000;firstScenePresentation.pending=false;}
+}
+const firstGuidePause=s=>{const busy=typeof guideNavigationBusy!=='undefined'&&guideNavigationBusy;if(!busy&&Date.now()>=firstScenePresentation.until)firstScenePresentation.pending=false;return Math.max(0,(busy&&firstScenePresentation.pending)?100:0,firstScenePresentation.until-Date.now(),({fieldHello:2000,trapReady:1100,captured:800,clinicHello:700,shopHello:700,homeHello:700,callWait:900}[s.onboarding.guide]||0)-(Date.now()-(s.onboarding.guideEnteredAt||0)));};
 let firstGuideRevealTimer=0;
 const hasFirstFurniture=s=>FIRST_FURNITURE.every(id=>getPlaced(getRoom(s)).some(p=>p.itemId===id));
 const firstComfort=getRoomComfortBreakdown;
@@ -205,6 +215,7 @@ function fitFirstPortrait(svg){
 }
 const firstRender=render;
 render=function(state){
+ syncFirstScenePresentation(state);
  cancelAnimationFrame(firstFrame);clearTimeout(firstGuideRevealTimer);clearTimeout(firstTimer);clearTimeout(shopExitTimer);state=repairIntakePlacement(state);if(guidedIntake(state))gameState=state;firstRender(state);
  if(titleScreenOpen)return;
  if(state.campaign.phase==='intake'){

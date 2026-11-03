@@ -57,7 +57,7 @@ function adoptionShowComment(view,node,text){
 function adoptionVisitors(view,seconds,grade){
  const w=view.find('walkway').clientWidth,sets={high:[0,1,3,4,5],mid:[1,4,5],low:[4]},comments=['こっちを見てくれた。','きれいな毛並みだね。','どんな子なんだろう。','ちょっと、見ていこうか。','この子、気になるなあ。','いい出会いがあるといいね。'];let speaker=null;
  const smooth=p=>p*p*(3-2*p);
- view.walkers.forEach((n,i)=>{const t=seconds-([-1.3,1.5,4.3,7.1,10.5,13.3][i]),left=i%2===1,pw=n.clientWidth,origin=left?w+pw:-pw,end=left?-pw:w+pw,target=w*(left?.87:.13)-pw/2,stop=sets[grade].includes(i),arrive=2.3,pause=2.6,depart=5.5,stopped=stop&&t>=arrive&&t<arrive+pause;
+ view.walkers.forEach((n,i)=>{const t=seconds-([0,1.5,4.3,7.1,10.5,13.3][i]),left=i%2===1,pw=n.clientWidth,origin=left?w+pw:-pw,end=left?-pw:w+pw,target=w*(left?.87:.13)-pw/2,stop=sets[grade].includes(i),arrive=2.3,pause=2.6,depart=5.5,stopped=stop&&t>=arrive&&t<arrive+pause;
   let x,amount=1;if(!stop){x=origin+(end-origin)*t/8;}else if(t<arrive){const p=Math.max(0,t/arrive);x=origin+(target-origin)*(2*p-p*p);amount=Math.min(1,(1-p)*5);}else if(stopped){x=target;amount=0;}else{const p=Math.min(1,(t-arrive-pause)/depart);x=target+(end-target)*smooth(p);amount=Math.min(1,p*7);}
   adoptionPosition(n,x,stopped,left,Math.abs(x-origin),amount,(i%3)*6-6);if(t<0||t>(stop?arrive+pause+depart:8))n.style.visibility='hidden';
   if(stopped&&t>arrive+.25&&t<arrive+pause-.2)speaker={n,text:comments[i]};
@@ -73,7 +73,7 @@ function paintAdoption(view,time){
   view.root.dataset.phase=phase;
   view.root.querySelector('.adoption-basket-tag').textContent=name;
   view.root.querySelector('.adoption-basket').setAttribute('aria-label',`かごの中の${name}`);find('cat').setAttribute('aria-label',name);
-  view.speech.textContent=phase==='thanks'?`大切に、一緒に暮らします。\n${name}を育ててくれて、ありがとう。`:`あの……${name}を、\n家族に迎えたいんです。`;
+  if(['request','thanks'].includes(phase))view.speech.textContent=phase==='thanks'?`大切に、一緒に暮らします。\n${name}を育ててくれて、ありがとう。`:`あの……${name}を、\n家族に迎えたいんです。`;
   view.root.querySelector('.adoption-panel').style.visibility=['ready','result'].includes(phase)?'visible':'hidden';
   const ready=isGraduationReady(state);
   let text=['最後の挑戦','この子の、これからへ。',ready?'育ててきた日々を、この出会いへ。\n準備ができたら、譲渡会をはじめよう。':'もう少し、おうちで準備を続けよう。\n体調と手術の記録を確認しましょう。','譲渡会をはじめる','BEGIN_ADOPTION',!ready];
@@ -99,6 +99,7 @@ function paintAdoption(view,time){
   const p=Math.min(1,Math.max(0,(seconds-32.4)/.8)),ease=p*p*(3-2*p),a=source.querySelector('svg').getScreenCTM(),b=carrier.querySelector('.adoption-held-cat').getScreenCTM(),from=new DOMPoint(360,215).matrixTransform(a),to=new DOMPoint(360,215).matrixTransform(b),scale=Math.hypot(b.a,b.b)/Math.hypot(a.a,a.b);
   source.style.transform=`translate(${(to.x-from.x)*ease}px,${(to.y-from.y)*ease-Math.sin(p*Math.PI)*48}px) scale(${1+(scale-1)*ease})`;source.style.opacity=p>=1?'0':'1';carrier.querySelector('.adoption-held-cat').style.opacity=p>=1?'1':'0';
  }
+ find('cat').dataset.catDirection=phase==='handover'?'right':'left';
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,t=reduced?0:time/1000,pose=phase==='handover'&&seconds>=32.4&&seconds<33.2?'jump':'sit',poseTime=pose==='jump'?Math.min(.9,(seconds-32.4)/.8):t,model=CatSVG.poseModel(pose,poseTime);if(pose==='jump')model.lift=0;if(phase==='walking'&&!reduced){model.hr=Math.sin(t*.65)*4;model.hx=Math.sin(t*.65)*5;}if(['approach','request','result'].includes(phase)&&adopted){model.hr=5;model.hx=8;}CatSVG.applyPose(view.rig,model,poseTime,pose);
  if(run?.status==='playing'&&seconds>=adoptionDuration(run))dispatch({type:'FINISH_ADOPTION'});
  view.neighbors.forEach((rig,i)=>CatSVG.applyPose(rig,CatSVG.poseModel('sit',t+i),t+i,'sit'));

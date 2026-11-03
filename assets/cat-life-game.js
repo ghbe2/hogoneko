@@ -10,7 +10,14 @@
   else r.reviewDirection=r.svg.closest('.tnr-cat')?'right':r.svg.dataset.catDirection||'left';
   // The family's walking figure may be mirrored; cancel that for the held cat.
   const figure=r.svg.closest('.adoption-figure');
-  if(figure){r.svg.style.transformOrigin='50% 50%';r.svg.style.transformBox='view-box';r.svg.style.transform=figure.getAttribute('transform')?.includes('scale(-1')?'scaleX(-1)':'';}
+  if(figure){
+   // Reflect the drawing about its own viewBox centre. A CSS transform on a
+   // nested SVG uses the parent's viewport and moves the cat out of the arms.
+   r.svg.style.removeProperty('transform');r.svg.style.removeProperty('transform-origin');r.svg.style.removeProperty('transform-box');
+   if(!r.identityFacing){const g=document.createElementNS('http://www.w3.org/2000/svg','g');g.dataset.identityFacing='';for(const child of [...r.svg.children])if(child.tagName.toLowerCase()!=='defs')g.append(child);r.svg.append(g);r.identityFacing=g;}
+   const v=r.svg.viewBox.baseVal;
+   r.identityFacing.setAttribute('transform',figure.getAttribute('transform')?.includes('scale(-1')?'translate('+(v.x*2+v.width)+' 0) scale(-1 1)':'');
+  }
   const drawingPose=p.startsWith('reaction')?p.split(':')[1]:p==='avoid'?'sit':p;
   CatLifeMotion.reset(r);apply(r,m,t,drawingPose);
   // Eyelids are animated in place; the original coat and eye positions do not move apart.

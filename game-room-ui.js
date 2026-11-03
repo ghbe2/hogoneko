@@ -29,13 +29,35 @@ startCommandDrag=function(draft,x,y){
 clearCommandDrag=function(draft,accepted){drawerClearCommand(draft,accepted);const tray=app.querySelector('.room-preparation');if(tray){tray.classList.remove('is-carrying');tray.querySelector('.room-preparation-items').inert=!roomPreparationOpen;}};
 function roomActionArt(kind){const art={app:'<rect x="22" y="10" width="28" height="47" rx="6" fill="#526f63"/><rect x="25" y="15" width="22" height="34" rx="3" fill="#fffaf0"/><path d="M36 29c-8-10-16 3 0 13 16-10 8-23 0-13" fill="#c8878d"/><path d="M32 53h8" stroke="#e8eadb" stroke-width="2"/>',layout:'<path d="M17 34V24q0-5 6-5h25q6 0 6 5v10" fill="#9daa88"/><rect x="13" y="31" width="45" height="20" rx="5" fill="#829573"/><path d="M20 51v6m31-6v6M20 37h31" stroke="#6a7a5c" stroke-width="3"/>',items:'<path d="M24 24v-6q12-13 24 0v6" fill="none" stroke="#8c765b" stroke-width="4"/><path d="M18 23h36l3 32H15Z" fill="#c5a375"/><path d="M21 27h30v17H21Z" fill="#e9d7b0"/><path d="M31 32h10v8H31Z" fill="#81947c"/>'};return `<svg class="room-action-art" viewBox="0 0 72 72" aria-hidden="true"><path d="M8 25Q10 8 31 7Q57 3 64 25Q71 49 53 61Q30 72 12 55Q2 44 8 25Z" fill="#faf0d9"/><path d="M13 55q21 15 42 2" fill="none" stroke="#d6bf96" stroke-width="2"/>${art[kind]||art.items}${kind==='layout'?'<path d="M46 59l13-13 4 4-13 13-6 2Z" fill="#b88d63"/><path d="M46 59l4 4-6 2Z" fill="#665b46"/>':''}</svg>`;}
 const adoptedRoomInterfaceRender=render;
+// Floor items share a paint layer. Use their floor contact (bottom edge), not
+// purchase/placement order, for both drawing and browser hit testing.
+function orderRoomFloorItems(stage){
+ const items=[...stage.querySelectorAll('.placed-item.floor-placement')];
+ // Artwork without an action must not shield a bowl underneath its transparent
+ // image rectangle. Layout handles and damaged/cleanable items remain targets.
+ for(const item of items){
+  if(!item.matches('[data-action],[data-drop-target],[data-layout-item]')){
+   item.style.pointerEvents='none';item.removeAttribute('role');item.removeAttribute('tabindex');
+  }
+ }
+ const parents=new Set(items.map(item=>item.parentNode));
+ for(const parent of parents){
+  const group=items.filter(item=>item.parentNode===parent);
+  if(group.length<2)continue;
+  const ordered=group.map((item,index)=>({item,index,bottom:item.getBoundingClientRect().bottom}))
+   .sort((a,b)=>a.bottom-b.bottom||a.index-b.index);
+  const marker=document.createComment('floor-items');parent.insertBefore(marker,group[0]);
+  for(const {item} of ordered)parent.insertBefore(item,marker);
+  marker.remove();
+ }
+}
 // Menus share the drawer's inventory, but food is a separate surface.
 const drawerInventory=renderInventory;
 renderInventory=function(state){
  const t=document.createElement('template');t.innerHTML=drawerInventory(state);const food=state.ui.inventoryTab==='food';
  t.content.querySelector('.menu-modal')?.classList.add('room-supplies-menu',food?'room-food-menu':'room-tools-menu');
  const title=t.content.querySelector('h2');if(title)title.textContent=food?'ごはん':state.ui.inventoryTab==='clean'?'掃除道具':'おもちゃ';
- const hint=t.content.querySelector('.sheet-head small');if(hint)hint.textContent=food?'選んだごはんを、お皿へドラッグ':'使う道具を選んで持ち替え';
+ const hint=t.content.querySelector('.sheet-head small');if(hint)hint.textContent=food?'ごはんを選んで、お皿を押すと補充できます':'使う道具を選んで持ち替え';
  t.content.querySelector('.inventory-capacity b')?.remove();
  if(food)t.content.querySelector('.inventory-tabs')?.remove();else t.content.querySelectorAll('.inventory-tabs [data-tab="food"],.inventory-tabs [data-tab="touch"]').forEach(n=>n.remove());
  const shop=t.content.querySelector('.bag-shop');if(shop)shop.dataset.tab=food?'food':state.ui.inventoryTab==='clean'?'care':'play';
@@ -71,7 +93,7 @@ render=function(state){
  const supply=app.querySelector('.room-supplies-menu');if(supply){const key=state.ui.inventoryTab||'touch',saved=supplySearchMemory.get(key);supply.dataset.tab=key;if(saved){const input=supply.querySelector('[data-supply-search]');if(input)input.value=saved.query;supply.querySelectorAll('.grid-cell').forEach(n=>n.hidden=!n.textContent.includes(saved.query));const grid=supply.querySelector('.inventory-grid');if(grid)grid.scrollTop=saved.scroll;}}
  const phase=state.campaign.phase,room=phase==='room',intake=phase==='intake';
  if(room||intake){
-  const stage=app.querySelector('.stage,.intake-layout');if(!stage)return;stage.classList.add('new-room-ui');
+  const stage=app.querySelector('.stage,.intake-layout');if(!stage)return;stage.classList.add('new-room-ui');orderRoomFloorItems(stage);
   if(intake)stage.querySelectorAll('.intake-feedback').forEach(n=>n.remove());
   if(intake&&state.ui.layoutMode)app.querySelector('.intake-footer')?.remove();
   const menu=app.querySelector('.bottom-menu');
