@@ -40,6 +40,7 @@
 #app .room-icon-menu button:active svg,#app .main-command:active svg{transform:translateY(2px)}#app .new-room-ui button:focus-visible{outline:2px solid #6e8567;outline-offset:2px}
 #app:has(.modal-layer) .room-travel-icon{display:none}@media(prefers-reduced-motion:reduce){#app .room-preparation{transition:none}}
 #app .room-icon-menu [aria-pressed="true"] .label{background:var(--guide-accent, #9d5341);color:#fff6e2;box-shadow:inset 0 2px 0 #2f4936}
+#app .modal-layer[aria-label="呼び方を変える"]{z-index:100}
 #app .room-supplies-menu{position:absolute;inset:0;display:block;padding:0;background:#493c262b;z-index:100}
 #app .room-supplies-menu .menu-sheet{position:absolute;left:54px;right:8px;bottom:120px;top:auto;width:auto;height:min(420px,calc(100% - 168px));max-height:none;min-height:0;margin:0;padding:10px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box;animation:none}
 #app .room-supplies-menu .sheet-head{padding:0 48px 0 0;min-height:50px;margin:0;flex:none}

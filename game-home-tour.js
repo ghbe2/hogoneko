@@ -13,8 +13,9 @@ reduceGameState=function(state,action){
  return next;
 };
 const homeTourRender=render;
-let homeTourLastStep=null;
+let homeTourLastStep=null,homeTourFocusFrame=0;
 render=function(state){
+ cancelAnimationFrame(homeTourFocusFrame);
  const step=HOME_TOUR.find(s=>s[0]===state.onboarding.homeTour);
  if(step&&HOME_TOUR.indexOf(step)<=4&&state.ui.modal!=='notebook')state={...state,ui:{...state.ui,modal:'notebook'}};
  if(step)roomPreparationOpen=['food','items'].includes(step[0]);
@@ -27,8 +28,22 @@ render=function(state){
  const text=ACTIVITY_DIALOGUE['homeTour_'+step[0]];
  overlay.innerHTML=`<div class="home-tour-focus"></div><article><h2>${text.title}</h2><p>${text.copy}</p>${step[0]==='close'?'':`<button data-home-tour-next>${step[0]==='items'?'お世話をはじめる':step[0]==='pay'?'部屋へ戻る':'つぎへ'} →</button>`}</article>`;
  app.append(overlay);
- const a=app.getBoundingClientRect(),r=target.getBoundingClientRect(),ring=overlay.firstElementChild,card=overlay.lastElementChild;
- Object.assign(ring.style,{left:(r.left-a.left-3)+'px',top:(r.top-a.top-3)+'px',width:(r.width+6)+'px',height:(r.height+6)+'px'});
+ const ring=overlay.firstElementChild,card=overlay.lastElementChild;
+ // Layout can settle after fonts load or the mobile viewport changes.
+ // Measure against the overlay itself and follow the actual control, not a saved position.
+ let lastBounds='';
+ const alignFocus=()=>{
+  if(!overlay.isConnected||!target.isConnected)return;
+  const a=overlay.getBoundingClientRect(),r=target.getBoundingClientRect();
+  const bounds=[r.left-a.left-3,r.top-a.top-3,r.width+6,r.height+6];
+  const key=bounds.join(',');
+  if(key!==lastBounds){
+   ['left','top','width','height'].forEach((name,i)=>ring.style[name]=bounds[i]+'px');
+   lastBounds=key;
+  }
+  homeTourFocusFrame=requestAnimationFrame(alignFocus);
+ };
+ alignFocus();
  const lower=['profile','vitals'].includes(step[0]);
  card.style.top=lower?'auto':'12px';card.style.bottom=lower?'12px':'auto';
 };

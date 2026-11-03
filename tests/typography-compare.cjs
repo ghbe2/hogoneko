@@ -1,0 +1,5 @@
+const fs=require('fs'),assert=require('node:assert/strict');
+const read=t=>JSON.parse(fs.readFileSync(`tests/screenshots/typography-${t}/report.json`,'utf8'));
+const before=read('before'),after=read('after'),diff=[],movingCoins=[];let count=0;
+for(const a of before){const b=after.find(x=>x.width===a.width&&x.name===a.name);assert(b,`${a.width} ${a.name} missing`);for(const v of a.buttons){const w=b.buttons.find(x=>x.key===v.key);if(!w){diff.push({screen:a.name,width:a.width,key:v.key,missing:true});continue;}count++;let d={};for(const k of ['x','y','width','height'])if(Math.abs(v.rect[k]-w.rect[k])>.5)d[k]=[v.rect[k],w.rect[k]];if(Object.keys(d).length){const entry={screen:a.name,width:a.width,key:v.key,d};if(v.key.includes('pick-discovery-coin')&&Object.keys(d).every(k=>k==='x'||k==='y'))movingCoins.push(entry);else diff.push(entry);}}}
+console.log(JSON.stringify({screens:after.length,buttons:count,scroll:after.filter(x=>x.screenScroll).map(x=>[x.width,x.name]),animatedCoinPositions:movingCoins,differences:diff},null,2));assert.equal(diff.length,0,'button geometry changed');

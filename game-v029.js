@@ -119,7 +119,7 @@ const surgeryStyle=document.createElement('style');surgeryStyle.textContent=`
 #app .campaign-screen:has(.surgery-scene){position:relative;min-height:0;padding:0}
 #app .campaign-scroll:has(>.surgery-scene){position:absolute;inset:0;padding:0;display:block}
 #app .campaign-screen:has(.surgery-scene)>.campaign-actions{display:none}
-.surgery-scene{position:absolute;inset:0;--surgery-panel:280px;background:#d4dcc6;color:#574a38}
+.surgery-scene{position:absolute;inset:0;--surgery-panel:310px;background:#d4dcc6;color:#574a38}
 .surgery-room{position:absolute;inset:0;border-radius:0;overflow:hidden;background:linear-gradient(var(--clinic-wall) 0 64%,#cbb493 64%)}
 .surgery-setting{position:absolute;left:0;right:0;top:0;height:calc(100% - var(--surgery-panel) - 14px)}
 .surgery-poster{position:absolute;left:7%;top:14%;width:23%;padding:10px 8px;background:#f4efd9;color:#7c8969;font-size:12px;transform:rotate(-2deg)}.surgery-poster i{display:block;height:3px;margin-top:8px;background:#bbc6a7;width:80%}.surgery-poster i:last-child{width:55%}
@@ -127,7 +127,7 @@ const surgeryStyle=document.createElement('style');surgeryStyle.textContent=`
 .surgery-table{position:absolute;left:14%;right:14%;bottom:0;height:18%;border-top:12px solid #71866c;background:linear-gradient(90deg,transparent 5%,#8f8467 5% 9%,transparent 9% 91%,#8f8467 91% 95%,transparent 95%)}
 .surgery-cat{position:absolute;left:50%;bottom:calc(var(--surgery-panel) + 14px + (100% - var(--surgery-panel) - 14px)*.18);width:160px;height:calc((100% - var(--surgery-panel) - 14px)*.72);max-height:230px;transform:translateX(-50%)}
 .surgery-cat .game-cat-svg{width:100%;height:100%!important}
-.surgery-sheet{position:absolute;left:10px;right:10px;bottom:14px;height:var(--surgery-panel);padding:14px;display:grid;grid-template-rows:52px minmax(0,1fr) 48px;gap:8px;margin:0;background:#fff8e9f5;border:1px solid #fffaf0;border-radius:22px;box-shadow:0 4px 14px #63513620}
+.surgery-sheet{position:absolute;left:10px;right:10px;bottom:14px;height:var(--surgery-panel);padding:14px;display:grid;grid-template-rows:82px minmax(0,1fr) 48px;gap:8px;margin:0;background:#fff8e9f5;border:1px solid #fffaf0;border-radius:22px;box-shadow:0 4px 14px #63513620}
 .surgery-sheet h1{font-size:20px;line-height:1.4;margin:4px 0}.surgery-sheet header>small{font-size:11px;color:#89765c}
 .surgery-information{display:flex;flex-direction:column;gap:8px;min-height:0}
 .surgery-checks{background:#ecefdc;border-radius:12px;padding:4px 10px}
