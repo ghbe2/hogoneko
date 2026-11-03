@@ -82,6 +82,9 @@ renderField=function(state){
  return renderCampaignShell(state,stageName(c.area||'a1'),`<div class="field-scene encounter-scene ${scene}" data-field-drop="scene">${fieldBackdrop(state)}${effect}${cage}</div>${chooser}`).replace('class="campaign-frame"','class="campaign-frame field-fullscreen encounter-screen"')+(state.ui.modal==='fieldTraps'?renderFieldChoice(state):'');
 };
 let encounterTimer=null,encounterTimerKey=null,gustTimer=null,gustStopTimer=null,gustKey=null;
+let releaseActiveBaitTouch=null;
+window.addEventListener('blur',()=>releaseActiveBaitTouch?.());
+document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseActiveBaitTouch?.();});
 function installCarousel(){
  const rail=app.querySelector('.bait-carousel');if(!rail||rail.dataset.bound)return;rail.dataset.bound='true';
  const options=[...rail.querySelectorAll('.bait-option')];
@@ -103,12 +106,53 @@ function installCarousel(){
  rail.addEventListener('pointermove',event=>{if(drag){event.preventDefault();rail.scrollLeft=drag.left+drag.x-event.clientX;select();}});
  const finish=()=>{if(!drag)return;const delta=rail.scrollLeft-drag.left,origin=options.reduce((a,b)=>Math.abs(center(b)-drag.left)<Math.abs(center(a)-drag.left)?b:a);drag=null;const index=options.indexOf(origin),chosen=options[Math.max(0,Math.min(options.length-1,index+(Math.abs(delta)>18?Math.sign(delta):0)))];rail.classList.remove('dragging');rail.scrollTo({left:center(chosen),behavior:'smooth'});saveGameState(gameState);rail.dispatchEvent(new CustomEvent('bait-released',{bubbles:true}));};
  rail.addEventListener('pointerup',()=>{select();finish();});
- // Touch uses native horizontal scrolling. Safari cancels Pointer Events when
- // it takes over a pan; that cancellation must not erase the user's selection.
+ // Pointer cancellation belongs to the mouse/pen drag only. Touch has its
+ // own contact lifetime and does not rely on Safari's native pan/snap sequence.
  rail.addEventListener('pointercancel',()=>{if(drag)finish();});
  rail.addEventListener('lostpointercapture',()=>{if(drag)finish();});
- rail.addEventListener('touchstart',()=>{rail.dataset.baitActive='true';},{passive:true});
- const releaseTouch=()=>{rail.dataset.baitActive='false';select();saveGameState(gameState);rail.dispatchEvent(new CustomEvent('bait-released',{bubbles:true}));};
+ let contact=null;
+ const touchFor=(list,id)=>Array.from(list||[]).find(t=>t.identifier===id);
+ const moveTouch=t=>{
+  if(!contact||!t)return;
+  contact.lastX=t.clientX;
+  const scale=rail.clientWidth/(rail.getBoundingClientRect().width||rail.clientWidth);
+  rail.scrollLeft=Math.max(0,Math.min(rail.scrollWidth-rail.clientWidth,contact.left+(contact.x-t.clientX)*scale));
+  select();
+ };
+ const releaseTouch=event=>{
+  if(!contact)return;
+  if(!rail.isConnected||gameState.campaign.phase!=='field'){contact=null;if(releaseActiveBaitTouch===releaseTouch)releaseActiveBaitTouch=null;return;}
+  // Releasing a second finger must not commit the first finger's selection.
+  if(event&&touchFor(event.touches,contact.id))return;
+  const last=event&&touchFor(event.changedTouches,contact.id);
+  if(last)moveTouch(last);
+  const previous=contact,delta=rail.scrollLeft-previous.left;
+  let chosen=options.reduce((a,b)=>Math.abs(center(b)-rail.scrollLeft)<Math.abs(center(a)-rail.scrollLeft)?b:a);
+  if(chosen===previous.origin&&Math.abs(delta)>18){
+   chosen=options[Math.max(0,Math.min(options.length-1,options.indexOf(previous.origin)+Math.sign(delta)))];
+  }
+  contact=null;rail.dataset.baitActive='false';rail.classList.remove('dragging');
+  if(releaseActiveBaitTouch===releaseTouch)releaseActiveBaitTouch=null;
+  // Commit the exact centre ourselves: no dependency on scrollend, momentum,
+  // or a pending mandatory scroll-snap animation when Safari changes its bars.
+  rail.scrollLeft=center(chosen);select();saveGameState(gameState);
+  rail.dispatchEvent(new CustomEvent('bait-released',{bubbles:true}));
+ };
+ rail.addEventListener('touchstart',event=>{
+  if(contact&&event.touches.length>1&&touchFor(event.touches,contact.id)){if(event.cancelable)event.preventDefault();return;}
+  // A fresh single contact also recovers if Safari dropped a prior end event.
+  const t=event.touches[0];if(!t)return;
+  rail.dataset.baitInteracted='true';rail.dataset.baitActive='true';
+  contact={id:t.identifier,x:t.clientX,lastX:t.clientX,left:rail.scrollLeft,
+   origin:options.reduce((a,b)=>Math.abs(center(b)-rail.scrollLeft)<Math.abs(center(a)-rail.scrollLeft)?b:a)};
+  rail.classList.add('dragging');releaseActiveBaitTouch=releaseTouch;
+  if(event.cancelable)event.preventDefault();
+ },{passive:false});
+ rail.addEventListener('touchmove',event=>{
+  if(!contact)return;
+  if(event.cancelable)event.preventDefault();
+  moveTouch(touchFor(event.touches,contact.id));
+ },{passive:false});
  rail.addEventListener('touchend',releaseTouch,{passive:true});
  rail.addEventListener('touchcancel',releaseTouch,{passive:true});
  select();
@@ -128,7 +172,7 @@ render=function(state){
 };
 const encounterStyle=document.createElement('style');encounterStyle.textContent=`
 .encounter-drag-source{visibility:hidden}.encounter-picker:has(.encounter-drag-source){visibility:hidden}
-#app .encounter-screen .campaign-scroll{display:block;position:relative;height:100%;padding:0}.encounter-scene{isolation:isolate;overflow:hidden}.encounter-landscape{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:-2}.encounter-picker{position:absolute;bottom:max(12px,env(safe-area-inset-bottom));left:0;right:0;display:flex;flex-direction:column;align-items:center;z-index:5;color:#645b46}.encounter-picker:before{content:'';position:absolute;inset:-10px 0 -12px;background:linear-gradient(transparent,#ead8bba6 48%,#ead8bbe8);z-index:-1;pointer-events:none}.encounter-cage-row{position:relative;width:140px;height:70px;display:flex;justify-content:center}.encounter-cage-row .encounter-trap{width:110px;height:63px;border:0;padding:0;background:none;touch-action:none;cursor:grab}.encounter-cage-row .encounter-trap svg{width:100%;height:100%;pointer-events:none}.encounter-change{position:absolute;right:-24px;top:22px;min-height:44px;width:44px;border:1px solid #fff8e599;border-radius:50%;background:#fff8e5cc;color:#75694f;font-size:22px}.encounter-instruction{font-size:12px;line-height:1.5;margin:2px 0 0}.bait-carousel{display:flex;position:relative;width:100%;box-sizing:border-box;gap:14px;padding:8px calc(50% - 52px);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-x;cursor:grab;user-select:none}.bait-carousel::-webkit-scrollbar{display:none}.bait-carousel.dragging{scroll-snap-type:none;cursor:grabbing}.bait-option{flex:0 0 104px;scroll-snap-align:center;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.55;color:#655a44;pointer-events:none}.bait-option.chosen{opacity:1}.bait-picture{width:58px;height:58px;display:grid;place-items:center;border-radius:50%;background:#fff8e594;border:2px solid transparent}.bait-picture img{width:44px;height:42px;object-fit:contain;pointer-events:none}.bait-option.chosen .bait-picture{border-color:#ac945d;background:#fff7df;box-shadow:0 0 18px #f8e7a666}.bait-detail{display:flex;align-items:center;justify-content:center;gap:12px;height:24px;margin:0;font-size:13px}.bait-detail strong{font-weight:500}.bait-detail span{font-size:14px}.bait-luck{height:15px;display:flex;gap:4px;align-items:center;justify-content:center}.bait-luck i{width:9px;height:9px;border-left:2px solid #ad8d4c;border-top:2px solid #ad8d4c;transform:rotate(45deg)}.encounter-wait{position:absolute;left:0;right:0;bottom:16%;text-align:center;color:#665b45;font-size:14px;pointer-events:none}.encounter-plant{transform-box:fill-box;transform-origin:50% 100%}.encounter-plant.gust{animation:encounter-rustle .36s linear}.encounter-plant.gust-strong{animation:encounter-rustle-strong .48s linear}.encounter-night{position:absolute;inset:0;background:#182c5366;pointer-events:none;z-index:-1}.encounter-moon{position:absolute;top:8%;left:15%;width:65px;height:65px;border-radius:50%;background:#fff3c4;box-shadow:0 0 35px 12px #fff0ba55;pointer-events:none}.encounter-rainbow{position:absolute;left:13%;top:6%;width:74%;aspect-ratio:2/1;border-radius:200px 200px 0 0;border:7px solid #d6979390;border-bottom:0;box-shadow:0 -7px #dfbf8090,0 -14px #d6d79690,0 -21px #a3c9b090,0 -28px #9cbccd90;pointer-events:none;opacity:.8}.moon .encounter-wait{color:#fff5d5}.encounter-scene .trap{z-index:3}
+#app .encounter-screen .campaign-scroll{display:block;position:relative;height:100%;padding:0}.encounter-scene{isolation:isolate;overflow:hidden}.encounter-landscape{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:-2}.encounter-picker{position:absolute;bottom:max(12px,env(safe-area-inset-bottom));left:0;right:0;display:flex;flex-direction:column;align-items:center;z-index:5;color:#645b46}.encounter-picker:before{content:'';position:absolute;inset:-10px 0 -12px;background:linear-gradient(transparent,#ead8bba6 48%,#ead8bbe8);z-index:-1;pointer-events:none}.encounter-cage-row{position:relative;width:140px;height:70px;display:flex;justify-content:center}.encounter-cage-row .encounter-trap{width:110px;height:63px;border:0;padding:0;background:none;touch-action:none;cursor:grab}.encounter-cage-row .encounter-trap svg{width:100%;height:100%;pointer-events:none}.encounter-change{position:absolute;right:-24px;top:22px;min-height:44px;width:44px;border:1px solid #fff8e599;border-radius:50%;background:#fff8e5cc;color:#75694f;font-size:22px}.encounter-instruction{font-size:12px;line-height:1.5;margin:2px 0 0}.bait-carousel{display:flex;position:relative;width:100%;box-sizing:border-box;gap:14px;padding:8px calc(50% - 52px);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:none;cursor:grab;user-select:none}.bait-carousel::-webkit-scrollbar{display:none}.bait-carousel.dragging{scroll-snap-type:none;cursor:grabbing}.bait-option{flex:0 0 104px;scroll-snap-align:center;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.55;color:#655a44;pointer-events:none}.bait-option.chosen{opacity:1}.bait-picture{width:58px;height:58px;display:grid;place-items:center;border-radius:50%;background:#fff8e594;border:2px solid transparent}.bait-picture img{width:44px;height:42px;object-fit:contain;pointer-events:none}.bait-option.chosen .bait-picture{border-color:#ac945d;background:#fff7df;box-shadow:0 0 18px #f8e7a666}.bait-detail{display:flex;align-items:center;justify-content:center;gap:12px;height:24px;margin:0;font-size:13px}.bait-detail strong{font-weight:500}.bait-detail span{font-size:14px}.bait-luck{height:15px;display:flex;gap:4px;align-items:center;justify-content:center}.bait-luck i{width:9px;height:9px;border-left:2px solid #ad8d4c;border-top:2px solid #ad8d4c;transform:rotate(45deg)}.encounter-wait{position:absolute;left:0;right:0;bottom:16%;text-align:center;color:#665b45;font-size:14px;pointer-events:none}.encounter-plant{transform-box:fill-box;transform-origin:50% 100%}.encounter-plant.gust{animation:encounter-rustle .36s linear}.encounter-plant.gust-strong{animation:encounter-rustle-strong .48s linear}.encounter-night{position:absolute;inset:0;background:#182c5366;pointer-events:none;z-index:-1}.encounter-moon{position:absolute;top:8%;left:15%;width:65px;height:65px;border-radius:50%;background:#fff3c4;box-shadow:0 0 35px 12px #fff0ba55;pointer-events:none}.encounter-rainbow{position:absolute;left:13%;top:6%;width:74%;aspect-ratio:2/1;border-radius:200px 200px 0 0;border:7px solid #d6979390;border-bottom:0;box-shadow:0 -7px #dfbf8090,0 -14px #d6d79690,0 -21px #a3c9b090,0 -28px #9cbccd90;pointer-events:none;opacity:.8}.moon .encounter-wait{color:#fff5d5}.encounter-scene .trap{z-index:3}
 @keyframes encounter-rustle{0%,100%{transform:translateX(0)}15%,45%,75%{transform:translateX(-1px) rotate(-.25deg)}30%,60%,90%{transform:translateX(1px) rotate(.25deg)}}@keyframes encounter-rustle-strong{0%,100%{transform:translateX(0)}12%,36%,60%,84%{transform:translateX(-1.5px) rotate(-.4deg)}24%,48%,72%,94%{transform:translateX(1.5px) rotate(.4deg)}}
 @media(prefers-reduced-motion:reduce){.encounter-plant.gust,.encounter-plant.gust-strong{animation:none}.bait-carousel{scroll-behavior:auto}}
 `;document.head.append(encounterStyle);

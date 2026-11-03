@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const root = path.resolve(__dirname, '..');
+const buildId=require('node:child_process').execFileSync('git',['-c','safe.directory='+root.replace(/\\/g,'/'),'rev-parse','--short','HEAD'],{cwd:root,encoding:'utf8'}).trim()+(process.env.PREVIEW_COMMITTED==='1'?'':'-local');
 // Optional release snapshot: do not publish unrelated work-in-progress assets.
 function readSource(file){return process.env.PREVIEW_COMMITTED==='1'&&path.relative(root,file).replace(/\\/g,'/')!=='TYPE_MATCHUP_v0.1.html'
  ?require('node:child_process').execFileSync('git',['-c','safe.directory='+root.replace(/\\/g,'/'),'show','HEAD:'+path.relative(root,file).replace(/\\/g,'/')],{cwd:root,encoding:'utf8',maxBuffer:32*1024*1024})
@@ -17,7 +18,7 @@ const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
 // Inline local game modules before encryption; deployed preview remains self-contained.
 function inlinePage(relativePage){
 const base=path.dirname(path.join(root,relativePage));
-let source = readSource(path.join(root, relativePage)).replace(/<script src="([^"]+)"><\/script>/g, (_, relative) => {
+let source = readSource(path.join(root, relativePage)).replace('<head>','<head>\n<meta name="tsuguneko-build" content="'+buildId+'">').replace(/<script src="([^"]+)"><\/script>/g, (_, relative) => {
   const file = path.resolve(base, relative);
   if (!file.startsWith(root + path.sep)) throw new Error('External script not allowed: ' + relative);
   return '<script>\n' + readSource(file).replace(/<\/script/gi, '<\\/script') + '\n</script>';
