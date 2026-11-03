@@ -4219,6 +4219,8 @@ let debugHoldTimer = null;
 let debugHoldDraft = null;
 
 app.addEventListener("pointerdown", event => {
+  // A second finger must not replace or finish the active drag.
+  if (event.isPrimary === false) return;
   const debugTarget = event.target.closest("[data-debug-hold]");
   if (debugTarget) {
     debugHoldDraft = { x:event.clientX, y:event.clientY };
@@ -4325,6 +4327,8 @@ app.addEventListener("pointerdown", event => {
 });
 
 app.addEventListener("pointermove", event => {
+  // A second finger must not replace or finish the active drag.
+  if (event.isPrimary === false) return;
   if (fieldDragDraft) {
     event.preventDefault();
     if(fieldDragDraft.bounds)moveEncounterDrag(fieldDragDraft,event);
@@ -4365,6 +4369,8 @@ app.addEventListener("pointermove", event => {
 });
 
 app.addEventListener("pointerup", event => {
+  // A second finger must not replace or finish the active drag.
+  if (event.isPrimary === false) return;
   if (debugHoldTimer) {
     window.clearTimeout(debugHoldTimer);
     debugHoldTimer = null;
@@ -4420,7 +4426,8 @@ app.addEventListener("pointerup", event => {
   }
 });
 
-app.addEventListener("pointercancel", () => {
+app.addEventListener("pointercancel", event => {
+  if (event.isPrimary === false) return;
   const hadDrag = !!(fieldDragDraft || commandDraft || playDraft || dragDraft || panDraft);
   if (debugHoldTimer) window.clearTimeout(debugHoldTimer);
   debugHoldTimer = null;

@@ -46,8 +46,8 @@ function cancelRoomTools(){
  playDraft=null;document.querySelectorAll('.command-ghost,.drop-ready,.drop-hover').forEach(n=>n.matches('.command-ghost')?n.remove():n.classList.remove('drop-ready','drop-hover'));
 }
 // A cleaning redraw can detach the captured source. Finish on window release too.
-window.addEventListener('pointerup',event=>{if(commandDraft){const d=commandDraft;commandDraft=null;if(d.moved)completeCommandDrag(d,event.clientX,event.clientY);else clearCommandDrag(d,true);}});
-window.addEventListener('pointercancel',cancelRoomTools);window.addEventListener('blur',cancelRoomTools);
+window.addEventListener('pointerup',event=>{if(event.isPrimary===false)return;if(commandDraft){const d=commandDraft;commandDraft=null;if(d.moved)completeCommandDrag(d,event.clientX,event.clientY);else clearCommandDrag(d,true);}});
+window.addEventListener('pointercancel',event=>{if(event.isPrimary!==false)cancelRoomTools();});window.addEventListener('blur',cancelRoomTools);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelRoomTools();});
 const objectReactionRender=render;
 function visibleRoomCatPoint(node){
