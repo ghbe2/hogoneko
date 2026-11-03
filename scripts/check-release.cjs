@@ -5,6 +5,7 @@ const root = path.resolve(__dirname, '..');
 process.chdir(root);
 const suites = {
  critical:[
+  ['部屋の抱っこ・相性と心・中断復帰', 'room-hold.test.cjs'],
   ['連打・ドラッグ中断・購入・報酬・再読み込み', 'interruption-recovery.test.cjs'],
   ['マップの進行停止', 'town-blocker-shared.test.cjs'],
   ['餌選択・操作中断／ChromeとWebKit', 'bait-mobile-recovery.test.cjs'],

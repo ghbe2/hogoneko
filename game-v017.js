@@ -300,7 +300,7 @@ function animateGameCats(now){
     svgLast=now;
     for(const [svg,entry] of svgRigs){
       if(!svg.isConnected){svgRigs.delete(svg);continue;}
-      if(svg.dataset.staticPhoto==='true')continue;
+      if(svg.dataset.staticPhoto==='true'||entry.roomHold)continue;
       if(entry.seniorHeld){
         poseSeniorCompanion(entry.rig,now);
         continue;

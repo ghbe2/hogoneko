@@ -83,6 +83,7 @@ completeCommandDrag=function(draft,...args){if(draft.command==='clean'){clearCom
 let catRub=null;
 function endCatRub(){if(catRub)clearTimeout(catRub.timer);catRub?.node.classList.remove('cat-hold-charge');catRub=null;}
 window.addEventListener('pointerdown',event=>{
+ if(window.CatRoomHold)return; // Replaced by tap-to-pet / drag-to-hold.
  const node=event.target.closest('.cat-object,.held-cat');
  if(!node||commandDraft||event.button!==0||gameState.campaign.phase!=='room'||gameState.ui.layoutMode||gameState.ui.modal||gameState.ui.careAnimation)return;
  event.preventDefault();event.stopImmediatePropagation();
