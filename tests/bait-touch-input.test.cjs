@@ -29,6 +29,9 @@ for(const [width,height]of (process.env.BAIT_TOUCH_QUICK?[[393,659]]:[[393,659],
  await fixture(p);await contact(p,'touchstart',[{id:1,x:40}]);await contact(p,'touchmove',[{id:1,x:10}]);
  await contact(p,'touchcancel',[],[{id:1,x:10}]);await p.waitForFunction(()=>gameState.onboarding.guide==='trap');
  assert.equal(await p.evaluate(()=>gameState.campaign.fieldFood),'food_wet');console.log('PASS',engine.name(),height,'short swipe + cancellation snaps to exact item');
+ await fixture(p);await p.evaluate(()=>Object.defineProperty(app.querySelector('.bait-carousel'),'scrollLeft',{get:()=>0,set:()=>{}}));
+ await contact(p,'touchstart',[{id:1,x:40}]);await contact(p,'touchend',[],[{id:1,x:-70}]);await p.waitForFunction(()=>gameState.onboarding.guide==='trap');
+ console.log('PASS',engine.name(),height,'commits swipe even when scrolling does not move the rail');
  await fixture(p,'food_wet');await p.evaluate(()=>saveGameState(gameState));await p.reload();await p.waitForFunction(()=>typeof gameState!=='undefined');await p.evaluate(()=>{titleScreenOpen=false;render(gameState)});await p.waitForTimeout(4500);
  await contact(p,'touchstart',[{id:1,x:0}]);await contact(p,'touchend',[],[{id:1,x:0}]);await p.waitForFunction(()=>gameState.onboarding.guide==='trap');console.log('PASS',engine.name(),height,'resume a saved selected food without starting over');
  await fixture(p);await contact(p,'touchstart',[{id:1,x:0}]);await p.evaluate(()=>window.dispatchEvent(new Event('blur')));assert.equal(await p.evaluate(()=>app.querySelector('.bait-carousel').dataset.baitActive),'false');

@@ -92,7 +92,7 @@ function installCarousel(){
  for(const type of ['pointerdown','wheel','keydown'])rail.addEventListener(type,()=>{rail.dataset.baitInteracted='true';},{capture:true});
  const center=option=>option.offsetLeft+option.offsetWidth/2-rail.clientWidth/2;
  rail.scrollLeft=center(options.find(o=>o.dataset.foodId===encounterFood(gameState).id)||options[0]);
- function select(){const middle=rail.getBoundingClientRect().left+rail.clientWidth/2;const option=options.reduce((a,b)=>Math.abs(b.getBoundingClientRect().left+b.clientWidth/2-middle)<Math.abs(a.getBoundingClientRect().left+a.clientWidth/2-middle)?b:a);const food=getFood(option.dataset.foodId);
+ function select(committed){const middle=rail.getBoundingClientRect().left+rail.clientWidth/2;const option=options.includes(committed)?committed:options.reduce((a,b)=>Math.abs(b.getBoundingClientRect().left+b.clientWidth/2-middle)<Math.abs(a.getBoundingClientRect().left+a.clientWidth/2-middle)?b:a);const food=getFood(option.dataset.foodId);
   options.forEach(o=>{o.classList.toggle('chosen',o===option);o.setAttribute('aria-selected',String(o===option));});rail.setAttribute('aria-activedescendant',option.id);
   gameState={...gameState,campaign:{...gameState.campaign,fieldFood:food.id}};
   const detail=app.querySelector('.bait-detail');if(detail){detail.querySelector('strong').textContent=food.label;detail.querySelector('span').textContent=food.unlimited&&gameState.inventory[food.id]>=1?'∞':'×'+(gameState.inventory[food.id]||0);}
@@ -126,24 +126,28 @@ function installCarousel(){
   if(event&&touchFor(event.touches,contact.id))return;
   const last=event&&touchFor(event.changedTouches,contact.id);
   if(last)moveTouch(last);
-  const previous=contact,delta=rail.scrollLeft-previous.left;
+  const previous=contact,delta=previous.x-previous.lastX;
   let chosen=options.reduce((a,b)=>Math.abs(center(b)-rail.scrollLeft)<Math.abs(center(a)-rail.scrollLeft)?b:a);
   if(chosen===previous.origin&&Math.abs(delta)>18){
    chosen=options[Math.max(0,Math.min(options.length-1,options.indexOf(previous.origin)+Math.sign(delta)))];
+  }
+  if(last&&event.type==='touchend'&&Math.abs(delta)<8&&Math.abs(last.clientY-previous.y)<8){
+   const tapped=options.find(option=>{const rect=option.getBoundingClientRect();return last.clientX>=rect.left&&last.clientX<=rect.right&&last.clientY>=rect.top&&last.clientY<=rect.bottom;});
+   if(tapped)chosen=tapped;
   }
   contact=null;rail.dataset.baitActive='false';rail.classList.remove('dragging');
   if(releaseActiveBaitTouch===releaseTouch)releaseActiveBaitTouch=null;
   // Commit the exact centre ourselves: no dependency on scrollend, momentum,
   // or a pending mandatory scroll-snap animation when Safari changes its bars.
-  rail.scrollLeft=center(chosen);select();saveGameState(gameState);
-  rail.dispatchEvent(new CustomEvent('bait-released',{bubbles:true}));
+  rail.scrollLeft=center(chosen);select(chosen);saveGameState(gameState);
+  rail.dispatchEvent(new CustomEvent('bait-released',{bubbles:true,detail:{foodId:chosen.dataset.foodId}}));
  };
  rail.addEventListener('touchstart',event=>{
   if(contact&&event.touches.length>1&&touchFor(event.touches,contact.id)){if(event.cancelable)event.preventDefault();return;}
   // A fresh single contact also recovers if Safari dropped a prior end event.
   const t=event.touches[0];if(!t)return;
   rail.dataset.baitInteracted='true';rail.dataset.baitActive='true';
-  contact={id:t.identifier,x:t.clientX,lastX:t.clientX,left:rail.scrollLeft,
+  contact={id:t.identifier,x:t.clientX,y:t.clientY,lastX:t.clientX,left:rail.scrollLeft,
    origin:options.reduce((a,b)=>Math.abs(center(b)-rail.scrollLeft)<Math.abs(center(a)-rail.scrollLeft)?b:a)};
   rail.classList.add('dragging');releaseActiveBaitTouch=releaseTouch;
   if(event.cancelable)event.preventDefault();
