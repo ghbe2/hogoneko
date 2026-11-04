@@ -18,7 +18,10 @@ async function contact(p,type,points,changed=points){
 }
 (async()=>{for(const engine of [chromium,webkit]){const b=await engine.launch(engine===chromium?{channel:'chrome'}:{});try{
 for(const [width,height]of (process.env.BAIT_TOUCH_QUICK?[[393,659]]:[[393,659],[393,852]])){const p=await b.newPage({viewport:{width,height},hasTouch:true,isMobile:true}),errors=[];p.on('pageerror',e=>errors.push(e.message));
- await fixture(p);await contact(p,'touchstart',[{id:1,x:45}]);await contact(p,'touchmove',[{id:1,x:-65}]);
+ await fixture(p);
+ await p.evaluate(()=>{guideSpeechCache.clear();render(gameState);if(!app.querySelector('.first-guide[data-reading="true"]'))throw new Error('Expected the bait explanation to be typing');});
+ await contact(p,'touchstart',[{id:1,x:45}]);
+ assert.equal(await p.locator('.bait-carousel').getAttribute('data-bait-active'),'true','the rail receives a finger placed during the bait explanation');await contact(p,'touchmove',[{id:1,x:-65}]);
  assert.equal(await p.evaluate(()=>gameState.campaign.fieldFood),'food_wet','finger movement changes the choice without native scrolling');
  await p.waitForTimeout(700);assert.equal(await p.evaluate(()=>gameState.onboarding.guide),'bait','held contact cannot advance');
  await contact(p,'touchstart',[{id:1,x:-65},{id:2,x:70}],[{id:2,x:70}]);

@@ -83,6 +83,14 @@ renderField=function(state){
 };
 let encounterTimer=null,encounterTimerKey=null,gustTimer=null,gustStopTimer=null,gustKey=null;
 let releaseActiveBaitTouch=null;
+let baitTouchTrace=null;
+window.addEventListener('touchstart',event=>{
+ if(gameState.campaign.phase!=='field'||gameState.onboarding.guide!=='bait'||event.target.closest('[data-alpha-report],.alpha-report,.alpha-layer'))return;
+ const rail=app.querySelector('.bait-carousel'),point=event.changedTouches[0];
+ if(!rail||!point)return;
+ const r=rail.getBoundingClientRect(),inside=point.clientX>=r.left&&point.clientX<=r.right&&point.clientY>=r.top&&point.clientY<=r.bottom;
+ baitTouchTrace={inside,target:event.target.closest('.bait-carousel')?'bait':event.target.localName,reading:!!app.querySelector('.first-guide[data-reading="true"]'),started:false,moved:false,ended:false};
+},{capture:true,passive:true});
 window.addEventListener('blur',()=>releaseActiveBaitTouch?.());
 document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseActiveBaitTouch?.();});
 function installCarousel(){
@@ -126,6 +134,7 @@ function installCarousel(){
   if(event&&touchFor(event.touches,contact.id))return;
   const last=event&&touchFor(event.changedTouches,contact.id);
   if(last)moveTouch(last);
+  if(baitTouchTrace)baitTouchTrace.ended=event?.type||'blur';
   const previous=contact,delta=previous.x-previous.lastX;
   let chosen=options.reduce((a,b)=>Math.abs(center(b)-rail.scrollLeft)<Math.abs(center(a)-rail.scrollLeft)?b:a);
   if(chosen===previous.origin&&Math.abs(delta)>18){
@@ -146,6 +155,7 @@ function installCarousel(){
   if(contact&&event.touches.length>1&&touchFor(event.touches,contact.id)){if(event.cancelable)event.preventDefault();return;}
   // A fresh single contact also recovers if Safari dropped a prior end event.
   const t=event.touches[0];if(!t)return;
+  if(baitTouchTrace)baitTouchTrace.started=true;
   rail.dataset.baitInteracted='true';rail.dataset.baitActive='true';
   contact={id:t.identifier,x:t.clientX,y:t.clientY,lastX:t.clientX,left:rail.scrollLeft,
    origin:options.reduce((a,b)=>Math.abs(center(b)-rail.scrollLeft)<Math.abs(center(a)-rail.scrollLeft)?b:a)};
@@ -155,6 +165,7 @@ function installCarousel(){
  rail.addEventListener('touchmove',event=>{
   if(!contact)return;
   if(event.cancelable)event.preventDefault();
+  if(baitTouchTrace)baitTouchTrace.moved=true;
   moveTouch(touchFor(event.touches,contact.id));
  },{passive:false});
  rail.addEventListener('touchend',releaseTouch,{passive:true});
