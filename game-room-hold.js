@@ -26,7 +26,7 @@ window.CatRoomHold=(()=>{
    // Treat the cat and the little coin between its paws as one tap target.
    const node=e.target.closest('.cat-object');
    const startX=e.clientX,startY=e.clientY,id=e.pointerId;
-   function clear(){window.removeEventListener('pointerup',collect,true);window.removeEventListener('pointercancel',clear,true);window.removeEventListener('blur',clear);}
+   function clear(event){if(event?.pointerId!=null&&event.pointerId!==id)return;window.removeEventListener('pointerup',collect,true);window.removeEventListener('pointercancel',clear,true);window.removeEventListener('blur',clear);}
    function collect(up){if(up.pointerId!==id)return;clear();stopEvent(up);suppressClickUntil=Date.now()+450;
     if(Math.hypot(up.clientX-startX,up.clientY-startY)<12&&discoveryScene(gameState))dispatch({type:'PICK_DISCOVERY_COIN'});
    }
@@ -40,7 +40,7 @@ window.CatRoomHold=(()=>{
  window.addEventListener('pointerup',e=>{if(consumedId===e.pointerId){consumedId=null;stopEvent(e);captureOff();suppressClickUntil=Date.now()+450;if(active)land();return;}if(!pending||pending.id!==e.pointerId)return;stopEvent(e);const p=pending;captureOff();suppressClickUntil=Date.now()+450;if(active)land();else dispatch({type:'TOUCH_NOW',fromGesture:true,point:p.point});},true);
  window.addEventListener('click',e=>{if(active&&e.target instanceof Element&&e.target.closest('.cat-object'))stopEvent(e);},true);
  window.addEventListener('pointercancel',e=>{if(e.isPrimary!==false)cancel();},true);window.addEventListener('blur',cancel);document.addEventListener('visibilitychange',()=>{if(document.hidden)cancel()});
- window.addEventListener('resize',cancel);app.addEventListener('lostpointercapture',e=>{if(pending?.id===e.pointerId)cancel()});
+ window.addEventListener('resize',cancel);app.addEventListener('lostpointercapture',e=>{if(e.target===app&&pending?.id===e.pointerId)cancel()});
  const reduce=reduceGameState;reduceGameState=function(s,a){if((active||pending)&&['ROAM_CAT','TAP_CAT','TOUCH_NOW','EXECUTE_CONTACT','START_PLAY','FINISH_PLAY'].includes(a.type))return s;return reduce(s,a)};
  const basePoint=getCatPoint;getCatPoint=function(s){return active&&s.campaign.phase==='room'&&getCat(s).id===active.catId?{...active.point}:basePoint(s)};
  const baseRender=render;render=function(s){

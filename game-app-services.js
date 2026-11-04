@@ -36,7 +36,10 @@ app.addEventListener('click',e=>{if(e.target.closest('[data-app-schedule-next]')
 app.addEventListener('click',e=>{if(e.target.closest('[data-app-album-close]'))dispatch({type:'APP_ALBUM_CLOSE'});});
 
 let appPhotoDrag=null;
-app.addEventListener('pointerdown',e=>{const photo=e.target.closest('.app-photo-view figure');if(!photo||e.target.closest('button'))return;appPhotoDrag={id:e.pointerId,x:e.clientX,y:e.clientY};photo.setPointerCapture(e.pointerId);});
+app.addEventListener('pointerdown',e=>{const photo=e.target.closest('.app-photo-view figure');if(!photo||!e.isPrimary||e.target.closest('button'))return;appPhotoDrag={id:e.pointerId,x:e.clientX,y:e.clientY};photo.setPointerCapture(e.pointerId);});
 app.addEventListener('pointerup',e=>{if(!appPhotoDrag||appPhotoDrag.id!==e.pointerId)return;const dx=e.clientX-appPhotoDrag.x,dy=e.clientY-appPhotoDrag.y;appPhotoDrag=null;if(Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy)*1.2)dispatch({type:'APP_PHOTO_POSE',delta:dx<0?1:-1});});
-app.addEventListener('pointercancel',()=>appPhotoDrag=null);
+function cancelPhotoPointer(e){if(appPhotoDrag?.id===e.pointerId)appPhotoDrag=null;}
+app.addEventListener('pointercancel',cancelPhotoPointer);
+app.addEventListener('lostpointercapture',e=>{if(e.target.matches('.app-photo-view figure'))cancelPhotoPointer(e);});
+window.addEventListener('blur',()=>{appPhotoDrag=null;});
 app.addEventListener('click',e=>{const arrow=e.target.closest('[data-photo-step]');if(arrow)dispatch({type:'APP_PHOTO_POSE',delta:Number(arrow.dataset.photoStep)});});

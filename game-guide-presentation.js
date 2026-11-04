@@ -61,6 +61,8 @@ function guidePresentation(state){
  ring.hidden=noFocus;
  const selector=typeof spec.target==='function'?spec.target():spec.target;
  const target=app.querySelector(selector);
+ if(['swipe','clinicScroll'].includes(key))layer.gestureSurface=app.querySelector('.town-map-scroll');
+ else if(['bait','trap','moveFurniture'].includes(key))layer.gestureSurface=target;
  if(state.ui.layoutTrayOpen&&target?.closest('.furniture-grid'))target.scrollIntoView({block:'nearest'});
  const tick=()=>{
   if(!layer.isConnected)return;
@@ -101,7 +103,18 @@ render=function(state){
   veil.animate([{opacity:0},{opacity:1}],{duration:180,fill:'forwards'}).finished.then(()=>{snapshot.remove();return veil.animate([{opacity:1},{opacity:0}],{duration:260,fill:'forwards'}).finished;}).finally(()=>{snapshot.remove();veil.remove();guideNavigationBusy=false;finishFirstSceneTransition();});
  }
 };
-for(const event of ['click','pointerdown','touchstart'])window.addEventListener(event,e=>{if(e.target.closest('[data-alpha-report],.alpha-report,.alpha-layer'))return;if(gameState.campaign.phase==='field'&&gameState.onboarding.guide==='bait'&&e.target.closest('.bait-carousel')&&!app.querySelector('.alpha-layer,[data-copy-pending="true"]'))return;if(app.querySelector('[data-reading="true"]')||(app.querySelector('[data-copy-pending="true"]')&&!e.target.closest('[data-copy-page]'))){e.preventDefault();e.stopImmediatePropagation();}},{capture:true,passive:false});
+for(const type of ['click','pointerdown','touchstart'])window.addEventListener(type,event=>{
+ const target=event.target;
+ if(target.closest('[data-alpha-report],.alpha-report,.alpha-layer'))return;
+ const layer=app.querySelector('section.first-guide:not(.navigation-snapshot *),section.tutorial-focus:not(.navigation-snapshot *)');
+ if(!layer)return;
+ const reading=layer.dataset.reading==='true',more=layer.dataset.copyPending==='true';
+ if(!reading&&(!more||target.closest('[data-copy-page]')))return;
+ // A gesture needs its initial contact, even while the last line is typing.
+ if(!more&&!app.querySelector('.alpha-layer')&&layer.gestureSurface?.contains(target))return;
+ event.preventDefault();
+ event.stopImmediatePropagation();
+},{capture:true,passive:false});
 // Fade both sides of navigation, never re-enter the reducer while an exit is playing.
 const guideNavigationDispatch=dispatch;
 let guideNavigationBusy=false;

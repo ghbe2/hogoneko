@@ -20,7 +20,7 @@ async function touchGesture(page) {
   async up(){if(!held)throw new Error('No active touch');await send('touchEnd');held=false;counts.ends++;},
   async cancel(){if(!held)throw new Error('No active touch');await send('touchCancel');held=false;},
   async addFinger(x,y){secondary={id:2,x,y};await send('touchStart');},
-  async removeFinger(){secondary=null;await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{id:1,...point}]});},
+  async removeFinger(){await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{id:2,...secondary}]});secondary=null;},
   async wheel(dx,dy){
    // Existing map tests use wheel direction; a finger moves in the opposite direction.
    await gesture.down();await gesture.move(point.x-dx,point.y-dy,{steps:12});await gesture.up();

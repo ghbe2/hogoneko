@@ -117,23 +117,25 @@ function setupTownScroll(s){
   go(step(Math.round(s.scrollTop/s.clientHeight*2)/2,Math.sign(e.deltaY)));
  },{passive:false});
  s.addEventListener('pointerdown',e=>{
-  if(e.pointerType==='mouse'||busy)return;
-  drag={y:e.clientY,top:s.scrollTop,page:Math.round(s.scrollTop/s.clientHeight*2)/2,moved:false};
+  if(e.pointerType==='mouse'||!e.isPrimary||busy)return;
+  drag={id:e.pointerId,y:e.clientY,top:s.scrollTop,page:Math.round(s.scrollTop/s.clientHeight*2)/2,moved:false};
  });
  s.addEventListener('pointermove',e=>{
-  if(!drag)return;
+  if(drag?.id!==e.pointerId)return;
   const delta=drag.y-e.clientY;
   if(Math.abs(delta)>8){drag.moved=true;s.setPointerCapture(e.pointerId);}
   if(drag.moved)e.preventDefault();
  });
  const finish=e=>{
-  if(!drag)return;
+  if(drag?.id!==e.pointerId)return;
   const d=drag;drag=null;
   if(d.moved){suppressClick=true;setTimeout(()=>suppressClick=false,400);go(Math.abs(d.y-e.clientY)>35?step(d.page,Math.sign(d.y-e.clientY)):d.page);}
  };
  let suppressClick=false;
  s.addEventListener('pointerup',finish);
- s.addEventListener('pointercancel',()=>{drag=null;});
+ const cancel=e=>{if(drag?.id===e.pointerId)drag=null;};
+ s.addEventListener('pointercancel',cancel);
+ s.addEventListener('lostpointercapture',e=>{if(e.target===s)cancel(e);});
  s.addEventListener('click',e=>{if(suppressClick){e.preventDefault();e.stopImmediatePropagation();}},true);
  s.addEventListener('keydown',e=>{
   if(e.target!==s)return;
