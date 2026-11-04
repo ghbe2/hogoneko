@@ -2,8 +2,8 @@
 // AND-combined, data-driven unlock rules. Mountain never has a completion percentage.
 const STAGE_RULES={
  a1:{total:4,previous:null,percent:0,adoptions:0},
- a2:{total:12,previous:'a1',percent:100,adoptions:0},
- a3:{total:16,previous:'a2',percent:100,adoptions:0},
+ a2:{total:6,previous:'a1',percent:100,adoptions:0},
+ a3:{total:8,previous:'a2',percent:100,adoptions:0},
  a4:{total:null,previous:'a3',percent:100,adoptions:0}
 };
 for(const area of CONFIG.town.areas)if(STAGE_RULES[area.id])area.totalCats=STAGE_RULES[area.id].total;

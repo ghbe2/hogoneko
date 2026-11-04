@@ -96,12 +96,12 @@ function setupTownScroll(s){
  const go=(page)=>{
   if(busy)return;
   const from=s.scrollTop,to=Math.max(0,Math.min(2,page))*s.clientHeight;
-  const duration=matchMedia('(prefers-reduced-motion:reduce)').matches?0:850;
+  const duration=matchMedia('(prefers-reduced-motion:reduce)').matches?0:Math.abs(to-from)/s.clientHeight*1100;
   busy=true;const start=performance.now();
   const tick=now=>{
    if(!s.isConnected){busy=false;return;}
    const t=duration?Math.min(1,(now-start)/duration):1;
-   const eased=t*t*(3-2*t);
+   const eased=t;
    s.scrollTop=from+(to-from)*eased;
    if(t<1)requestAnimationFrame(tick);else{busy=false;townScrollTop=to;}
   };
@@ -124,7 +124,7 @@ function setupTownScroll(s){
   if(!drag)return;
   const delta=drag.y-e.clientY;
   if(Math.abs(delta)>8){drag.moved=true;s.setPointerCapture(e.pointerId);}
-  if(drag.moved){e.preventDefault();s.scrollTop=Math.max(0,Math.min(2*s.clientHeight,drag.top+delta*.45));}
+  if(drag.moved)e.preventDefault();
  });
  const finish=e=>{
   if(!drag)return;
@@ -133,7 +133,7 @@ function setupTownScroll(s){
  };
  let suppressClick=false;
  s.addEventListener('pointerup',finish);
- s.addEventListener('pointercancel',()=>{if(drag){const page=drag.page;drag=null;go(page);}});
+ s.addEventListener('pointercancel',()=>{drag=null;});
  s.addEventListener('click',e=>{if(suppressClick){e.preventDefault();e.stopImmediatePropagation();}},true);
  s.addEventListener('keydown',e=>{
   if(e.target!==s)return;

@@ -38,8 +38,8 @@ function adoptionSinglePerson(i){
      <path d="M34 55Q23 28 36 15Q57-1 79 11Q91 17 86 37L71 29 62 21 44 36 42 57Z" fill="${hair}"/>
      ${i===2?'<path d="M28 26Q42 3 68 9L87 28H28" fill="#b8aa85"/><path d="M26 30h68" stroke="#9e9170" stroke-width="4"/>':''}
      <ellipse cx="40" cy="53" rx="5" ry="7" fill="${skin}"/>
-     <g class="adoption-face-profile"><path d="M73 46l4 1m-3 20 5-1" stroke="#75614d" stroke-width="2" stroke-linecap="round"/></g>
-     <g class="adoption-face-front"><path d="M48 48l5-1m15 0 5 1m-18 19q7 5 14-1" fill="none" stroke="#75614d" stroke-width="2" stroke-linecap="round"/>${i%2?'<g stroke="#8c816d" stroke-width="1.3" fill="none"><rect x="44" y="41" width="15" height="13" rx="5"/><rect x="65" y="41" width="15" height="13" rx="5"/><path d="M59 46h6"/></g>':''}</g>
+     <g class="adoption-face-profile">${i%2?'<g class="visitor-glasses" stroke="#786d59" stroke-width="1.6" fill="none"><rect x="69" y="41" width="13" height="12" rx="4"/><path d="m69 44-25-2"/></g>':''}<path d="M73 46l4 1m-3 20 5-1" stroke="#75614d" stroke-width="2" stroke-linecap="round"/></g>
+     <g class="adoption-face-front"><path d="M48 48l5-1m15 0 5 1m-18 19q7 5 14-1" fill="none" stroke="#75614d" stroke-width="2" stroke-linecap="round"/>${i%2?'<g class="visitor-glasses" stroke="#786d59" stroke-width="1.6" fill="none"><rect x="44" y="41" width="15" height="13" rx="5"/><rect x="65" y="41" width="15" height="13" rx="5"/><path d="M59 46h6"/></g>':''}</g>
      <ellipse cx="73" cy="60" rx="4" ry="2" fill="#c58d78" opacity=".45"/>
      ${i===2||i===3?'<path d="M45 56l6 2m20 0 6-2M53 73q10 5 18-1" stroke="#b18c73" stroke-width="1" fill="none"/>':''}
     </g>

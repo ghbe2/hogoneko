@@ -1,7 +1,27 @@
-const{chromium}=require('playwright'),assert=require('node:assert/strict'),{pathToFileURL}=require('node:url'),path=require('node:path');
-(async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{const p=await b.newPage();for(const [width,height]of[[320,520],[375,764]]){
-await p.setViewportSize({width,height});await p.goto(pathToFileURL(path.resolve('index.html')).href+'?check=1&scenario=intake');await p.waitForTimeout(500);
-await p.evaluate(()=>{gameState.onboarding.status='active';gameState.album=[];gameState.flags.firstCatWelcomed=false;gameState.ui.layoutTrayOpen=false;render(gameState);});
-for(const open of [false,true]){await p.evaluate(open=>{gameState.ui.layoutTrayOpen=open;render(gameState);},open);if(open){assert(await p.locator('.layout-library').isVisible());await p.click('.furniture-close');}const button=p.locator('[data-action="call-intake-cat"]'),r=await button.boundingBox();assert(r.y+r.height<=height);assert(await button.evaluate(e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}));await p.screenshot({path:`tests/screenshots/intake-call-${width}-${open}.png`});}
-await p.click('[data-action="call-intake-cat"]');assert(await p.evaluate(()=>gameState.campaign.intakeCalled));await p.waitForTimeout(2500);assert.equal(await p.evaluate(()=>gameState.campaign.phase),'room');
-}console.log('PASS visible and clickable call with furniture open/closed; first cat enters room at both sizes');}finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+const {openGame}=require('./helpers/game-page.cjs');
+(async()=>{
+ const b=await chromium.launch({channel:'chrome'});
+ try{for(const [width,height] of [[320,568],[375,812]]){
+  const p=await b.newPage({viewport:{width,height},hasTouch:true,isMobile:true});
+  await openGame(p,'intake');
+  await p.evaluate(()=>{
+   titleScreenOpen=false;
+   gameState.album=[{catId:'previous',outcome:'adopted',name:'はな'}];
+   gameState.flags.firstCatWelcomed=true;
+   gameState.onboarding={status:'done',guide:null,homeTour:'done'};
+   gameState.campaign.phase='intake';gameState.campaign.intakeCalled=false;
+   Object.assign(getCat(gameState),{status:'intake',named:true,name:'こまめ'});
+   Object.assign(gameState.ui,{layoutMode:false,layoutTrayOpen:false,modal:null});
+   render(gameState);
+  });
+  await p.locator('[data-action="toggle-layout"]').first().tap();
+  await p.locator('[data-action="toggle-layout-tray"]').first().tap();
+  assert(await p.locator('.layout-library').isVisible());
+  await p.locator('.furniture-close').tap();await p.locator('.layout-done').tap();
+  const call=p.locator('.intake-footer-call');
+  await call.tap();assert.equal(await p.locator('.room-call-feedback').innerText(),'こまめ');
+  console.log('PASS real layout entry, library, done, call',width);await p.close();
+ }}finally{await b.close()}
+})().catch(e=>{console.error(e);process.exitCode=1});

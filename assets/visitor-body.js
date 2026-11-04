@@ -34,6 +34,8 @@ function fitVisitorBody(svg,child=false){
  return svg;
 }
 function drawVisitorLegs(svg,t,walking,direction){
+ const figure=svg.querySelector(':scope > .adoption-figure');
+ if(!figure)return;
  svg.classList.toggle('is-walking',walking);
  const baseHip=Number(svg.dataset.visitorHip),cycle=t/1.5*Math.PI*2,bob=walking?-1.8*(1-Math.cos(cycle*2)):0,hip=baseHip+bob,floor=Number(svg.dataset.visitorFoot),child=svg.dataset.visitorChild==='true',width=child?12:16,spread=walking?(child?4:6):(child?12:18);
  const pieces=[];
@@ -52,10 +54,10 @@ function drawVisitorLegs(svg,t,walking,direction){
   pieces.push(`<g class="visitor-shape-leg" data-depth="${near?'near':'far'}" data-ground-y="${floor-depth}" data-stance="${!walking||stance}" data-foot-x="${ax}" data-foot-y="${ay+8}"><path d="M${hx-width} ${hip-6}Q${hx-width-2} ${hy+20} ${kx-width*.7} ${ky}L${ax-8} ${ay}Q${ax} ${ay+2} ${ax+8} ${ay}L${kx+width*.7} ${ky}Q${hx+width+2} ${hy+20} ${hx+width} ${hip-6}Z" fill="${color}"/><path d="M${ax-8} ${ay-3}Q${ax} ${ay} ${ax+8} ${ay-3}L${ax+8+direction*8} ${ay+4}Q${ax+8+direction*8} ${ay+8} ${ax+5} ${ay+8}H${ax-9}Q${ax-12} ${ay+5} ${ax-8} ${ay-3}Z" fill="#645e52"/><path d="M${ax-7} ${ay-4}L${ax+7} ${ay-4}" stroke="#5d6659" stroke-width="1.3"/></g>`);
  }
  pieces.unshift(`<path class="visitor-pelvis" d="M${60-spread-width} ${hip-8}H${60+spread+width}L${60+spread+width} ${hip+18}Q60 ${hip+26} ${60-spread-width} ${hip+18}Z" fill="#777970"/>`);
- svg.querySelector('.visitor-shaped-legs').innerHTML=pieces.join('');
- const torso=svg.querySelector('.adoption-torso');torso.setAttribute('transform',walking?`translate(60 ${bob}) scale(.86 1) translate(-60 0) rotate(${Math.sin(cycle)*.6} 60 ${baseHip})`:'');
- svg.querySelector('.visitor-rear-arm-layer').setAttribute('transform',torso.getAttribute('transform'));
- const arm=svg.querySelector('.visitor-arm-near'),far=svg.querySelector('.visitor-arm-far');
+ figure.querySelector('.visitor-shaped-legs').innerHTML=pieces.join('');
+ const torso=figure.querySelector('.adoption-torso');torso.setAttribute('transform',walking?`translate(60 ${bob}) scale(.86 1) translate(-60 0) rotate(${Math.sin(cycle)*.6} 60 ${baseHip})`:'');
+ figure.querySelector('.visitor-rear-arm-layer').setAttribute('transform',torso.getAttribute('transform'));
+ const arm=figure.querySelector('.visitor-arm-near'),far=figure.querySelector('.visitor-arm-far');
  // Project both shoulders into the walking plane. Do not swing the wide,
  // front-facing arms across the abdomen; keep a relaxed elbow and wrist.
  for(const [part,near] of [[arm,true],[far,false]]){

@@ -17,6 +17,7 @@ const SHOP_CATALOG = [
   {id:'food_dry',shop:'super',category:'food',label:'いつものカリカリ',emoji:'◉',price:4,quantity:6,unit:'皿分'},
   {id:'food_wet',shop:'super',category:'food',label:'ウェットフード',emoji:'🥫',price:5,quantity:6,unit:'皿分'},
   {id:'food_fish',shop:'super',category:'food',label:'お魚ごはん',emoji:'🐟',price:6,quantity:6,unit:'皿分'},
+  {id:'food_kitten',shop:'super',category:'food',label:'子猫用フード',emoji:'🥣',price:6,quantity:6,unit:'皿分'},
   {id:'food_chicken',shop:'super',category:'food',label:'チキンごはん',emoji:'🍗',price:5,quantity:6,unit:'皿分'},
   {id:'food_soup',shop:'super',category:'food',label:'香るスープ',emoji:'🍲',price:6,quantity:6,unit:'皿分'},
   {id:'clean_paper',shop:'super',category:'care',label:'おそうじペーパー',emoji:'🧻',price:3,quantity:24,unit:'回'},
@@ -54,7 +55,7 @@ CONFIG.items.push(
 CONFIG.stage1.handItems.push('ribbon','bug','scent_pouch','peek_toy');
 CONFIG.stage1.placedItems.push('doll','tunnel','sunmat','hammock');
 Object.assign(CONFIG.stage1.defaultLayout,{doll:{x:35,y:74,zone:'floor'},tunnel:{x:53,y:70,zone:'floor'},sunmat:{x:62,y:83,zone:'floor'},hammock:{x:32,y:39,zone:'wall'}});
-CONFIG.stage1.foods.push({id:'food_chicken',label:'チキンごはん',emoji:'🍗',affinityType:'food'},{id:'food_soup',label:'香るスープ',emoji:'🍲',affinityType:'scent'});
+CONFIG.stage1.foods.push({id:'food_kitten',label:'子猫用フード',emoji:'🥣',affinityType:'food'},{id:'food_chicken',label:'チキンごはん',emoji:'🍗',affinityType:'food'},{id:'food_soup',label:'香るスープ',emoji:'🍲',affinityType:'scent'});
 CONFIG.stage1.roamPoints.push({id:'hammock',x:36,y:36,scale:.55,distance:'far',surface:'hammock',requiresItem:'hammock'});
 for(const product of SHOP_CATALOG){
   const item=getItem(product.id);if(item)item.price=product.price;
@@ -126,11 +127,11 @@ reduceGameState=function(state,action){
   if(action.type==='OPEN_WALLET')return {...state,ui:{...state.ui,walletReturn:state.ui.modal,modal:'wallet'}};
   if(action.type==='CLOSE_WALLET')return {...state,ui:{...state.ui,modal:state.ui.walletReturn||null,walletReturn:null,adStartedAt:null,adToken:null}};
   if(action.type==='START_REWARD_AD'){
-    if(state.ui.adToken||state.ui.modal!=='wallet'||state.ui.appRewardStarted||state.economy?.appRewardDay===appRewardDay())return {...state,ui:{...state.ui,adNotice:'本日の応援は受取済みです'}};
+    if(state.ui.adToken||state.ui.modal!=='wallet'||state.ui.appRewardStarted||careDayUsed(state.economy?.appRewardDay))return {...state,ui:{...state.ui,adNotice:'本日の応援は受取済みです'}};
     return {...state,ui:{...state.ui,adToken:action.token,adStartedAt:Date.now(),adNotice:null}};
   }
   if(action.type==='COMPLETE_REWARD_AD'){
-    if(state.economy?.appRewardDay===appRewardDay()||state.ui.modal!=='wallet'||!state.ui.adToken||state.ui.adToken!==action.token||Date.now()-state.ui.adStartedAt<3000)return state;
+    if(careDayUsed(state.economy?.appRewardDay)||state.ui.modal!=='wallet'||!state.ui.adToken||state.ui.adToken!==action.token||Date.now()-state.ui.adStartedAt<3000)return state;
     return {...state,coins:state.coins+CONFIG.economy.adRewardCoins,economy:{...state.economy,appRewardDay:appRewardDay(),adClaims:(state.economy?.adClaims||0)+1},ui:{...state.ui,adToken:null,adStartedAt:null,adNotice:CONFIG.economy.adRewardCoins+'コイン受け取りました'}};
   }
   if(action.type==='CANCEL_REWARD_AD')return {...state,ui:{...state.ui,adToken:null,adStartedAt:null,adNotice:'中止しました。コインは増えていません'}};
@@ -180,7 +181,7 @@ renderMapShop=function(state){
   return renderCampaignShell(state,name,`<section class="shop-sheet"><div class="release-shop-heading"><h1>${name}</h1><button data-action="open-wallet">● ${state.coins} ＋</button></div><p class="shop-notice" role="status">${state.ui.shopNotice||'買ったものは、かばん・押し入れへ。'}</p>${clinic?'<div class="clinic-price-list"><p>初診・ワクチン　<strong>10 コイン</strong></p><p>手術　<strong>12 コイン</strong></p><small>保護・卒業の流れで利用します。ゲーム内の仮価格です。</small></div>':`<div class="shop-products">${shopProducts(state,null,id)}</div>`}</section>`,`<button class="campaign-button secondary" data-action="back-town">街へ戻る</button>`);
 };
 function renderWallet(state){
-  const busy=Boolean(state.ui.adToken),viewed=state.economy?.appRewardDay===appRewardDay();
+  const busy=Boolean(state.ui.adToken),viewed=careDayUsed(state.economy?.appRewardDay);
   return `<div class="release-overlay" role="dialog" aria-modal="true" aria-label="コイン"><section class="release-sheet wallet-sheet"><header><small>ミャオペイ</small><h2>コイン</h2></header><div class="coin-balance">● <strong>${state.coins}</strong><small>コイン</small></div><p>${state.coins<0?'マイナス分は医療費の未払いです。<br>コインを受け取ると自動で精算されます。':'初診10・手術12コイン。<br>病気や怪我の治療費は別途かかります。'}</p><div class="ad-preview ${busy?'playing':''}"><span>🐾</span><strong>${busy?'広告を再生中…':'広告を見てコインを受け取る'}</strong><small>広告のダミー · 通信・課金はありません</small>${busy?'<i class="ad-progress"></i>':''}</div><p class="shop-notice" role="status">${state.ui.adNotice||'家具は次の子にも使えます。'}</p>${busy?'<button class="campaign-button secondary" data-action="cancel-reward-ad">中止する</button>':`<button class="campaign-button" data-action="reward-ad" ${viewed?'disabled':''}>${viewed?'本日は受取済み':`広告を見る（ダミー）＋${CONFIG.economy.adRewardCoins}`}</button>`}<button class="campaign-button secondary" data-action="close-wallet">戻る</button></section></div>`;
 }
 const paletteBeforeV017=renderLayoutPalette;
@@ -234,7 +235,7 @@ const clinicBeforeV017=renderClinic;
 renderClinic=(state,cat)=>clinicBeforeV017(state,cat).replace('<strong>400</strong>','<strong>7</strong>').replace('<strong>300</strong>','<strong>5</strong>').replace('<strong>700</strong>','<strong>12 コイン</strong>');
 const graduationBeforeV017=renderGraduation;
 renderGraduation=(state,cat)=>graduationBeforeV017(state,cat).replace('譲渡会へ送り出す</button>','譲渡会をはじめる</button>');
-isGraduationReady=function(state){const cat=getCat(state);return cat.body.weight>=(cat.age==='kitten'?CONFIG.cat.weightGoal.kitten:CONFIG.stage1.campaign.bodyGoal)&&!cat.body.sick&&(cat.age!=='kitten'||cat.body.days>=5);};
+isGraduationReady=function(state){const cat=getCat(state);return cat.body.weight>=surgeryWeightGoal(cat)&&!cat.body.sick&&(cat.age!=='kitten'||cat.body.days>=5);};
 const guideBeforeV017=getScreenGuide;
 getScreenGuide=function(state){
   if(state.campaign.phase==='intake')return {title:'この子が落ち着く部屋を探そう',detail:'押し入れの「＋ 買う」から家具を買い足せます。置いて様子を見て、名前を呼ぼう。ごはん皿・水入れ・トイレは好みに関係なく必要です。'};

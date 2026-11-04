@@ -18,6 +18,10 @@ receptionArt=function(kind){
 const nativeStoreBackground=storeBackground;
 storeBackground=function(state){
  const template=document.createElement('template');template.innerHTML=nativeStoreBackground(state);
- const svg=template.content.firstElementChild;if(svg.querySelector('.shop-clerk'))completeStoreClerk(svg);
+ const svg=template.content.firstElementChild;if(svg.querySelector('.shop-clerk')){
+  completeStoreClerk(svg);
+  // Only the torso and the separately drawn counter hand are visible here.
+  svg.querySelector('.store-lower-study')?.remove();
+ }
  return svg.outerHTML;
 };

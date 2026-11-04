@@ -8,7 +8,7 @@ reduceGameState=function(state,action){
  if(action.type==='HOME_FROM_ADOPTION'){
   const run=adoptionRunFor(state);if(state.campaign.phase!=='result'||run?.status!=='done')return state;
   const cat=getCat(state),entry=state.album.find(e=>e.catId===cat.id),adopted=entry?.outcome==='adopted',letters={...state.economy?.familyLetters};
-  if(adopted&&!letters[cat.id])letters[cat.id]={catId:cat.id,name:cat.name,coins:CARE_BALANCE.familyCoins,itemId:drawFamilyItem(),bonusItem:drawFamilyItem(),claimed:false,bonusClaimed:false};
+  if(adopted&&!letters[cat.id])letters[cat.id]={receivedAt:gameNow(),catId:cat.id,name:cat.name,coins:CARE_BALANCE.familyCoins,itemId:drawFamilyItem(),bonusItem:drawFamilyItem(),claimed:false,bonusClaimed:false};
   const next=familyLetterReducer(state,{type:'NEXT_RESCUE'});
   if(next.campaign.phase!=='room')return state;
   return {...next,economy:{...next.economy,familyLetters:letters,pendingFamilyLetter:null},ui:{...next.ui,modal:null,adoptionRecord:false,familyAd:null}};

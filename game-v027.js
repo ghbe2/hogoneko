@@ -13,6 +13,25 @@ function ensureRealClock(state,now=gameNow()){
  if(clock?.version===1&&Number.isFinite(clock.processedAt)&&Number.isInteger(clock.dayTicks)&&clock.dayTicks>=0&&clock.dayTicks<8)return state;
  return {...state,realClock:{version:1,processedAt:now,dayTicks:0}};
 }
+function rollCareDate(next,from,to){
+ const day=careDayKey(to,true),previous=next.realClock.careDay||careDayKey(from,true);
+ if(day<=previous)return next;
+ let cat={...getCat(next)},body={...cat.body},ui={...next.ui};
+ let week=next.week,durability=next.durability;
+ body.days+=1;
+ cat.previousDayHeart=cat.heart;
+ body.weightHistory=[...(body.weightHistory||[]),body.weight];
+ cat.heartCap=Math.min(CONFIG.week.heartCapMax,cat.heartCap+CONFIG.week.heartCapPerDay);
+ const dayOfWeek=(week.dayOfWeek+1)%7;
+ week={...week,dayOfWeek,weekIndex:week.weekIndex+(dayOfWeek===CONFIG.game.weekStart?1:0)};
+ ui.usedHandItems={};
+ if(body.days%2===0){
+  const furnishings=getPlaced(getRoom(next)).filter(p=>!getItem(p.itemId)?.essential&&getMaxDurability(p.itemId)&&getDurability(next,p.itemId)>0);
+  const item=furnishings[body.days%Math.max(1,furnishings.length)];
+  if(item){durability=changeDurability(next,item.itemId,-1);body.broken=worsenDamage(body.broken,item.itemId);}
+ }
+ return {...next,week,durability,ui,cats:next.cats.map(c=>c.id===cat.id?{...cat,body}:c),realClock:{...next.realClock,careDay:day}};
+}
 function advanceRealTicks(state,ticks,realtime=false){
  let next=state;
  for(let i=0;i<ticks;i++){
@@ -31,23 +50,8 @@ function advanceRealTicks(state,ticks,realtime=false){
   cat={...cat,heart:Math.max(0,Math.round((cat.heart-loss)*10)/10)};
   if(neglect.food>REAL_TIME_TUNING.graceTicks)body.weight=Math.max(1,body.weight-(cat.age==='kitten'?REAL_TIME_TUNING.kittenWeightLoss:REAL_TIME_TUNING.adultWeightLoss));
   body.neglectDays=Math.floor(Math.max(...Object.values(neglect))/8);
-  let week=next.week,durability=next.durability;
-  if(dayTicks===8){
-   dayTicks=0;body.days+=1;
-   cat.previousDayHeart=cat.heart;
-   if(cat.age==='kitten'&&cat.initialAge==='kitten'&&body.days<=7){body.weight+=120;if(body.days===7){cat.age='adult';cat.phenotype={...cat.phenotype,age:'adult'};}}
-   body.weightHistory=[...(body.weightHistory||[]),body.weight];
-   cat.heartCap=Math.min(CONFIG.week.heartCapMax,cat.heartCap+CONFIG.week.heartCapPerDay);
-   const dayOfWeek=(week.dayOfWeek+1)%7;
-   week={...week,dayOfWeek,weekIndex:week.weekIndex+(dayOfWeek===CONFIG.game.weekStart?1:0)};
-   ui.usedHandItems={};
-   if(body.days%2===0){
-    const furnishings=getPlaced(getRoom(next)).filter(p=>!getItem(p.itemId)?.essential&&getMaxDurability(p.itemId)&&getDurability(next,p.itemId)>0);
-    const item=furnishings[body.days%Math.max(1,furnishings.length)];
-    if(item){durability=changeDurability(next,item.itemId,-1);body.broken=worsenDamage(body.broken,item.itemId);}
-   }
-  }
-  next={...next,week,durability,cats:next.cats.map(c=>c.id===cat.id?{...cat,body}:c),realClock:{...next.realClock,dayTicks},ui};
+  next={...next,cats:next.cats.map(c=>c.id===cat.id?{...cat,body}:c),realClock:{...next.realClock,dayTicks:dayTicks%8},ui};
+  next=rollCareDate(next,from,from+REAL_TICK_MS);
  }
  return {...next,realClock:{...next.realClock,careSimulatedAt:(state.realClock.careSimulatedAt??state.realClock.processedAt)+ticks*REAL_TICK_MS}};
 }
@@ -61,6 +65,7 @@ function syncRealTime(state,now=gameNow()){
  const processedAt=state.realClock.processedAt+ticks*REAL_TICK_MS;
  const remaining=careSlotsBetween(Math.max(processedAt,state.realClock.careProcessedAt??processedAt),now);
  if(remaining){if(typeof applySurgeryFasting==='function')next=applySurgeryFasting(next,now);next=advanceCatLife(next,remaining);}
+ next=rollCareDate(next,processedAt,now);
  return reconcileVisit({...next,realClock:{...next.realClock,processedAt,careProcessedAt:now},lastSeenAt:now});
 }
 const beforeRealTimeReducer=reduceGameState;

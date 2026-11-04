@@ -12,4 +12,7 @@ window.seniorFaceRefinement.adjustBody=svg=>{
  const sleeves=upper.querySelector('path[stroke="#b98466"]');
  sleeves.setAttribute('d','M75 127Q69 147 75 164Q81 179 94 187M144 127Q151 147 144 164Q137 179 124 186');
  sleeves.setAttribute('stroke-width','14');
+ // The upper arms cradle the cat from behind. Only the hands cross its belly.
+ const cat=upper.querySelector('.senior-held-cat');
+ if(cat)upper.insertBefore(sleeves,cat);
 };

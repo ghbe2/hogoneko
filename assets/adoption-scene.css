@@ -20,7 +20,7 @@
 .adoption-floor{position:absolute;inset:44% 0 0;background:repeating-linear-gradient(0deg,transparent 0 67px,#ae95611c 68px 69px),linear-gradient(#d4c4a1,#c5ae81)}
 .adoption-floor:after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 12%,#f7ecd726 12% 43%,transparent 43%)}
 .adoption-walkway{position:absolute;inset:0;pointer-events:none;z-index:2}
-.adoption-scene:is([data-phase="approach"],[data-phase="request"],[data-phase="handover"],[data-phase="thanks"],[data-phase="departure"]) .adoption-walkway{z-index:6}
+.adoption-scene:is([data-phase="approach"],[data-phase="request"],[data-phase="handover"],[data-phase="thanks"],[data-phase="departure"],[data-phase="result"]) .adoption-walkway{z-index:6}
 .adoption-scene .adoption-request-speech{z-index:7}
 .adoption-person{position:absolute;left:0;top:calc(var(--display-y) + 98px - var(--person-h));width:calc(var(--person-h)*120/248);height:var(--person-h);visibility:hidden;will-change:transform}
 .adoption-person>svg{height:100%;width:100%;overflow:visible}
@@ -62,7 +62,7 @@
 .adoption-scene[data-phase="handover"] .adoption-panel,.adoption-scene[data-phase="thanks"] .adoption-panel,.adoption-scene[data-phase="departure"] .adoption-panel{display:none}
 .adoption-held{opacity:0;pointer-events:none}.adoption-carrying .adoption-held{opacity:1}.adoption-carrying .adoption-main .adoption-arm,.adoption-carrying .adoption-main .visitor-arm-far{visibility:hidden}
 .adoption-handover .adoption-basket:not(.adoption-neighbor) .adoption-basket-front{transform:scaleX(.12);transform-origin:7% center;transition:transform .7s}
-.adoption-scene[data-phase="handover"] .adoption-basket:not(.adoption-neighbor){z-index:6}
+.adoption-scene[data-phase="handover"] .adoption-basket:not(.adoption-neighbor){z-index:5}
 .adoption-cat{transform-origin:center}
 .adoption-result-title{position:absolute;top:8%;left:6%;right:6%;text-align:center;opacity:0;transform:translateY(8px);transition:opacity .8s,transform .8s;z-index:6;pointer-events:none;padding:12px 0;background:radial-gradient(ellipse,#f9f3d9f5,transparent 72%)}
 .adoption-result-title small{display:block;font-size:11px;letter-spacing:.08em;color:#817651}
@@ -90,3 +90,5 @@
 }
 @media(prefers-reduced-motion:reduce){.adoption-scene *{animation:none!important;transition:none!important}}
 
+
+.adoption-scene:not([data-phase="ready"]):not([data-phase="result"]) .adoption-panel{visibility:hidden;pointer-events:none}

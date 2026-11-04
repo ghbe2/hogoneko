@@ -9,6 +9,7 @@ adoptionPerson=function(i){
  for(const companion of companions){
   const child=i===0;
   fitVisitorBody(companion,child);
+  companion.style.overflow='visible';
   companion.setAttribute('viewBox',child?'-11.613 0 143.226 296':'-29.516 0 179.032 370');
   for(const key of ['x','y','width','height'])companion.setAttribute(key,Number(companion.getAttribute(key))*370/248);
   svg.prepend(companion);

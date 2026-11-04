@@ -26,7 +26,7 @@ for(const [width,height] of [[320,568],[375,812]]){
  const id=choices[0].id,before=await page.evaluate(id=>Number(gameState.inventory[id])||0,id);
  await page.click(`[data-alpha-gift="${id}"]`);assert.equal(await page.evaluate(id=>gameState.inventory[id],id),before+1);
  await page.evaluate(id=>dispatch({type:'ALPHA_TASTE_CLAIM',itemId:id}),id);assert.equal(await page.evaluate(id=>gameState.inventory[id],id),before+1);
- await page.click('[data-alpha-taste-close]');await page.click('[data-center="taste"]');await page.waitForTimeout(3650);
+ await page.waitForSelector('.alpha-taste',{state:'detached'});await page.click('[data-center="taste"]');await page.waitForTimeout(3650);
  assert.equal(await page.locator('[data-alpha-gift]:enabled').count(),0);await page.click('[data-alpha-taste-close]');
  await page.evaluate(()=>{gameState.campaign.shopId='clinic';gameState.campaign.clinicReception=true;gameState.campaign.clinicExamined=false;render(gameState)});
  await page.locator('.is-clinic').waitFor();await page.waitForTimeout(450);await page.screenshot({path:`tests/screenshots/alpha-clinic-${width}.png`});

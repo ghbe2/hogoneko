@@ -6,9 +6,9 @@ function carePlan(cat){
  const completed=cat.surgery?.completedDay;
  return {version:2,surgeryDay:cat.surgery?.status==='in_progress'?cat.surgery.startedDay:null,eventDay:cat.surgery?.status==='done'?(completed||cat.body.days+1)+2:null,notices:{}};
 }
-function careReady(cat){return cat.status==='raising'&&!cat.permanentResident&&cat.body.weight>=2000&&!cat.body.sick&&cat.body.days>=(cat.recoveryUntilDay||0)&&cat.age!=='kitten';}
+function careReady(cat){return cat.status==='raising'&&!cat.permanentResident&&cat.body.weight>=surgeryWeightGoal(cat)&&!cat.body.sick&&cat.body.days>=(cat.recoveryUntilDay||0);}
 function earliestSurgeryDay(cat){return cat.initialAge==='kitten'||cat.age==='kitten'?12:5;}
-surgeryEligibility=function(state){const cat=getCat(state),plan=carePlan(cat),day=cat.body.days+1,healthy=!cat.body.sick&&cat.body.days>=(cat.recoveryUntilDay||0),weightReady=cat.body.weight>=2000,dayReady=plan.surgeryDay===day,minDay=earliestSurgeryDay(cat);return {goal:2000,day,minDay,healthy,weightReady,dayReady,canBook:careReady(cat)&&day+1>=minDay&&!plan.surgeryDay&&!['done','in_progress'].includes(cat.surgery?.status),ready:careReady(cat)&&dayReady&&day>=minDay};};
+surgeryEligibility=function(state){const cat=getCat(state),plan=carePlan(cat),day=cat.body.days+1,healthy=!cat.body.sick&&cat.body.days>=(cat.recoveryUntilDay||0),weightReady=cat.body.weight>=surgeryWeightGoal(cat),dayReady=plan.surgeryDay===day,minDay=earliestSurgeryDay(cat);return {goal:surgeryWeightGoal(cat),day,minDay,healthy,weightReady,dayReady,canBook:careReady(cat)&&day+1>=minDay&&!plan.surgeryDay&&!['done','in_progress'].includes(cat.surgery?.status),ready:careReady(cat)&&dayReady&&day>=minDay};};
 // Notices never force travel or lock unrelated care controls.
 pendingVisit=()=>null;
 reconcileVisit=state=>state.campaign.requiredVisit?{...state,campaign:{...state.campaign,requiredVisit:null}}:state;
@@ -23,7 +23,7 @@ function normalizeCarePlan(state){
 function applySurgeryFasting(state,at=gameNow()){
  state=normalizeCarePlan(state);const cat=getCat(state),day=cat.body.days+1,plan=carePlan(cat);
  const stored=cat.body.surgeryFoodStored;
- const fasting=cat.status==='raising'&&!cat.permanentResident&&cat.age!=='kitten'&&cat.surgery?.status!=='done'&&!!plan.surgeryDay&&day>=plan.surgeryDay-1&&day<=plan.surgeryDay;
+ const fasting=cat.status==='raising'&&!cat.permanentResident&&cat.surgery?.status!=='done'&&!!plan.surgeryDay&&day>=plan.surgeryDay-1&&day<=plan.surgeryDay;
  if(fasting&&stored===undefined)return updateCareCat(state,c=>({...c,body:{...c.body,surgeryFoodStored:c.body.foodLevel||0,foodLevel:0}}));
  if(!fasting&&stored!==undefined)return updateCareCat(state,c=>{const body={...c.body,foodLevel:stored};delete body.surgeryFoodStored;return {...c,body};});
  return state;
@@ -66,7 +66,7 @@ render=function(state){
  carePlanRender(state);
  if(!state.ui.careBookingOpen||titleScreenOpen)return;
  const cat=getCat(state),layer=document.createElement('section');layer.className='care-booking modal-layer';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','手術の予約');
- layer.innerHTML=`<article><h2>明日、手術を受けますか？</h2><p>今の体重は <strong>${Math.round(cat.body.weight).toLocaleString()}g</strong>。</p><p>手術の前はごはんをあげられないので、予約するとお皿をしまいます。絶食で体重が減るので、2,000gぎりぎりなら、もう1日育ててからにしましょう。</p><p>手術当日も、2,000g以上・体調良好が条件です。予約はアプリから取り消せます。</p><small>現実の絶食は獣医師の指示に従ってください。</small><button data-care-booking="confirm">明日の手術を予約する</button><button data-care-booking="cancel">もう1日育てる</button></article>`;
+ layer.innerHTML=`<article><h2>明日、手術を受けますか？</h2><p>今の体重は <strong>${Math.round(cat.body.weight).toLocaleString()}g</strong>。</p><p>手術の前はごはんをあげられないので、予約するとお皿をしまいます。絶食で体重が減るので、${surgeryWeightGoal(cat).toLocaleString()}gぎりぎりなら、もう1日育ててからにしましょう。</p><p>手術当日も、${surgeryWeightGoal(cat).toLocaleString()}g以上・体調良好が条件です。予約はアプリから取り消せます。</p><small>現実の絶食は獣医師の指示に従ってください。</small><button data-care-booking="confirm">明日の手術を予約する</button><button data-care-booking="cancel">もう1日育てる</button></article>`;
  for(const child of app.children)child.inert=true;
  app.append(layer);
 };

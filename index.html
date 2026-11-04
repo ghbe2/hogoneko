@@ -1689,7 +1689,7 @@ const CONFIG = {
     typeCount: { min:1, max:2 },
     heartStart: { min:50, max:50 },
     bodyDaysToReady: { kitten:5, adult:0 },
-    weightGoal: { kitten:700, adult:3500 },
+    weightGoal: { kitten:1500, adult:3500 },
   },
   intake: {
     clinic: {
@@ -2435,11 +2435,25 @@ function getNeglectPenalty(days) {
     : CONFIG.stage1.careTrust.neglectPenalty;
 }
 
+function careDayKey(at=gameNow(),padded=false){
+  // 09:00 JST is midnight UTC. The key never depends on the device timezone.
+  const iso=new Date(at).toISOString().slice(0,10);
+  return padded?iso:iso.split('-').map(Number).join('-');
+}
+function careDayUsed(key,today=careDayKey()){
+  const sortable=k=>k.split('-').map(n=>n.padStart(2,'0')).join('-');
+  return typeof key==='string'&&sortable(key)>=sortable(today);
+}
+function surgeryWeightGoal(cat){return cat.age==='kitten'||cat.initialAge==='kitten'?1500:2000;}
+function heartGainLimit(cat,result,overflow=false){
+  const limit=overflow?CONFIG.week.heartCapMax:cat.heartCap;
+  return result?.operation==='play'&&isLikedAffinity(result.affinity)?limit:Math.min(80,limit);
+}
 function updateHeart(cat, amount, options = {}) {
   if(amount>0)amount*=cat.trustGainRate??1;
   const rounded = Math.round((cat.heart + amount) * 10) / 10;
   if (amount <= 0) return Math.max(0, rounded);
-  const limit = options.ignoreCap ? CONFIG.week.heartCapMax : cat.heartCap;
+  const limit = heartGainLimit(cat,options.result,options.ignoreCap);
   return Math.max(cat.heart, Math.min(limit, rounded));
 }
 
@@ -2457,7 +2471,7 @@ function isNegativeAffinity(kind) {
 
 function applyAffinityHeart(state, cat, result, requestedAmount = result.rawHeartDelta) {
   const canOverflow = result.affinity === "superMatch" && !state.ui.usedHandItems.heart_overflow;
-  const nextHeart = updateHeart(cat, requestedAmount, { ignoreCap:canOverflow });
+  const nextHeart = updateHeart(cat, requestedAmount, {ignoreCap:canOverflow,result});
   return {
     nextHeart,
     delta:Math.round((nextHeart - cat.heart) * 10) / 10,
@@ -2467,7 +2481,8 @@ function applyAffinityHeart(state, cat, result, requestedAmount = result.rawHear
 
 function getInteractionApplication(state, cat, result, alreadyUsed = false, requestedAmount = result.rawHeartDelta) {
   const repeatableLoss = result.affinity === "superDislike";
-  const amount = alreadyUsed && !repeatableLoss ? 0 : requestedAmount;
+  const base=result.operation==='feed'?Math.min(1,requestedAmount):result.operation==='pet'?Math.min(2,requestedAmount):requestedAmount;
+  const amount = alreadyUsed && !repeatableLoss ? 0 : base;
   return applyAffinityHeart(state, cat, result, amount);
 }
 
@@ -2861,7 +2876,7 @@ function reduceGameState(state, action) {
           ui:{ ...state.ui, layoutMode:false, modal:null, lastLayoutItem:null,
             usedHandItems:{ ...state.ui.usedHandItems, [usedKey]:true, heart_overflow:state.ui.usedHandItems.heart_overflow || application.overflowUsed }, lastAffinityLog:affinityLog({ ...result, heartDelta:delta }),
             catFocus:getInteractionFocus(result, getPlacedPoint(state, item.id, CONFIG.stage1.defaultLayout[item.id])),
-            message:`${item.label}の配置を保存。${getCallName(cat)}が様子を見に来た`, reaction:reactionFromResult(result, delta) },
+            message:`${item.label}の配置を保存。${getCallName(cat)}が様子を見に来た`, reaction:null },
         };
       }
       return {
@@ -3362,7 +3377,7 @@ function animateCatWalk(from, to) {
 
 function animateFelineTravel(element, from, to, pace = 1) {
   element._travelAnimation?.cancel();
-  const jumping = from.surface !== to.surface && (from.surface !== "floor" || to.surface !== "floor");
+  const jumping = to.escapeHop || from.surface !== to.surface && (from.surface !== "floor" || to.surface !== "floor");
   const rect = element.parentElement.getBoundingClientRect();
   const distance = Math.hypot((to.x-from.x)*rect.width/100,(to.y-from.y)*rect.height/100);
   const duration = jumping ? CONFIG.stage1.jumpMs : Math.max(1100,Math.min(6500,distance/42*1000))*pace;
@@ -4106,10 +4121,36 @@ const app = document.querySelector("#app");
 
 // Use the actual visible host, not only viewport units: embedded previews can
 // clip a taller layout viewport. All scenes inherit this same playing area.
+var nameViewportLock;
+document.addEventListener('focusin', event => {
+  if (!event.target.matches('.first-name input, #campaign-cat-name')) return;
+  nameViewportLock ||= {height:app.offsetHeight, previousHeight:app.style.height, visible:window.visualViewport?.height || innerHeight};
+});
+document.addEventListener('focusout', () => {
+  if (nameViewportLock) requestAnimationFrame(fitGameViewport);
+});
 function fitGameViewport() {
   const root = document.querySelector('#app');
   if (!root) return;
   const rect = root.getBoundingClientRect(), viewport = window.visualViewport;
+  if (nameViewportLock) {
+    const visible = viewport ? viewport.height : innerHeight;
+    const keyboardOpen = visible < nameViewportLock.visible - 70;
+    if (document.activeElement?.matches('.first-name input, #campaign-cat-name') || keyboardOpen) {
+      root.style.height = root.style.maxHeight = nameViewportLock.height + 'px';
+      const panel = root.querySelector('.first-name');
+      if (panel) {
+        const covered = Math.max(0, rect.bottom - ((viewport?.offsetTop || 0) + visible));
+        panel.style.bottom = covered + 'px';
+        panel.classList.toggle('keyboard-open', keyboardOpen);
+      }
+      return;
+    }
+    root.querySelector('.first-name')?.style.removeProperty('bottom');
+    root.querySelector('.first-name')?.classList.remove('keyboard-open');
+    root.style.height = nameViewportLock.previousHeight;
+    nameViewportLock = null;
+  }
   let bottom = Math.min(innerHeight, viewport ? viewport.offsetTop + viewport.height : innerHeight);
   for (let parent = root.parentElement; parent; parent = parent.parentElement) {
     gameViewportObserver.observe(parent);
@@ -4292,7 +4333,7 @@ app.addEventListener("pointerdown", event => {
     const worldRect = world.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
     dragDraft = {
-      target, itemId, zone:item.zone, stage, world, stageRect, worldRect, fromPalette,
+      target, itemId, phase:gameState.campaign.phase, zone:item.zone, stage, world, stageRect, worldRect, fromPalette,
       startX:event.clientX, startY:event.clientY, pointerType:event.pointerType, pointerId:event.pointerId,
       offsetX:fromPalette ? null : event.clientX-targetRect.left,
       offsetY:fromPalette ? null : event.clientY-targetRect.top,
@@ -4715,12 +4756,14 @@ function updateLiveToyPlay(draft, clientX, clientY) {
   }
 
   // Bat from a planted stance. Only chase when the toy leaves paw reach.
-  if(draft.playInReach||now-(draft.landedAt||0)<500){draft.chaseSince=0;return;}
+  const perch=perchNearPointer(clientX,clientY);
+  const changingPerch=perch&&draft.livePlayPoint?.surface!==perch.surface;
+  if(!changingPerch&&(draft.playInReach||now-(draft.landedAt||0)<500)){draft.chaseSince=0;return;}
   draft.chaseSince ||= now;
   if(now-draft.chaseSince<180){scheduleToyFollow(draft,190);return;}
   const from=draft.livePlayPoint||getCatPoint(gameState),scale=from.scale||.75;
   const floor=typeof roomPlacementBounds==='function'?roomPlacementBounds(parent.height):{floorTop:parent.height*.56,floorBottom:parent.height-100};
-  const to={...from,id:'toy-floor',surface:'floor',distance:'near',scale,
+  const to=perch||{...from,id:'toy-floor',surface:'floor',distance:'near',scale,
     x:Math.max(48,Math.min(parent.width-48,clientX-parent.left+(clientX>cx?-24:24)))/parent.width*100,
     y:Math.max(floor.floorTop-28,Math.min(floor.floorBottom-12,clientY-parent.top-12))/parent.height*100};
   if(Math.hypot((to.x-from.x)*parent.width/100,(to.y-from.y)*parent.height/100)<24)return;
@@ -4752,7 +4795,7 @@ function accrueLivePlayHeart(draft, catElement, result, segment, dt, speed) {
   const earnedToday = Number(gameState.ui.usedHandItems[usedKey]) || 0;
   const cat = getCat(gameState);
   const overflowAvailable = result.affinity === "superMatch" && !gameState.ui.usedHandItems.heart_overflow;
-  const limit = overflowAvailable ? CONFIG.week.heartCapMax : cat.heartCap;
+  const limit = heartGainLimit(cat,result,overflowAvailable);
   const allowance = Math.max(0, Math.min(result.baseHeart - earnedToday, limit - cat.heart));
   draft.heartAtLimit=allowance-draft.heartEarned<.9999;
   if (allowance - draft.heartEarned < .9999) return;
@@ -4930,7 +4973,7 @@ gameState=migrateLifeState(gameState);
 
 // One simulation tick is three in-game hours. Numbers are prototype tuning, not medical guidance.
 // Define before the saved-clock catch-up, so offline meals use the same affinity.
-function foodNutritionMultiplier(cat,id){const affinity=resolveInteraction(cat,'feed',getFood(id)).affinity;return ({superMatch:1.25,match:1.15,neutral:1,dislike:.9,superDislike:.8})[affinity]||1;}
+function foodNutritionMultiplier(cat,id){const affinity=resolveInteraction(cat,'feed',getFood(id)).affinity;const preference=({superMatch:1.15,match:1.08,neutral:1,dislike:.92,superDislike:.85})[affinity]||1;const kitten=cat.age==='kitten';return preference*(id==='food_kitten'?(kitten?.84:.8):kitten?.635:1);}
 function advanceCatLife(state, ticks=1) {
   if(getCat(state).status!=="raising" && state.campaign.phase!=="room")return state;
   let body={...getCat(state).body,digestion:[...(getCat(state).body.digestion||[])],hair:[...(getCat(state).body.hair||[])]};
@@ -4945,11 +4988,11 @@ function advanceCatLife(state, ticks=1) {
     body.litter=Math.min(6,(Number(body.litter)||0)+digested);
     if(placed.has("bowl")&&body.foodLevel>0&&body.satiety<85){
       const portion=Math.min(50,body.foodLevel);body.foodLevel-=portion;body.satiety+=portion*.8;
-      const nutrition={food_dry:18,food_wet:24,food_chicken:26,food_fish:28,food_soup:22};
+      const nutrition=getCat(state).age!=="kitten"?{food_dry:18,food_wet:24,food_chicken:26,food_fish:28,food_soup:22,food_kitten:28}:{food_dry:26,food_wet:27,food_chicken:28,food_fish:29,food_soup:27,food_kitten:28};
       body.digestion.push(body.lifeTicks+2);body.weight+=(nutrition[body.bowlFood]||18)*(portion/50)*foodNutritionMultiplier(getCat(state),body.bowlFood);ate=true;
       if(body.satiety>100){body.vomit=Math.min(6,(Number(body.vomit)||0)+1);body.satiety=Math.max(0,body.satiety-45);body.digestion.pop();threwUp=true;}
     }
-    if(body.surgeryFoodStored!==undefined&&getCat(state).age!=='kitten')body.weight=Math.max(1,body.weight-4);
+    if(body.surgeryFoodStored!==undefined)body.weight=Math.max(1,body.weight-4);
     if(placed.has("water")&&body.waterLevel>0&&body.hydration<70){const sip=Math.min(50,body.waterLevel);body.waterLevel-=sip;body.hydration=Math.min(100,body.hydration+sip*.8);drank=true;}
     const groomed=body.groomedTicks>0;body.groomedTicks=Math.max(0,(body.groomedTicks||0)-1);body.looseCoat=Math.min(10,(body.looseCoat||0)+(groomed?.25:1.5));
     // Sparse, irregular shedding; grooming lowers the probability, not a fixed timer.
@@ -5309,6 +5352,15 @@ triggerAutoEvent=function(){
 <script src="assets/cat-hold-motion.js"></script>
 <script src="game-room-hold.js"></script>
 <script>
+// Periodic renders must not detach a captured piece of furniture or an IME input.
+const renderBetweenIntakeGestures = render;
+render = function(state) {
+  const phase = state.campaign.phase;
+  if (dragDraft && state.ui.layoutMode && dragDraft.stage.isConnected &&
+      phase === dragDraft.phase && !state.ui.modal) return;
+  if (state.ui.firstName && document.activeElement?.matches('.first-name input')) return;
+  return renderBetweenIntakeGestures(state);
+};
 // Render only after every module has installed its current rules and artwork.
 document.addEventListener('DOMContentLoaded', () => render(gameState), {once:true});
 </script>

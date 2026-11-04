@@ -9,6 +9,20 @@ function roomObjectCuePoint(state,id,pose){
  const footHeight=pose==='sit'?67:35;
  return {x:(b.left-r.left+b.width/2+(feeding?25:0))/r.width*100,y:(b.top-r.top+(feeding?-18:8-footHeight*scale))/r.height*100,scale,distance:'near',surface:id};
 }
+function perchNearPointer(x,y){
+ const world=app.querySelector('[data-room-world]');
+ if(!world)return null;
+ const r=world.getBoundingClientRect();
+ for(const id of ['shelf','hammock']){
+  const node=world.querySelector('.placed-item.item-'+id);
+  if(!node||getDurability(gameState,id)<=0)continue;
+  const b=node.getBoundingClientRect(),top=b.top+b.height*.45;
+  if(x<b.left-6||x>b.right+6||y<top-38||y>top+26)continue;
+  const scale=.65;
+  return {x:(b.left+b.width/2-r.left)/r.width*100,y:(top-r.top-67*scale)/r.height*100,scale,surface:id,distance:'near',catId:getCat(gameState).id};
+ }
+ return null;
+}
 function queueObjectReaction(state,id,pose){
  const point=roomObjectCuePoint(state,id,pose);if(!point)return;
  const now=Date.now(),cue={catId:getCat(state).id,pose,point,itemId:id,started:now+800,reveal:now+800,until:now+5000,previous:1};
@@ -27,12 +41,22 @@ function freeMessPoint(preferred){
 const objectReactionReduce=reduceGameState;
 reduceGameState=function(state,action){
  if(action.type==='LIFE_MESS_POSITION')action={...action,point:freeMessPoint(action.point)};
- const next=objectReactionReduce(state,action);
+ const coinBusy=discoveryScene(state)&&!currentLifeCue();
+ if(coinBusy&&['TAP_CAT','TOUCH_NOW','EXECUTE_CONTACT'].includes(action.type))return state;
+ const anchor=(action.type==='TOGGLE_LAYOUT'||action.type==='PICK_DISCOVERY_COIN')&&state.campaign.phase==='room'
+  ?visibleRoomCatPoint(app.querySelector('.cat-object')):null;
+ let next=objectReactionReduce(state,action);
+ if(anchor&&next!==state){catLifeCues=[];next={...next,ui:{...next.ui,catFocus:null,playRestPoint:{...anchor,catId:getCat(next).id}}};}
+ if(coinBusy||discoveryScene(next))return next;
  if(next.campaign.phase!=='room'||document.hidden||next.ui.modal||next.ui.layoutMode||getCat(next).status!=='raising')return next;
  const before=getCat(state),after=getCat(next),care=state.ui.careAnimation;
  if(after.body.foodLevel<before.body.foodLevel){const cue=catLifeCues.find(c=>c.pose==='eat'&&c.catId===after.id),point=roomObjectCuePoint(next,'bowl','eat');if(cue&&point)cue.point=point;}
  if(after.body.waterLevel<before.body.waterLevel&&!currentLifeCue())queueObjectReaction(next,'water','eat');
  if(action.type==='FINISH_CARE'&&care&&!next.ui.careAnimation){
+  if(['touch','groom'].includes(care.operation)&&next.ui.lastAffinityLog?.affinity==='superDislike'){
+   const from=visibleRoomCatPoint(app.querySelector('.cat-object'));
+   if(from){catLifeCues=[];next={...next,ui:{...next.ui,catFocus:null,playRestPoint:{...from,x:from.x>50?20:80,surface:'floor',escapeHop:true,catId:after.id}}};}
+  }
   if(care.operation==='food'&&before.body.foodLevel<=50&&after.body.foodLevel>before.body.foodLevel)queueObjectReaction(next,'bowl','eat');
   if(care.operation==='water'&&before.body.waterLevel<=50&&after.body.waterLevel>before.body.waterLevel)queueObjectReaction(next,'water','eat');
  }else if((action.type==='ROAM_CAT'||state.ui.layoutMode&&!next.ui.layoutMode)&&!currentLifeCue()&&!commandDraft&&!discoveryScene(next)){

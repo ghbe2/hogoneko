@@ -27,3 +27,6 @@
 #app :is(.home-phone-close,.furniture-sheet>header>button,.senior-dialog-close)::after{transform:rotate(-45deg)}
 
 #app .furniture-sheet>header>button{position:relative;width:44px;height:44px;flex:0 0 44px}
+
+#app .first-name.keyboard-open>section{grid-template-rows:minmax(0,1fr) 28px 46px var(--action-height);max-height:100%;min-height:0}
+.first-name.keyboard-open .first-name-cat{height:auto;min-height:0}

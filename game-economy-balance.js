@@ -10,4 +10,4 @@ function wearToyForTime(state,id,milliseconds){
  return {inventory:next.inventory,durability:next.durability,broken,toyWearMs:{...state.toyWearMs,[id]:next.inventory[id]?total%CARE_BALANCE.toyWearMs:0}};
 }
 const balancedBenefit=productBenefit;
-productBenefit=id=>getItem(id)?.kind==='hand'?'好きな玩具ほど短い時間でなかよしに。消耗は使用時間に応じます。':getFood(id)?'好物なら、同じ量でも体重が増えやすくなります。':balancedBenefit(id);
+productBenefit=id=>id==='food_kitten'?'子猫が食べやすいごはん。子猫の体重が増えやすく、大人には好まれにくいです。':getItem(id)?.kind==='hand'?'好きな玩具ほど短い時間でなかよしに。消耗は使用時間に応じます。':getFood(id)?'好物なら、同じ量でも体重が増えやすくなります。':balancedBenefit(id);

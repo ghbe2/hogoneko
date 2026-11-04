@@ -17,7 +17,7 @@ function beginEncounterDrag(draft,event){
  moveEncounterDrag(draft,event);
 }
 // Probability is internal tuning only. No rates are rendered into player UI.
-const BAIT_GRADES={food_dry:1,food_wet:2,food_chicken:2,food_fish:3,food_soup:3};
+const BAIT_GRADES={food_kitten:2,food_dry:1,food_wet:2,food_chicken:2,food_fish:3,food_soup:3};
 const ENCOUNTER_TUNING={baseRare:.03,boost:[0,.0025,.006,.01],waitMs:4200};
 const encounterFoods=(state=gameState)=>CONFIG.stage1.foods.filter(f=>!f.water&&(state.inventory[f.id]>=1||(f.id==='food_dry'&&state.onboarding?.status==='active'&&state.onboarding?.flowVersion===1)));
 function encounterFood(state){return encounterFoods(state).find(f=>f.id===state.campaign.fieldFood)||encounterFoods(state)[0]||getFood(state.campaign.fieldFood)||getFood('food_dry');}

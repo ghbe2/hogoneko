@@ -56,7 +56,8 @@ SHOP_CATALOG.push({id:'starter_set',shop:'petshop',category:'tools',label:'初�
 bookIcons.starter_set=`<svg viewBox="0 0 100 90"><path d="M14 28h72v48H14Z" fill="#b98b59"/><path d="M14 28L25 14h52l9 14-36 11Z" fill="#ddbe87"/><path d="M50 39v37" stroke="#91744e" stroke-width="2"/><path d="M30 47h40v20H30Z" fill="#f8eed5"/><path d="M42 58l-1-8 6 3 7-3 1 8q-6 8-13 0" fill="#7c926c"/></svg>`;
 const firstBenefit=productBenefit;
 productBenefit=id=>id==='starter_set'?'これがあれば初心者保護主デビュー！':firstBenefit(id);
-const firstActive=s=>s.onboarding?.flowVersion===1&&s.onboarding.status==='active';
+function subsequentCat(s){const id=getCat(s).id;return !!(s.alpha?.firstCatId&&s.alpha.firstCatId!==id)||(s.album||[]).some(entry=>entry.catId&&entry.catId!==id);}
+const firstActive=s=>!subsequentCat(s)&&s.onboarding?.flowVersion===1&&s.onboarding.status==='active';
 const guideTo=(s,guide)=>({...s,onboarding:{...s.onboarding,guide,guideEnteredAt:s.onboarding.guide===guide?s.onboarding.guideEnteredAt:Date.now()}});
 // A scene gets one quiet beat after its navigation fade, not after every line.
 let firstScenePresentation={key:null,until:0};
@@ -114,7 +115,7 @@ reduceGameState=function(state,action){
  }
  if(action.type==='FIRST_NAME_CALL'){
   const name=String(action.name||'').trim().slice(0,8);if(!name||!state.ui.firstName||c.phase!=='intake'||cat.named)return state;
-  return guideTo({...state,cats:state.cats.map(n=>n.id===cat.id?{...n,name,named:true}:n),campaign:{...c,intakeCallCount:0},ui:{...state.ui,firstName:false}},'callFirst');
+  return guideTo({...state,cats:state.cats.map(n=>n.id===cat.id?{...n,name,named:true}:n),campaign:{...c,intakeCallCount:0},ui:{...state.ui,firstName:false}},first?'callFirst':null);
  }
  if(action.type==='FIRST_CALL_PAUSE_DONE'&&g==='callWait')return guideTo(state,'callAgain');
  if(action.type==='CALL_INTAKE_CAT'&&first&&cat.named&&!c.intakeCalled){if(g==='callWait')return state;const count=(c.intakeCallCount||0)+1;const next={...state,campaign:{...c,intakeCallCount:count,firstCalledAt:Date.now()}};return count<4?guideTo(next,count===1?'callWait':'callAgain'):guideTo(firstReducer(next,action),null);}
@@ -211,7 +212,9 @@ function fitFirstPortrait(svg){
  // Measure in SVG coordinates: scene entry transforms must not shrink the portrait.
  svg.querySelectorAll('path,ellipse,circle,polygon').forEach(n=>{if(n.closest('defs,clipPath,mask'))return;const outline=n.classList.contains('part-outline');for(let p=n;p&&p!==svg;p=p.parentElement){if(p===n&&outline)continue;const s=getComputedStyle(p);if(s.display==='none'||s.visibility==='hidden'||Number(s.opacity)===0&&!outline)return;}const r=n.getBBox(),ctm=n.getScreenCTM();if(!ctm||(!r.width&&!r.height))return;const matrix=inverse.multiply(ctm);for(const [x,y]of [[r.x,r.y],[r.x+r.width,r.y],[r.x,r.y+r.height],[r.x+r.width,r.y+r.height]])points.push(new DOMPoint(x,y).matrixTransform(matrix));});
  outlines.forEach(([n,display])=>n.style.display=display);
- if(!points.length)return;const x=Math.min(...points.map(p=>p.x)),y=Math.min(...points.map(p=>p.y)),w=Math.max(...points.map(p=>p.x))-x,h=Math.max(...points.map(p=>p.y))-y;svg.setAttribute('viewBox',`${x-5} ${y-5} ${w+10} ${h+10}`);svg.setAttribute('preserveAspectRatio','xMidYMax meet');
+ if(!points.length)return;const x=Math.min(...points.map(p=>p.x)),y=Math.min(...points.map(p=>p.y)),w=Math.max(...points.map(p=>p.x))-x,h=Math.max(...points.map(p=>p.y))-y;const keepAge=svg.closest('.first-chart-cat,.first-name-cat')&&svgRigs.get(svg)?.rig.d.age==='kitten',ratio=keepAge?.74/1.25:1;
+ const width=(w+10)/ratio,height=(h+10)/ratio;
+ svg.setAttribute('viewBox',[x+w/2-width/2,y+h+5-height,width,height].join(' '));svg.setAttribute('preserveAspectRatio','xMidYMax meet');
 }
 const firstRender=render;
 render=function(state){
@@ -220,8 +223,11 @@ render=function(state){
  if(titleScreenOpen)return;
  if(state.campaign.phase==='intake'){
   if(guidedIntake(state))app.querySelector('.intake-layout')?.classList.add('guided-intake');
-  const r=intakePlacementFrame(state).carrier,cage=app.querySelector('.room-carrier'),emerging=app.querySelector('.intake-emerging-cat');
+  const stage=app.querySelector('.stage');
+  const r=intakePlacementFrame(state,stage.clientWidth,stage.clientHeight).carrier,cage=app.querySelector('.room-carrier'),emerging=app.querySelector('.intake-emerging-cat');
   if(cage)Object.assign(cage.style,{left:(r.x+r.width/2)+'px',top:(r.y+r.height/2)+'px',width:r.width+'px',height:r.height+'px'});
+  const heart=stage.querySelector('.intake-ambient-heart');
+  if(heart)Object.assign(heart.style,{left:(r.x+r.width/2)+'px',top:(r.y-18)+'px'});
   if(emerging)Object.assign(emerging.style,{left:(r.x+r.width/2)+'px',top:(r.y+r.height-67)+'px'});
  }
  // The field intentionally keeps its DOM while a carousel is being dragged.

@@ -9,7 +9,7 @@ const ROOM_MENU_RESERVE=118;
 function layoutWallStart(height=app.clientHeight||window.innerHeight){return ROOM_MENU_RESERVE/height*100;}
 // The painted skirting is at y=429 in the 760-unit room artwork.
 function roomPlacementBounds(height=app.clientHeight||window.innerHeight,state=gameState){const intake=state.campaign.phase==='intake'&&state.onboarding?.status==='active'&&state.onboarding.flowVersion===1;return {wallTop:ROOM_MENU_RESERVE,wallBottom:height*429/760-8,floorTop:height*429/760+8,floorBottom:height-(intake?76:ROOM_CONTROL_RESERVE)};}
-function furnitureHeight(itemId){return itemId==='tower'?150:['bowl','water'].includes(itemId)?45:['shelf','decor_sun','litter'].includes(itemId)?65:84;}
+function furnitureHeight(itemId){if(['shelf','hammock'].includes(itemId))return 77;return itemId==='tower'?150:['bowl','water'].includes(itemId)?45:['shelf','decor_sun','litter'].includes(itemId)?65:84;}
 function constrainFurnitureY(itemId,y,height=app.clientHeight||window.innerHeight,itemHeight=furnitureHeight(itemId)){
  const b=roomPlacementBounds(height),wall=getItem(itemId)?.zone==='wall';
  // Floor objects stand on their bottom edge; tall objects may rise above the skirting.
@@ -21,6 +21,14 @@ function layoutFloorLimit(itemId,height=app.clientHeight||window.innerHeight){
  return Math.max(8,(height-ROOM_CONTROL_RESERVE-itemHeight)/height*100);
 }
 function keepFurnitureAboveControls(state){if(typeof guidedIntake==='function'&&guidedIntake(state))return state;return {...state,rooms:state.rooms.map(room=>({...room,wall:room.wall.map(p=>({...p,y:constrainFurnitureY(p.itemId,p.y)})),floor:room.floor.map(p=>({...p,y:constrainFurnitureY(p.itemId,p.y)}))}))};}
+function wallItemHitsWindow(itemId,x,y,world){
+ if(getItem(itemId)?.zone!=='wall'||!world?.width||!world.height)return false;
+ const w=roomWindowGeometry(world.height),left=x*world.width/100,top=y*world.height/100;
+ const width=['shelf','hammock'].includes(itemId)?118:100,height=furnitureHeight(itemId);
+ const leftEdge=(w.x+30*w.scale)*world.width/450,rightEdge=(w.x+355*w.scale)*world.width/450;
+ const topEdge=(w.y+69*w.scale)*world.height/760,bottomEdge=(w.y+350*w.scale)*world.height/760;
+ return left<rightEdge&&left+width>leftEdge&&top<bottomEdge&&top+height>topEdge;
+}
 const dragBeforeControlZone=moveLayoutDrag;
 moveLayoutDrag=function(draft,x,y){dragBeforeControlZone(draft,x,y);if(draft.moved&&draft.ghost&&!draft.store){const r=draft.stageRect,b=roomPlacementBounds(r.height),wall=draft.zone==='wall',raw=y-r.top-draft.offsetY,bottom=raw+draft.height;
  draft.y=constrainFurnitureY(draft.itemId,raw/r.height*100,r.height,draft.height);draft.ghost.style.top=draft.y+'%';
@@ -32,6 +40,7 @@ moveLayoutDrag=function(draft,x,y){dragBeforeControlZone(draft,x,y);if(draft.mov
   draft.ghost.style.left=draft.x+'%';draft.ghost.style.top=draft.y+'%';
   draft.valid=intakePositionClear({itemId:draft.itemId,x:draft.x,y:draft.y},getPlaced(getRoom(gameState)),frame);
  }
+ if(wall&&wallItemHitsWindow(draft.itemId,draft.x,draft.y,draft.worldRect))draft.valid=false;
  draft.ghost.classList.toggle('invalid',!draft.valid);}};
 function daylightAt(date=new Date(gameNow())){
  const hour=date.getHours()+date.getMinutes()/60;
@@ -45,6 +54,8 @@ getAvailableRoamPoints=function(state){const points=roamingBeforeSun(state),sun=
 const furnitureReducer=reduceGameState;
 reduceGameState=function(state,action){
  state=keepFurnitureAboveControls(state);
+ const world=()=>app.querySelector('[data-room-world]')?.getBoundingClientRect();
+ if(action.type==='DROP_LAYOUT_ITEM'&&!action.store&&wallItemHitsWindow(action.itemId,action.x,constrainFurnitureY(action.itemId,action.y),world()))return state;
  if(action.type==='DROP_LAYOUT_ITEM'&&!action.store){if(typeof guidedIntake==='function'&&guidedIntake(state)){if(!intakePositionClear(action,getPlaced(getRoom(state)),intakePlacementFrame(state)))return state;}else action={...action,y:constrainFurnitureY(action.itemId,action.y)};}
  if(action.type==='ROAM_CAT'&&daylightAt()&&getAffinity(getCat(state),{affinityType:'sun'}).score>0&&Math.random()<.65)action={...action,index:990};
  if(action.type==='PICK_FURNITURE'){
@@ -52,7 +63,13 @@ reduceGameState=function(state,action){
   const placed=getPlaced(getRoom(state)).find(p=>p.itemId===item.id);
   if(placed)return {...state,ui:{...state.ui,layoutTrayOpen:false,lastLayoutItem:item.id}};
   furnitureUndo.push(structuredClone(state.rooms));
-  const next=furnitureReducer(state,{type:'DROP_LAYOUT_ITEM',itemId:item.id,x:42,y:item.zone==='wall'?30:Math.min(65,layoutFloorLimit(item.id))});
+  let x=42,y=item.zone==='wall'?constrainFurnitureY(item.id,30):Math.min(65,layoutFloorLimit(item.id));
+  if(item.zone==='wall'&&wallItemHitsWindow(item.id,x,y,world())){
+   const rect=world(),size=['shelf','hammock'].includes(item.id)?118:100;
+   x=(rect.width-size-8)/rect.width*100;
+   if(wallItemHitsWindow(item.id,x,y,rect)){y=constrainFurnitureY(item.id,100);if(wallItemHitsWindow(item.id,x,y,rect))return state;}
+  }
+  const next=furnitureReducer(state,{type:'DROP_LAYOUT_ITEM',itemId:item.id,x,y});
   return {...next,ui:{...next.ui,layoutTrayOpen:false,lastLayoutItem:item.id}};
  }
  if(action.type==='UNDO_FURNITURE')return furnitureUndo.length?{...state,rooms:furnitureUndo.pop(),ui:{...state.ui,lastLayoutItem:null}}:state;
@@ -95,7 +112,7 @@ const roomInterfaceStyle=document.createElement('style');roomInterfaceStyle.text
 #app .layout-workbar button:nth-child(2){flex:1}
 #app .layout-workbar .layout-done{background:#637d59;color:#fffdf5}
 #app .layout-workbar button:disabled{opacity:.4}
-#app [data-layout-item].layout-selected{outline:2px dashed #637d59;outline-offset:5px}
+
 #app .layout-store-target{display:flex;align-items:center;gap:7px;left:50%;right:auto;bottom:84px;transform:translateX(-50%);width:218px;min-width:0;height:44px;min-height:44px;box-sizing:border-box;padding:0 8px 0 2px;border:1px solid #b8a27a;border-radius:10px;background:#f3e7cdee;color:#66513b;box-shadow:0 3px 8px #60472e18;z-index:28;font-size:12px;font-weight:600;pointer-events:none}
 #app .layout-store-target>svg{width:50px;height:42px;flex:none;overflow:visible}
 #app .layout-store-target .storage-copy{line-height:1.5;max-width:154px;text-wrap:balance}
@@ -144,7 +161,7 @@ render=function(state){
 };
 const closeEncounter=renderTrapInspect;
 const closeMount=mountGameCats;
-mountGameCats=function(){closeMount();app.querySelectorAll('.capture-cat .game-cat-svg').forEach(svg=>{if(svg.dataset.framed)return;svg.dataset.framed='1';{if(!svg.isConnected)return;let points=[];const inverse=svg.getScreenCTM()?.inverse();if(!inverse)return;svg.querySelectorAll('path,ellipse,circle,polygon').forEach(el=>{if(el.closest('defs,clipPath,mask'))return;for(let n=el;n&&n!==svg;n=n.parentElement){const s=getComputedStyle(n);if(s.display==='none'||s.visibility==='hidden'||Number(s.opacity)===0)return;}const r=el.getBoundingClientRect();if(!r.width&&!r.height)return;points.push(new DOMPoint(r.left,r.top).matrixTransform(inverse),new DOMPoint(r.right,r.bottom).matrixTransform(inverse));});if(!points.length)return;const x=Math.min(...points.map(p=>p.x)),y=Math.min(...points.map(p=>p.y)),w=Math.max(...points.map(p=>p.x))-x,h=Math.max(...points.map(p=>p.y))-y;svg.setAttribute('viewBox',[x-w*.08,y-h*.1,w*1.16,h*1.2].map(n=>n.toFixed(2)).join(' '));svg.setAttribute('preserveAspectRatio','xMidYMid meet');}});};
+mountGameCats=function(){closeMount();app.querySelectorAll('.capture-cat .game-cat-svg').forEach(svg=>{if(svg.dataset.framed)return;svg.dataset.framed='1';{if(!svg.isConnected)return;let points=[];const inverse=svg.getScreenCTM()?.inverse();if(!inverse)return;svg.querySelectorAll('path,ellipse,circle,polygon').forEach(el=>{if(el.closest('defs,clipPath,mask'))return;for(let n=el;n&&n!==svg;n=n.parentElement){const s=getComputedStyle(n);if(s.display==='none'||s.visibility==='hidden'||Number(s.opacity)===0)return;}const r=el.getBoundingClientRect();if(!r.width&&!r.height)return;points.push(new DOMPoint(r.left,r.top).matrixTransform(inverse),new DOMPoint(r.right,r.bottom).matrixTransform(inverse));});if(!points.length)return;const x=Math.min(...points.map(p=>p.x)),y=Math.min(...points.map(p=>p.y)),w=Math.max(...points.map(p=>p.x))-x,h=Math.max(...points.map(p=>p.y))-y;const ratio=svgRigs.get(svg)?.rig.d.age==='kitten'?.74/1.25:1,width=w*1.16/ratio,height=h*1.2/ratio;svg.setAttribute('viewBox',[x+w/2-width/2,y+h*1.1-height,width,height].map(n=>n.toFixed(2)).join(' '));svg.setAttribute('preserveAspectRatio','xMidYMid meet');}});};
 renderTrapInspect=function(state,cat){const t=document.createElement('template');t.innerHTML=closeEncounter(state,cat);const frame=t.content.querySelector('.capture-footprint'),cage=frame?.querySelector('.capture-cage');if(cage)frame.replaceWith(cage);const food=t.content.querySelector('.capture-food');if(food)food.innerHTML=bookImage(bowlSVG(false,100));return t.innerHTML;};
 const encounterCloseStyle=document.createElement('style');encounterCloseStyle.textContent=`
 #app .capture-inspect{position:absolute;inset:0;background-image:none!important;padding:0;display:block}
@@ -294,10 +311,10 @@ const progressionStyle=document.createElement('style');progressionStyle.textCont
 `;document.head.appendChild(progressionStyle);
 
 // Daily discovery: local calendar day, once per save, not per cat or simulated day.
-function discoveryDay(now=new Date(gameNow())){return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;}
+function discoveryDay(now=new Date(gameNow())){return careDayKey(now,true);}
 function discoveryAvailable(state){return getCat(state).status==='raising'&&(!state.dailyDiscovery?.lastDay||state.dailyDiscovery.lastDay<discoveryDay());}
 const discoveryReduce=reduceGameState;
-function discoveryScene(state){return state.campaign.phase==='room'&&!state.ui.modal&&!state.ui.layoutMode&&!state.ui.holdingCat&&!state.ui.careAnimation&&!state.campaign.requiredVisit&&discoveryAvailable(state);}
+function discoveryScene(state){return state.campaign.phase==='room'&&!state.ui.modal&&!state.ui.layoutMode&&!state.ui.holdingCat&&(!state.ui.careAnimation||['food','water'].includes(state.ui.careAnimation.operation))&&!state.campaign.requiredVisit&&discoveryAvailable(state);}
 reduceGameState=function(state,action){
  if(['ROAM_CAT','FINISH_PLAY'].includes(action.type)&&discoveryScene(state))return state;
  const next=discoveryReduce(state,action);
@@ -360,7 +377,7 @@ reduceGameState=function(state,action){
  const next=expressiveReducer(state,action),before=getCat(state),after=getCat(next);
  if(state.campaign.phase==='room'&&next.campaign.phase==='room'&&before.id===after.id&&!document.hidden&&!state.ui.modal&&!state.ui.layoutMode){
   const poses=[];
-  if(after.body.foodLevel<before.body.foodLevel)poses.push('eat');
+  if(after.body.foodLevel<before.body.foodLevel&&!discoveryScene(state))poses.push('eat');
   if(after.body.litter>before.body.litter)poses.push('poop');
   if(after.body.vomit>before.body.vomit)poses.push('vomit');
   if(poses.length){const now=Date.now(),point=getCatPoint(state);catLifeCues=poses.map((pose,i)=>{const started=now+800+i*3600;return {pose,catId:before.id,point:pose==='poop'?{...point,...getPlacedPoint(state,'litter',point),y:Math.min(88,getPlacedPoint(state,'litter',point).y+3)}:{...point},started,reveal:started+1800,until:started+3400,previous:pose==='vomit'?before.body.vomit:before.body.litter};});catLifeCues.forEach(scheduleLifeCueRefresh);}

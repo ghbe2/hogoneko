@@ -39,7 +39,8 @@ Object.assign(bookIcons,{
  shelf:bookSVG('<path d="M33 91L202  eighty 225 105  fifty 132Z" fill="#b5824e"/><path d="M fifty 124L225 101 225 117  fifty 141Z" fill="#765639"/><path d="M76 137L82 182 94 182 94 135M190 123L181 175 195 176 207 120Z" fill="#765639"/>'.replaceAll('eighty','80').replaceAll('fifty','50')),
  plant:bookSVG('<path d="M120 140Q103 84 144 32M120 100Q67 97 79 57Q117  fifty 120 100M132  seventy Q146 21 181 41Q184 75 132  seventy" fill="#6d8063" stroke="#6d8063" stroke-width="5"/><path d="M seventy 129Q122 118 174 129L160 185Q123 204 85 186Z" fill="#ba765e"/>'.replaceAll('fifty','50').replaceAll('seventy','70'))
 });
-bookIcons.doll=SB.placed.find(t=>t.type==='friend').svg;bookIcons.sunmat=SB.placed.find(t=>t.type==='sun').svg;bookIcons.hammock=bookIcons.shelf;bookIcons.bug=bookIcons.feather;
+bookIcons.doll=SB.placed.find(t=>t.type==='friend').svg;bookIcons.sunmat=SB.placed.find(t=>t.type==='sun').svg;bookIcons.hammock=bookSVG('<path d="M25 70v64m200-64v64" stroke="#896e50" stroke-width="10"/><path d="M25 80q102 66 200 0-36 107-102 106Q61 180 25 80Z" fill="#acb69a"/><path d="M25 80q98 99 200 0" stroke="#718269" fill="none" stroke-width="6"/>');
+bookIcons.bug=bookSVG('<path d="M35 186L143 67" stroke="#88674b" stroke-width="8"/><path d="M143 67q24-30 35-9" fill="none" stroke="#b39973" stroke-width="3"/><path d="M178 65q-42-39-45-11-1 19 42 19-30 8-21 24 17 14 28-26 11 33 27 20 10-17-20-24 34-3 32-21-10-21-43 19Z" fill="#cda27d"/><path d="m178 61 6 18" stroke="#718168" stroke-width="6"/>');
 for(const [id,svg] of Object.entries(bookIcons)){if(TOOL_META[id])TOOL_META[id].emoji=bookImage(svg);const p=productById(id);if(p)p.emoji=bookImage(svg);if(getItem(id)?.kind==='hand')TOY_EMOJI[id]=bookImage(svg);}
 const bookScene=(id,state)=>SB.scenes[`${id}_${state.season}`]||SB.scenes[`${id}_spring`];
 function bookTime(state){const hour=new Date(gameNow()).getHours();return hour<6||hour>=19?'night':hour<11?'morning':hour<15?'day':'evening';}
@@ -57,6 +58,7 @@ renderPlacedItem=function(placed,state,clue){
  if(id==='bowl')svg=bowlSVG(false,body.foodLevel);if(id==='water')svg=bowlSVG(true,body.waterLevel);
  const t=document.createElement('template');t.innerHTML=html;const el=t.content.querySelector('.placed-item');if(!el)return html;
  el.classList.add('book-furniture');el.style.width=(id==='tower'?90:id==='shelf'||id==='decor_sun'?100:84)+'px';el.style.height=(id==='tower'?150:id==='shelf'||id==='decor_sun'?65:id==='bowl'||id==='water'?45:id==='litter'?65:84)+'px';
+ if(['shelf','hammock'].includes(id)){el.style.width='118px';el.style.height='77px';}
  el.insertAdjacentHTML('afterbegin',bookImage(svg,'book-furniture-art'));
  if(id==='litter'&&body.litter)el.insertAdjacentHTML('beforeend','<span class="book-litter-mark">● ●</span>');
  return t.innerHTML;
@@ -68,7 +70,7 @@ getAvailableRoamPoints=function(state){
  const points=oldBookRoam(state),room=getPlaced(getRoom(state));
  const bounds=document.querySelector('[data-room-world]')?.getBoundingClientRect(),w=bounds?.width||375,h=bounds?.height||560;
  for(const p of points){const placed=room.find(x=>x.itemId===p.requiresItem);if(!placed)continue;
-  const dims={tower:[90,31],box:[84,19],shelf:[100,29],hammock:[84,38]}[p.requiresItem];if(dims){p.x=placed.x+dims[0]/2/w*100;p.y=placed.y+(dims[1]-67*p.scale)/h*100;}}
+  const dims={tower:[90,31],box:[84,19],shelf:[118,35],hammock:[118,35]}[p.requiresItem];if(dims){p.x=placed.x+dims[0]/2/w*100;p.y=placed.y+(dims[1]-67*p.scale)/h*100;}}
  const sun=room.find(p=>p.itemId==='decor_sun');if(sun&&getDurability(state,'decor_sun')>0)points.push({id:'decor_sun',requiresItem:'decor_sun',index:CONFIG.stage1.roamPoints.length+1,x:sun.x+50/w*100,y:sun.y+(29-67*.55)/h*100,scale:.55,distance:'far',surface:'decor_sun'});
  return points;
 };

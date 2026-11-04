@@ -65,7 +65,7 @@ function bondTick(now){
  if(heartShow.live&&draft){
   const result=resolveInteraction(cat,'play',getItem(draft.itemId));
   const used=Number(gameState.ui.usedHandItems['play_'+draft.itemId])||0;
-  const limit=result.affinity==='superMatch'&&!gameState.ui.usedHandItems.heart_overflow?CONFIG.week.heartCapMax:cat.heartCap;
+  const limit=heartGainLimit(cat,result,result.affinity==='superMatch'&&!gameState.ui.usedHandItems.heart_overflow);
   canEarn=Math.min(result.baseHeart-used,limit-cat.heart)-(draft.heartEarned||0)>=.9999;
  }
  cluster.querySelector('.bond-charge').classList.toggle('is-pulsing',canEarn&&!heartShow.flight);

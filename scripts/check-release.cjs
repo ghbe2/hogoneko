@@ -5,6 +5,9 @@ const root = path.resolve(__dirname, '..');
 process.chdir(root);
 const suites = {
  critical:[
+  ['コイン取得と撫でる操作、移動中の模様替え、抱っこ後の表示', 'room-continuity.test.cjs'],
+  ['壁の足場へ玩具で誘導・抱いて降ろす操作', 'room-perch.test.cjs'],
+  ['周回の命名とキーボード相当の表示範囲', 'intake-name-viewport.test.cjs'],
   ['部屋の抱っこ・相性と心・中断復帰', 'room-hold.test.cjs'],
   ['連打・ドラッグ中断・購入・報酬・再読み込み', 'interruption-recovery.test.cjs'],
   ['マップの進行停止', 'town-blocker-shared.test.cjs'],
@@ -20,7 +23,9 @@ const suites = {
   ['一覧スクロール・家具収納・写真スワイプと中断', 'touch-surfaces.test.cjs'],
   ['最初から買い物・家具・育成まで', 'published-alpha-flow.test.cjs'],
   ['場面転換と会話の間', 'scene-beat.test.cjs'],
-  ['6家族の受け渡しと退場', 'adoption-beat.test.cjs'],
+  ['譲渡会の入場と来場者の動き', 'adoption-beat.test.cjs'],
+  ['育成4日目から予約・手術・譲渡・帰宅までのタッチ操作', 'published-alpha-lifecycle.test.cjs'],
+  ['家族への受け渡し、中央での別れ、メールの報酬', 'adoption-farewell-nov.test.cjs'],
   ['通知・報酬・アルバム・再読込', 'mail-album-journey.test.cjs'],
   ['TNRと帰還・報酬の重複防止', 'tnr-return-journey.test.cjs'],
   ['手術の見出しと余白', 'surgery-heading-layout.test.cjs']

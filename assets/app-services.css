@@ -15,4 +15,4 @@ button.album-print>span{display:block;height:122px;background:#c4b99d}
 .photo-phone>figure>div{min-height:0;background:radial-gradient(ellipse at 50% 30%,#e1d9c8,#b8ad91)}
 .photo-phone figcaption{text-align:center;font-size:16px;padding-top:8px}
 
-.photo-phone>figure{position:relative;touch-action:pan-y;overflow:hidden}.photo-phone>figure>div{overflow:hidden}.photo-arrows{position:absolute;inset:45% 0 auto;display:flex;justify-content:space-between;pointer-events:none}.photo-arrows button{pointer-events:auto;width:44px;height:48px;border:0;border-radius:50%;background:#fff8e9bb;color:#8f4b3b;font:28px/1 sans-serif;padding:0}
+.photo-phone>figure{position:relative;touch-action:pan-y;overflow:hidden}.photo-phone>figure>div{overflow:hidden}.photo-arrows{position:absolute;inset:45% 6px auto;display:flex;justify-content:space-between;pointer-events:none}.photo-arrows button{pointer-events:auto;width:44px;height:48px;border:0;border-radius:50%;background:#fff8e9bb;color:#8f4b3b;font:28px/1 sans-serif;padding:0}

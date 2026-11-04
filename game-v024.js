@@ -1,6 +1,9 @@
 'use strict';
 const paperGlyph=body=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">${body}</svg>`;
 const careArt={
+ chickenFood:paperGlyph('<path d="M23 13h35l3 54H19Z" fill="#cea075"/><path d="M23 13h35v7H23Z" fill="#986f54"/><path d="M20 32h40l1 20H20Z" fill="#eee0bf"/><path d="M31 46q-1-11 7-11 10-8 13 2 4 10-9 10l-7 6-5-4Z" fill="#bc875f"/>'),
+ soupFood:paperGlyph('<path d="m17 22 42-4 6 45-42 5Z" fill="#98a88e"/><path d="m18 24 40-4" stroke="#637a65" stroke-width="5"/><path d="M28 44q12-5 26-2-1 14-12 15-11 0-14-13Z" fill="#fff0cd"/><path d="M36 38q-3-5 0-9m8 8q-2-4 1-8" fill="none" stroke="#efe7ca" stroke-width="2"/>'),
+ kittenFood:paperGlyph('<path d="M21 12h38l-2 11 6 42q-20 7-46 0l6-42Z" fill="#d7bd89"/><path d="M21 12h38v8H21Z" fill="#819585"/><path d="M20 36q20-8 41 0l2 19q-24 7-46 0Z" fill="#faf0d6"/><path d="M31 48v-9l6 4q4-2 8 0l5-4v10q-1 8-10 8t-9-9Z" fill="#879786"/>'),
  hand:paperGlyph('<path d="M24 68L18 46Q14 36 20 35L28 44 26 19Q26 12 31 15L36 36 36 11Q39 5 42 13L44 35 48 15Q53 10 54 18L52 39 59 25Q65 22 63 31L59 56Q51 75 24 68Z" fill="#bf9872"/><path d="M32 48q9-5 16 1" stroke="#8f6e51" stroke-width="2" fill="none"/>'),
  comb:paperGlyph('<path d="M14 17Q40 10 64 17L63 31 14 32Z" fill="#81927d"/><path d="M18 29v31m8-31v33m8-33v32m8-32v33m8-33v32m8-32v29" stroke="#a2a88b" stroke-width="4" stroke-linecap="round"/>'),
  wipe:paperGlyph('<path d="M14 29L58 22 70 62 23 70Z" fill="#9eaa91"/><path d="M26 32L48 13 61 21 53 40Z" fill="#f2e4c8"/><path d="M25 50l30-5" stroke="#e1d6b7" stroke-width="5"/>'),
@@ -14,7 +17,7 @@ const careArt={
 };
 for(const t of TOUCH_TOOLS)t.emoji=bookImage(careArt[t.id==='pet'?'hand':t.id==='comb'?'comb':'wipe']);
 for(const [id,key] of Object.entries({clean_paper:'roll',clean_wipe:'wipe',clean_spray:'spray'})){getCleaner(id).emoji=bookImage(careArt[key]);bookIcons[id]=careArt[key];}
-for(const [id,key] of Object.entries({food_wet:'tin',food_fish:'fish',food_chicken:'tin',food_soup:'tin'})){getFood(id).emoji=bookImage(careArt[key]);bookIcons[id]=careArt[key];}
+for(const [id,key] of Object.entries({food_kitten:'kittenFood',food_wet:'tin',food_fish:'fish',food_chicken:'chickenFood',food_soup:'soupFood'})){getFood(id).emoji=bookImage(careArt[key]);bookIcons[id]=careArt[key];}
 for(const [id,key] of Object.entries({groom_comb:'comb',groom_wipe:'wipe'}))bookIcons[id]=careArt[key];
 for(const product of SHOP_CATALOG)if(bookIcons[product.id])product.emoji=bookImage(bookIcons[product.id]);
 const faceSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');faceSvg.setAttribute('xmlns','http://www.w3.org/2000/svg');faceSvg.setAttribute('viewBox','280 112 160 130');

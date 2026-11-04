@@ -80,8 +80,17 @@ reduceGameState=function(state,action){
 let roomCallCueTimer=0;
 function showRoomCallCue(state,stage,call){
  clearTimeout(roomCallCueTimer);const cue=state.ui.roomCallCue,elapsed=Date.now()-(cue?.at||0);if(!cue||cue.catId!==getCat(state).id||elapsed<0||elapsed>=2200||state.ui.modal)return;
+ let temporaryCaller;
+ if (!call) {
+  temporaryCaller=document.createElement('span');
+  temporaryCaller.className='room-call-icon is-calling';
+  temporaryCaller.innerHTML=callPerson;
+  temporaryCaller.style.pointerEvents='none';
+  temporaryCaller.setAttribute('aria-hidden','true');
+  stage.append(temporaryCaller);
+ }
  const bubble=document.createElement('output');bubble.className='room-call-feedback';bubble.setAttribute('aria-live','polite');bubble.textContent=roomCallPhrase(getCat(state));bubble.style.animationDelay=-elapsed+'ms';stage.append(bubble);call?.classList.add('is-calling');
- roomCallCueTimer=setTimeout(()=>{bubble.remove();call?.classList.remove('is-calling');},2200-elapsed);
+ roomCallCueTimer=setTimeout(()=>{bubble.remove();temporaryCaller?.remove();call?.classList.remove('is-calling');},2200-elapsed);
 }
 function roomTravelArt(home){const cat=home?residentCats(gameState)[0]:null;const frame=RoomControlArt.frame.replace('class="rim"','class="corner-frame"').replace('<polygon','<g class="travel-frame"><polygon').replace('</svg>','</g></svg>');const picture=home?roomHomeArt().replace(/<g class="travel-frame">[\s\S]*?<\/g>/,''):RoomControlArt.map;return frame+'<span class="corner-picture">'+picture+'</span>'+(cat?'<span class="home-travel-cat">'+renderCatArt(cat)+'</span>':'');}
 render=function(state){
@@ -130,7 +139,7 @@ render=function(state){
   if(cat.body.surgeryFoodStored!==undefined)stage.querySelectorAll('.placed-item.item-bowl').forEach(n=>n.remove());
   if(room&&!state.ui.modal&&!state.ui.layoutMode&&!firstActive(state)&&(!state.onboarding.homeTour||state.onboarding.homeTour==='done')&&state.onboarding.appIntro!=='prompt'){
    const notice=careNotice(state),waiting=plan.surgeryDay&&cat.surgery?.status!=='done'&&cat.body.days+1<=plan.surgeryDay;
-   if(notice||waiting){const status=document.createElement('button');status.className='room-care-status';if(notice)status.dataset.careNotice='';else status.dataset.action='open-notebook';status.textContent=notice?.type==='ready'?'2,000gに到達。右上のスマホで予定を確認':notice?.type==='surgery'?'今日は手術の日。左上の地図から動物病院へ':notice?.type==='event'?'譲渡会の日。左上の地図から保護センターへ':cat.body.surgeryFoodStored!==undefined?'手術に備えて、ごはんはお休み':`手術の予約：${plan.surgeryDay}日目`;stage.append(status);}
+   if(notice||waiting){const status=document.createElement('button');status.className='room-care-status';if(notice)status.dataset.careNotice='';else status.dataset.action='open-notebook';status.textContent=notice?.type==='ready'?`${surgeryWeightGoal(cat).toLocaleString()}gに到達。右上のスマホで予定を確認`:notice?.type==='surgery'?'今日は手術の日。左上の地図から動物病院へ':notice?.type==='event'?'譲渡会の日。左上の地図から保護センターへ':cat.body.surgeryFoodStored!==undefined?'手術に備えて、ごはんはお休み':`手術の予約：${plan.surgeryDay}日目`;stage.append(status);}
   }
  }
  app.querySelectorAll('.room-travel-icon').forEach(n=>n.remove());

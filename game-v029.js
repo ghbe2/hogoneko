@@ -46,7 +46,7 @@ renderMapShop=function(state){
  const e=surgeryEligibility(state),medical=cat.surgery,done=medical?.status==='done',busy=medical?.status==='in_progress',poor=state.coins<RELEASE_ECONOMY.surgery;
  const title=busy?'耳に、小さな目印を':done?'不妊去勢手術が終わりました':'TNRへ、不妊去勢手術の準備';
  const plan=carePlan(cat),booked=!!plan.surgeryDay;
- const hint=done?`譲渡会は${medical.completedDay+2}日目。おうちでゆっくり過ごそう。`:!e.healthy?'体調が整ってから申し込みましょう。':!e.weightReady?`目標は2,000g。あと${Math.ceil(e.goal-cat.body.weight).toLocaleString('ja-JP')}gです。`:cat.age==='kitten'?'まずは最初の１週間、子猫の成長を見守りましょう。':e.dayReady?'今日は手術の日。ごはんをお休みして来院できました。':booked?`${plan.surgeryDay}日目の手術を予約しました。予約中は、ごはんをお休みします。`:e.day+1<e.minDay?`手術は最短${e.minDay}日目。おうちで落ち着く時間も必要です。`:'アプリから翌日の手術を予約できます。予約後はごはんを休み、当日も2,000g以上・体調良好が条件です。';
+ const hint=done?`譲渡会は${medical.completedDay+2}日目。おうちでゆっくり過ごそう。`:!e.healthy?'体調が整ってから申し込みましょう。':!e.weightReady?`目標は${e.goal.toLocaleString()}g。あと${Math.ceil(e.goal-cat.body.weight).toLocaleString('ja-JP')}gです。`:e.dayReady?'今日は手術の日。ごはんをお休みして来院できました。':booked?`${plan.surgeryDay}日目の手術を予約しました。予約中は、ごはんをお休みします。`:e.day+1<e.minDay?`手術は最短${e.minDay}日目。おうちで落ち着く時間も必要です。`:`アプリから翌日の手術を予約できます。予約後はごはんを休み、当日も${e.goal.toLocaleString()}g以上・体調良好が条件です。`;
  const row=(label,value,ok)=>`<div class="surgery-check"><span class="medical-check ${ok?'ok':''}">${ok?'✓':'○'}</span><span>${label}</span><strong>${value}</strong></div>`;
 const body=`<section class="surgery-sheet ${done?'surgery-done':''} ${busy?'surgery-busy':''}"><div class="surgery-room"><div class="surgery-cat">${renderCatArt(cat)}</div>${busy?'<span class="surgery-snip" aria-hidden="true"><i></i><b>ぱっちん</b></span>':done?'<span class="surgery-stamp">手術済み ✓</span>':''}</div><header><small>${surgeryText(cat.name||'この子')}・保護生活${e.day}日目</small><h1>${title}</h1></header>${busy?'<p class="surgery-copy" role="status">不妊去勢手術を終えた目印に、<br>耳に小さなカットを。</p>':done?`<div class="surgery-receipt"><span>手術の記録</span><strong>${medical.completedDay}日目</strong><span>${state.coins<0?'医療費（未払いあり）':'お支払い済み'}</span><strong>${medical.paid} コイン</strong></div><p class="surgery-copy">${hint}</p>`:`<div class="surgery-checks">${row('体重',`${Math.round(cat.body.weight).toLocaleString('ja-JP')} / ${e.goal.toLocaleString('ja-JP')}g`,e.weightReady)}${row('体調',e.healthy?'落ち着いています':'準備中',e.healthy)}</div><p class="surgery-copy" role="status">${hint}</p><div class="surgery-price"><span>手術</span><strong>10 コイン</strong><small>所持 ${state.coins} コイン</small></div>`}<small class="medical-footnote">このゲーム内の目安です。現実の手術は獣医師が判断します。</small></section>`;
  const returnHome=state.campaign.requiredVisit||state.campaign.medicalStage;
@@ -83,7 +83,7 @@ renderNotebook=function(state,cat){
 };
 const beforeSurgeryGuide=getScreenGuide;
 getScreenGuide=function(state){
- if(state.campaign.phase==='shop'&&state.campaign.shopId==='clinic'&&getCat(state).status==='raising')return {title:'からだの準備を確認しよう',detail:'体重2,000g以上・体調良好になったら、翌日の手術を申し込めます。'};
+ if(state.campaign.phase==='shop'&&state.campaign.shopId==='clinic'&&getCat(state).status==='raising')return {title:'からだの準備を確認しよう',detail:`体重${surgeryWeightGoal(getCat(state)).toLocaleString()}g以上・体調良好になったら、翌日の手術を申し込めます。`};
  return beforeSurgeryGuide(state);
 };
 let surgeryTimer=null,surgeryTimerKey=null,surgerySnipFrame=0;

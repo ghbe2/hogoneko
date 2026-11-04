@@ -28,6 +28,12 @@ const {openGame}=require('./helpers/game-page.cjs');
    await page.locator('[data-command="clean"]').tap();
    await page.locator('[data-action="equip-cleaner"][data-cleaner="starter_clean"]').tap();
    assert.equal(await page.evaluate(()=>gameState.ui.equippedCleaner),'starter_clean');
+   if(await page.locator('.discovery-pickup').isVisible()){
+    await page.locator('.room-call-icon').tap();
+    assert.equal(await page.locator('.room-call-feedback').count(),0,'coin play takes priority over calling');
+    await page.locator('.discovery-pickup').tap();
+    await page.waitForFunction(()=>!document.querySelector('.discovery-pickup'));
+   }
    await page.locator('.room-call-icon').tap();
    assert.equal(await page.locator('.room-call-feedback').innerText(),'こむぎ');
    assert.deepEqual(errors,[]);
