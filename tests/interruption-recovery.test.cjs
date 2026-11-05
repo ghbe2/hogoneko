@@ -7,13 +7,24 @@ async function startDrag(p,g,selector){const r=await p.locator(selector).boundin
 const tests={
  async guide(p,g){await p.evaluate(()=>{gameState.alpha.firstCatId=getCat(gameState).id;gameState.album=[];gameState.onboarding={...gameState.onboarding,status:'active',flowVersion:1,guide:'fieldHello',guideEnteredAt:Date.now()-5000};gameState.inventory.food_dry=0;gameState.inventory.food_wet=1;gameState.campaign.fieldFood='food_dry';render(gameState);saveGameState(gameState)});await p.waitForFunction(()=>!!app.querySelector('[data-first="next"]')&&!app.querySelector('[data-reading="true"]'));await burst(p,'[data-first="next"]');await p.waitForFunction(()=>gameState.onboarding.guide==='bait');assert(await p.locator('.encounter-trap').isDisabled(),'rapid next cannot skip bait');await reload(p);assert.equal(await p.evaluate(()=>gameState.onboarding.guide),'bait');await p.waitForTimeout(4500);await p.waitForFunction(()=>!app.querySelector('[data-reading="true"]'));const r=await p.locator('.bait-carousel').boundingBox();await g.move(r.x+r.width*.75,r.y+r.height/2);await g.down();await g.move(r.x+r.width*.2,r.y+r.height/2,{steps:12});await g.up();await p.waitForFunction(()=>gameState.onboarding.guide==='trap');assert(await p.locator('.encounter-trap').isEnabled(),'input works after rapid next and reload');
  },
- async furniture(p,g){await p.locator('[data-action="toggle-layout"]').tap();const placed=await p.evaluate(()=>JSON.stringify(getPlaced(getRoom(gameState))));await startDrag(p,g,'[data-layout-item="box"]');assert(await p.locator('.layout-drag-preview').count());
+ async furniture(p,g){await p.locator('[data-action="toggle-layout"]').tap();let placed=await p.evaluate(()=>JSON.stringify(getPlaced(getRoom(gameState))));await startDrag(p,g,'[data-layout-item="box"]');assert(await p.locator('.layout-drag-preview').count());
   // Focus-loss handler test. This does not claim to reproduce an iOS app suspension.
   await p.evaluate(()=>window.dispatchEvent(new Event('blur')));assert.equal(await p.evaluate(()=>dragDraft),null,'blur releases furniture drag');assert.equal(await p.locator('.layout-drag-preview').count(),0);await g.cancel();assert.equal(await p.evaluate(()=>JSON.stringify(getPlaced(getRoom(gameState)))),placed);
+  await startDrag(p,g,'[data-layout-item="box"]');
+ const viewport=p.viewportSize();await p.setViewportSize({...viewport,height:viewport.height-30});
+ await p.waitForFunction(()=>dragDraft===null);
+ assert.equal(await p.locator('.layout-drag-preview').count(),0,'viewport resize clears preview');
+ await g.cancel();await p.setViewportSize(viewport);
+  placed=await p.evaluate(()=>{render(gameState);return JSON.stringify(getPlaced(getRoom(gameState)))});
   await startDrag(p,g,'[data-layout-item="box"]');await reload(p);await g.cancel();assert.equal(await p.locator('.layout-drag-preview,.command-ghost').count(),0);assert.equal(await p.evaluate(()=>JSON.stringify(getPlaced(getRoom(gameState)))),placed,'reload during drag preserves original placement');
   if(!await p.evaluate(()=>gameState.ui.layoutMode))await p.locator('[data-action="toggle-layout"]').tap();await startDrag(p,g,'[data-layout-item="box"]');await g.cancel();await p.locator('.layout-done').tap();assert.equal(await p.evaluate(()=>gameState.ui.layoutMode),false,'can finish after interrupted gesture');
  },
  async trap(p,g){await p.evaluate(()=>{gameState.campaign={...gameState.campaign,phase:'field',area:'a1',fieldFood:'food_wet',trapWaiting:false,trapReady:false,trapPlaced:false};gameState.inventory.food_wet=5;render(gameState);saveGameState(gameState)});await p.waitForFunction(()=>!guideNavigationBusy);await startDrag(p,g,'.encounter-trap');assert(await p.locator('.field-drag-ghost').count());await p.evaluate(()=>window.dispatchEvent(new Event('blur')));assert.equal(await p.evaluate(()=>fieldDragDraft),null,'blur releases trap');assert.equal(await p.locator('.field-drag-ghost').count(),0);await g.cancel();
+  await startDrag(p,g,'.encounter-trap');
+ const viewport=p.viewportSize();await p.setViewportSize({...viewport,height:viewport.height-30});
+ await p.waitForFunction(()=>fieldDragDraft===null);
+ assert.equal(await p.locator('.field-drag-ghost').count(),0,'viewport resize clears preview');
+ await g.cancel();await p.setViewportSize(viewport);
   await startDrag(p,g,'.encounter-trap');await reload(p);await g.cancel();assert.equal(await p.evaluate(()=>!!gameState.campaign.trapWaiting),false,'unfinished placement not committed');assert.equal(await p.locator('.field-drag-ghost').count(),0);
   await startDrag(p,g,'.encounter-trap');const bounds=await p.evaluate(()=>fieldDragDraft.bounds);await g.move((bounds.left+bounds.right)/2,(bounds.top+bounds.bottom)/2,{steps:8});await g.up();await p.waitForFunction(()=>gameState.campaign.trapWaiting);const saved=await p.evaluate(()=>({food:gameState.inventory.food_wet,pos:gameState.campaign.trapPosition}));await reload(p);assert.deepEqual(await p.evaluate(()=>({food:gameState.inventory.food_wet,pos:gameState.campaign.trapPosition})),saved);assert.equal(await p.locator('.illustrated-trap').count(),1);
  },

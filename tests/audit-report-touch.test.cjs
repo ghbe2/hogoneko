@@ -1,0 +1,9 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),{openGame}=require('./helpers/game-page.cjs');
+(async()=>{const b=await chromium.launch({channel:'chrome'});try{for(const [width,height]of [[320,568],[375,812]]){const p=await b.newPage({viewport:{width,height},hasTouch:true,isMobile:true,acceptDownloads:true});await openGame(p,'room');await p.evaluate(()=>{titleScreenOpen=false;gameState.onboarding.status='done';render(gameState)});
+ let mode='fail',calls=0;await p.route('https://script.google.com/**',async route=>{calls++;if(mode==='fail')return route.abort();await new Promise(r=>setTimeout(r,700));return route.fulfill({status:200,contentType:'application/json',body:'{"ok":true}'});});
+ await p.locator('[data-alpha-report]').tap();await p.locator('.alpha-report').waitFor();await p.locator('[name=steps]').fill('入力試験');await p.locator('[name=description]').fill('送信失敗からの再開試験');
+ await p.locator('[name=image]').uncheck();const download=p.waitForEvent('download');await p.locator('[data-report-save]').tap();const d=await download;assert(d.suggestedFilename().endsWith('.json'));
+ await p.locator('.alpha-report [type=submit]').tap();await p.waitForFunction(()=>document.querySelector('.report-status').textContent.includes('送信を確認できません'));
+ mode='ok';await p.locator('.alpha-report [type=submit]').tap();await p.waitForFunction(()=>document.querySelector('.report-status').textContent.includes('受け付けました'));assert.equal(calls,2);
+ await p.screenshot({path:'tests/screenshots/report-touch-'+width+'.png'});await p.locator('[data-report-close]').tap();assert.equal(await p.locator('.alpha-report').count(),0);assert.equal(await p.locator('#app').evaluate(e=>e.inert),false);
+ console.log('PASS',width,'report input, local file, failed send, retry and close; network mocked');await p.close();}}finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});

@@ -1,0 +1,331 @@
+[
+  {
+    "id": "01",
+    "area": "入口・案内",
+    "operation": "パスワード入力・開始・再開",
+    "suite": "audit-login-touch.test.cjs",
+    "limits": "公開用ファイルで誤パスワード→再入力→再読込。iOS自動入力・キーボードは実機"
+  },
+  {
+    "id": "02",
+    "area": "入口・案内",
+    "operation": "冒頭のつぎへ・先輩のつぎへ",
+    "suite": "first-journey-touch.test.cjs",
+    "limits": "台詞途中・連打は一部の案内で確認"
+  },
+  {
+    "id": "03",
+    "area": "街",
+    "operation": "上下スワイプ・端の矢印・行き先タップ",
+    "suite": "town-blocker-shared.test.cjs",
+    "limits": "実機の短いスワイプ・ブラウザ端の戻る操作"
+  },
+  {
+    "id": "04",
+    "area": "保護",
+    "operation": "餌を横に送る・直接選ぶ",
+    "suite": "bait-touch-input.test.cjs",
+    "limits": "Touchのみ・二本指・短い移動・中断・再読み込み。WebKitは合成入力"
+  },
+  {
+    "id": "05",
+    "area": "保護",
+    "operation": "保護器を掴む・運ぶ・離す",
+    "suite": "bait-touch-input.test.cjs",
+    "limits": "Touchのみ。実機で報告が継続した経路のため最優先"
+  },
+  {
+    "id": "06",
+    "area": "保護",
+    "operation": "保護器を運ぶ途中で中断・置き直す",
+    "suite": "interruption-recovery.test.cjs",
+    "limits": "blurによる中断の模擬。OSの中断は実機"
+  },
+  {
+    "id": "07",
+    "area": "保護",
+    "operation": "保護器を開ける・初診に向かう",
+    "suite": "first-journey-touch.test.cjs",
+    "limits": "捕獲待ち・場面転換を含む"
+  },
+  {
+    "id": "08",
+    "area": "病院",
+    "operation": "初診開始・カルテ確認・支払い",
+    "suite": "first-journey-touch.test.cjs",
+    "limits": "支払い重複を確認"
+  },
+  {
+    "id": "09",
+    "area": "病院",
+    "operation": "健康チェック・治療・残高不足",
+    "suite": "audit-clinic-touch.test.cjs",
+    "limits": "残高0から受診・治療・再読み込み・再受診。全病状の個別組合せは未確認"
+  },
+  {
+    "id": "10",
+    "area": "店",
+    "operation": "商品タブ・一覧のスクロール",
+    "suite": "touch-surfaces.test.cjs",
+    "limits": "スクロールで商品が誤選択されないこと"
+  },
+  {
+    "id": "11",
+    "area": "店",
+    "operation": "商品詳細・数量・カート・購入・戻る",
+    "suite": "interruption-recovery.test.cjs",
+    "limits": "連打・再読み込み・二重購入防止"
+  },
+  {
+    "id": "12",
+    "area": "部屋準備",
+    "operation": "家具一覧・選択・配置・完了",
+    "suite": "touch-surfaces.test.cjs",
+    "limits": "スクロールと選択の区別"
+  },
+  {
+    "id": "13",
+    "area": "部屋準備",
+    "operation": "家具を移動・収納・無効な場所へ離す",
+    "suite": "interruption-recovery.test.cjs",
+    "limits": "中断・再読み込み・元の配置を保持"
+  },
+  {
+    "id": "14",
+    "area": "部屋準備",
+    "operation": "壁の足場・窓との重なり・配置",
+    "suite": "room-perch.test.cjs",
+    "limits": "猫の移動を含む。実機ドラッグは別途"
+  },
+  {
+    "id": "15",
+    "area": "命名",
+    "operation": "名前入力・確定・キーボード開閉",
+    "suite": "intake-name-viewport.test.cjs",
+    "limits": "2・3匹目を含む。実キーボードは未確認"
+  },
+  {
+    "id": "16",
+    "area": "迎え入れ",
+    "operation": "名前を呼ぶ・出てこない時の相談",
+    "suite": "second-cat-help.test.cjs",
+    "limits": "所持金・家具・相談の分岐"
+  },
+  {
+    "id": "17",
+    "area": "周回",
+    "operation": "2・3匹目の案内・名前・育成再開",
+    "suite": "first-activity-repeat.test.cjs",
+    "limits": "初回限定案内の混入確認"
+  },
+  {
+    "id": "18",
+    "area": "部屋",
+    "operation": "猫をタップして撫でる・コイン回収",
+    "suite": "room-continuity.test.cjs",
+    "limits": "動作優先順位と猫の位置"
+  },
+  {
+    "id": "19",
+    "area": "部屋",
+    "operation": "猫を掴む・運ぶ・離す・逃げる",
+    "suite": "room-hold.test.cjs",
+    "limits": "相性・中断・再読み込み"
+  },
+  {
+    "id": "20",
+    "area": "部屋",
+    "operation": "ご飯と水の選択・補充",
+    "suite": "care-entry-touch.test.cjs",
+    "limits": "ChromeタッチとWebKitの入力試験"
+  },
+  {
+    "id": "21",
+    "area": "部屋",
+    "operation": "玩具選択・遊ぶ・離す",
+    "suite": "tool-multitouch-cleanup.test.cjs",
+    "limits": "二本指・キャンセル・街への移動"
+  },
+  {
+    "id": "22",
+    "area": "部屋",
+    "operation": "掃除道具選択・掃除・離す",
+    "suite": "tool-multitouch-cleanup.test.cjs",
+    "limits": "二本指・キャンセル・残留表示"
+  },
+  {
+    "id": "23",
+    "area": "部屋",
+    "operation": "収納棚・持ち物タブ・一覧",
+    "suite": "touch-surfaces.test.cjs",
+    "limits": "一覧の縦スクロール"
+  },
+  {
+    "id": "24",
+    "area": "部屋",
+    "operation": "アプリ・模様替え・街への出入り",
+    "suite": "room-hold.test.cjs",
+    "limits": "ドラッグ中の移動と後始末"
+  },
+  {
+    "id": "25",
+    "area": "部屋",
+    "operation": "呼ぶ・触る道具の選択",
+    "suite": "care-entry-touch.test.cjs",
+    "limits": "通常操作。すべてのアイテム個別の組合せは対象外"
+  },
+  {
+    "id": "26",
+    "area": "アプリ",
+    "operation": "基本情報・バイタル・閉じる",
+    "suite": "first-journey-touch.test.cjs",
+    "limits": "初回アプリ案内を含む"
+  },
+  {
+    "id": "27",
+    "area": "アプリ",
+    "operation": "予定・予約・絶食の案内",
+    "suite": "published-alpha-lifecycle.test.cjs",
+    "limits": "準備済み4日目から試験"
+  },
+  {
+    "id": "28",
+    "area": "アプリ",
+    "operation": "ミャオペイ・報酬・途中で閉じる",
+    "suite": "mail-album-journey.test.cjs",
+    "limits": "実広告配信・通信途絶は別項目"
+  },
+  {
+    "id": "29",
+    "area": "メール",
+    "operation": "通知・一覧・開封・閉じる",
+    "suite": "mail-album-journey.test.cjs",
+    "limits": "未読・既読・並び順"
+  },
+  {
+    "id": "30",
+    "area": "メール",
+    "operation": "プレゼント・追加報酬・再読み込み",
+    "suite": "interruption-recovery.test.cjs",
+    "limits": "演出途中・二重受取防止"
+  },
+  {
+    "id": "31",
+    "area": "アルバム",
+    "operation": "一覧スクロール・写真を開く",
+    "suite": "touch-surfaces.test.cjs",
+    "limits": "スクロールによる誤タップ防止"
+  },
+  {
+    "id": "32",
+    "area": "アルバム",
+    "operation": "左右スワイプ・矢印・戻る",
+    "suite": "touch-surfaces.test.cjs",
+    "limits": "二本指・中断後の再操作"
+  },
+  {
+    "id": "33",
+    "area": "保護センター",
+    "operation": "好み相談・選択・受取らない・受取る",
+    "suite": "center-gift-flow.test.cjs",
+    "limits": "観察・梱包演出中の操作"
+  },
+  {
+    "id": "34",
+    "area": "保護センター",
+    "operation": "先輩のアドバイス・ページ・閉じる",
+    "suite": "audit-center-touch.test.cjs",
+    "limits": "全質問を開く・全ページを進める・受付へ戻る"
+  },
+  {
+    "id": "35",
+    "area": "手術",
+    "operation": "病院へ移動・手術・帰宅",
+    "suite": "published-alpha-lifecycle.test.cjs",
+    "limits": "訪問の案内から帰宅まで"
+  },
+  {
+    "id": "36",
+    "area": "譲渡会",
+    "operation": "申込・入場・家族への受渡し・別れ",
+    "suite": "published-alpha-lifecycle.test.cjs",
+    "limits": "演出中のUI表示を含む"
+  },
+  {
+    "id": "37",
+    "area": "TNR",
+    "operation": "かごを開く・広告中断・帰宅",
+    "suite": "tnr-return-journey.test.cjs",
+    "limits": "再読み込みと報酬重複防止"
+  },
+  {
+    "id": "38",
+    "area": "帰還",
+    "operation": "帰ってきた猫・お土産・閉じる",
+    "suite": "tnr-return-journey.test.cjs",
+    "limits": "再読み込み・再受取防止"
+  },
+  {
+    "id": "39",
+    "area": "子猫",
+    "operation": "初診後の案内・体重・手術条件",
+    "suite": "care-balance-nov.test.cjs",
+    "limits": "数値検証。子猫専用の全行程タッチ通しは未確認"
+  },
+  {
+    "id": "40",
+    "area": "複数飼育",
+    "operation": "猫切替・増築・部屋の移動",
+    "suite": "audit-household-touch.test.cjs",
+    "limits": "タッチで猫切替・増築・移動。収納棚を開閉した状態も確認"
+  },
+  {
+    "id": "41",
+    "area": "チェック操作",
+    "operation": "6時間・24時間進める",
+    "suite": "debug-clock.test.cjs",
+    "limits": "日付更新と保存。実機連打は未確認"
+  },
+  {
+    "id": "42",
+    "area": "α報告",
+    "operation": "開く・入力・添付切替・保存・送信",
+    "suite": "audit-report-touch.test.cjs",
+    "limits": "送信応答は模擬。Googleへの実送信と実機の入力は別途"
+  },
+  {
+    "id": "43",
+    "area": "端末",
+    "operation": "画面回転・画面端・ホーム移動・ロック",
+    "suite": "interruption-recovery.test.cjs",
+    "limits": "PC上のblurとサイズ変更のみ。iOS実機必須"
+  },
+  {
+    "id": "44",
+    "area": "端末",
+    "operation": "再読み込み・タブ復帰・通信停止・メモリ解放",
+    "suite": "audit-network-recovery.test.cjs",
+    "limits": "ローカルHTTPで通信断・再読込失敗・再接続・タブ閉鎖後の保存復元。iOSのメモリ解放は未確認"
+  },
+  {
+    "id": "45",
+    "area": "子猫",
+    "operation": "保護センターで子猫の説明・迎え入れへ進む",
+    "suite": "audit-center-touch.test.cjs",
+    "limits": "全説明ページをタップ。実機の連続操作は未確認"
+  },
+  {
+    "id": "46",
+    "area": "α報告",
+    "operation": "道具を掴んでいる途中で報告画面を開く・閉じる",
+    "suite": "audit-report-interrupt.test.cjs",
+    "limits": "報告画面を開く処理のみ直接呼出し。道具の開始・終了はタッチ"
+  },
+  {
+    "id": "47",
+    "area": "保護",
+    "operation": "指を離した通知が届かない状態から掴み直す",
+    "suite": "trap-missing-end.test.cjs",
+    "limits": "Touchのみ。指番号の再利用も含む。ChromeとWindows WebKit"
+  }
+]

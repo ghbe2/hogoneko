@@ -4,6 +4,21 @@ const fs = require('node:fs'), path = require('node:path'), crypto = require('no
 const root = path.resolve(__dirname, '..');
 process.chdir(root);
 const suites = {
+ operations:[
+  ['通信切断・再接続・タブ再開とセーブ保持', 'audit-network-recovery.test.cjs'],
+  ['パスワード入力・再読み込み', 'audit-login-touch.test.cjs'],
+  ['保護器の終了通知欠落・指番号再利用', 'trap-missing-end.test.cjs'],
+  ['病院の受付・診察・未払い', 'audit-clinic-touch.test.cjs'],
+  ['保護センターの相談・子猫の案内', 'audit-center-touch.test.cjs'],
+  ['複数飼育・部屋移動・収納棚との重なり', 'audit-household-touch.test.cjs'],
+  ['α報告の入力・保存・送信失敗と再送（模擬応答）', 'audit-report-touch.test.cjs'],
+  ['道具操作中の報告画面と復帰', 'audit-report-interrupt.test.cjs'],
+  ['2匹目の呼びかけと救済', 'second-cat-help.test.cjs'],
+  ['子猫と成猫の育成条件', 'care-balance-nov.test.cjs'],
+  ['好みのおさがり・演出と受け取り', 'center-gift-flow.test.cjs'],
+  ['周回後の基本チュートリアル抑制', 'first-activity-repeat.test.cjs'],
+  ['6時間・24時間進める', 'debug-clock.test.cjs']
+ ],
  critical:[
   ['コイン取得と撫でる操作、移動中の模様替え、抱っこ後の表示', 'room-continuity.test.cjs'],
   ['壁の足場へ玩具で誘導・抱いて降ろす操作', 'room-perch.test.cjs'],
@@ -32,7 +47,7 @@ const suites = {
  ]
 };
 const mode = process.argv[2] || 'all';
-if (!['all', ...Object.keys(suites)].includes(mode)) throw new Error('指定は all / critical / journey');
+if (!['all', ...Object.keys(suites)].includes(mode)) throw new Error('指定は all / critical / journey / operations');
 const cases = mode === 'all' ? Object.values(suites).flat() : suites[mode];
 const selected = process.argv[3] ? cases.filter(([,file]) => file===process.argv[3]) : cases;
 if (!selected.length) throw new Error('指定した確認項目がありません');

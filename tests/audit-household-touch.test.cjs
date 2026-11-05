@@ -1,0 +1,10 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),{openGame}=require('./helpers/game-page.cjs');
+(async()=>{const b=await chromium.launch({channel:'chrome'});try{for(const [width,height]of [[320,568],[375,812]]){const p=await b.newPage({viewport:{width,height},isMobile:true,hasTouch:true});await openGame(p,'room');await p.evaluate(()=>{titleScreenOpen=false;gameState.onboarding={status:'done',homeTour:'done'};gameState.alpha={...gameState.alpha,firstCatId:'old',mail:[]};gameState.ui={...gameState.ui,modal:null,alphaNotice:null};const c=getCat(gameState);gameState.cats=[c,{...structuredClone(c),id:'resident-returned',name:'おかえり',permanentResident:true}];gameState.flags.returnedCat=true;gameState.household={renovation:1};gameState.campaign.requiredVisit=null;render(gameState)});await p.waitForFunction(()=>!guideNavigationBusy);
+ await p.locator('[data-resident=resident-returned]').first().tap();assert.equal(await p.evaluate(()=>getCat(gameState).id),'resident-returned');await p.locator('.household-pan button').last().tap();assert(await p.evaluate(()=>gameState.ui.roomPan>0));await p.locator('.household-pan button').first().tap();assert.equal(await p.evaluate(()=>gameState.ui.roomPan),0);
+ await p.locator('[data-room-fold]').tap();
+ for(const reverse of [false,true]){
+  const button=p.locator('.household-pan button')[reverse?'first':'last']();
+  await button.tap();
+ }
+ await p.screenshot({path:'tests/screenshots/household-touch-'+width+'.png'});
+ await p.evaluate(()=>{gameState.coins=25000;gameState.campaign={...gameState.campaign,phase:'shop',shopId:'petshop'};render(gameState)});await p.waitForFunction(()=>!guideNavigationBusy);await p.locator('.renovate-home').tap();assert.equal(await p.evaluate(()=>gameState.household.renovation),2);assert.equal(await p.evaluate(()=>gameState.coins),5000);assert(await p.locator('.renovate-home').isDisabled());console.log('PASS',width,'resident switching, room movement, renovation and duplicate prevention');await p.close();}}finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});

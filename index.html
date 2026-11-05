@@ -4492,7 +4492,12 @@ app.addEventListener('pointerdown',event=>{
 app.addEventListener('pointermove',event=>{if(fieldTouchId===null)moveGameDrag(event);});
 app.addEventListener('pointerup',event=>{if(fieldTouchId===null)finishGameDrag(event);});
 app.addEventListener('touchstart',event=>{
- if(fieldTouchId!==null||event.touches.length!==1||!event.target.closest('[data-field-drag]'))return;
+ if(fieldTouchId!==null){
+  if(event.touches.length>1&&Array.from(event.touches).some(t=>t.identifier===fieldTouchId))return;
+  // A new contact after a missing end event replaces the abandoned drag.
+  cancelActiveDrags(false);
+ }
+ if(event.touches.length!==1||!event.target.closest('[data-field-drag]'))return;
  const touch=event.touches[0];
  fieldTouchTrace={started:false,moved:false,ended:false}; startGameDrag(fieldTouchEvent(event,touch));
  if(fieldDragDraft){fieldTouchId=touch.identifier;fieldTouchTrace.started=true;}
@@ -4510,7 +4515,7 @@ app.addEventListener('touchend',event=>{
 app.addEventListener('touchcancel',event=>{
  if(Array.from(event.changedTouches).some(t=>t.identifier===fieldTouchId))cancelActiveDrags();
 });
-function cancelActiveDrags() {
+function cancelActiveDrags(renderAfter=true) {
  fieldTouchId=null;
   const hadDrag = !!(fieldDragDraft || commandDraft || playDraft || dragDraft || panDraft);
   const captures=[fieldDragDraft&&[fieldDragDraft.source,fieldDragDraft.pointerId],commandDraft&&[commandDraft.target,commandDraft.pointerId]].filter(Boolean);
@@ -4531,10 +4536,11 @@ function cancelActiveDrags() {
   if (panDraft?.world) panDraft.world.classList.remove("dragging");
   panDraft = null;
   for(const [target,id] of captures)if(target?.hasPointerCapture?.(id))target.releasePointerCapture(id);
-  if (hadDrag) render(gameState);
+  if (hadDrag && renderAfter) render(gameState);
 }
 app.addEventListener("pointercancel", event => {if(event.isPrimary!==false&&fieldTouchId===null)cancelActiveDrags();});
 window.addEventListener('blur',cancelActiveDrags);
+window.addEventListener('resize',cancelActiveDrags);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelActiveDrags();});
 
 function moveLayoutDrag(draft, clientX, clientY) {
