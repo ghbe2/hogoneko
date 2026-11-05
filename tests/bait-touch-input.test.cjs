@@ -29,6 +29,18 @@ for(const [width,height]of (process.env.BAIT_TOUCH_QUICK?[[393,659]]:[[393,659],
  await contact(p,'touchend',[],[{id:1,x:-65}]);await p.waitForFunction(()=>gameState.onboarding.guide==='trap');
  await p.screenshot({path:`tests/screenshots/bait-touch-${engine.name()}-${height}.png`});
  console.log('PASS',engine.name(),height,'Touch-only swipe, held contact, second finger, release');
+ await p.waitForFunction(()=>!app.querySelector('[data-reading="true"],[data-copy-pending="true"]'));
+ await p.evaluate(()=>{
+  const source=app.querySelector('.encounter-trap'),r=source.getBoundingClientRect(),scene=app.querySelector('[data-field-drop="scene"]').getBoundingClientRect();
+  const emit=(type,x,y)=>{const t={identifier:91,target:source,clientX:x,clientY:y};const e=new Event(type,{bubbles:true,cancelable:true});Object.defineProperties(e,{touches:{value:type==='touchend'?[]:[t]},changedTouches:{value:[t]}});source.dispatchEvent(e);};
+  emit('touchstart',r.x+r.width/2,r.y+r.height/2);
+  if(!fieldDragDraft)throw Error('Native touch did not pick up trap');
+  if(getComputedStyle(source).visibility==='hidden')throw Error('Touch target hidden');
+  emit('touchmove',scene.x+scene.width*.5,scene.y+scene.height*.55);
+  emit('touchend',scene.x+scene.width*.5,scene.y+scene.height*.55);
+  if(!gameState.campaign.trapWaiting)throw Error('Native touch did not place trap');
+ });
+ console.log('PASS',engine.name(),height,'touch-only bait followed by trap pickup and placement');
  await fixture(p);await contact(p,'touchstart',[{id:1,x:40}]);await contact(p,'touchmove',[{id:1,x:10}]);
  await contact(p,'touchcancel',[],[{id:1,x:10}]);await p.waitForFunction(()=>gameState.onboarding.guide==='trap');
  assert.equal(await p.evaluate(()=>gameState.campaign.fieldFood),'food_wet');console.log('PASS',engine.name(),height,'short swipe + cancellation snaps to exact item');
