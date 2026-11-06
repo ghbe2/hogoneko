@@ -27,6 +27,9 @@ for(const [width,height]of (process.env.BAIT_TOUCH_QUICK?[[393,659]]:[[393,659],
  await contact(p,'touchstart',[{id:1,x:-65},{id:2,x:70}],[{id:2,x:70}]);
  await contact(p,'touchend',[{id:1,x:-65}],[{id:2,x:70}]);assert.equal(await p.evaluate(()=>app.querySelector('.bait-carousel').dataset.baitActive),'true');
  await contact(p,'touchend',[],[{id:1,x:-65}]);await p.waitForFunction(()=>gameState.onboarding.guide==='trap');
+ // A late snap can put the rail back on the zero-stock default after the guide advances.
+ await p.evaluate(()=>{const rail=app.querySelector('.bait-carousel');rail.scrollLeft=0;rail.dispatchEvent(new Event('scroll'));});
+ assert(await p.locator('.encounter-trap').isEnabled(),'late scroll after selection must not disable the only allowed gesture');
  await p.screenshot({path:`tests/screenshots/bait-touch-${engine.name()}-${height}.png`});
  console.log('PASS',engine.name(),height,'Touch-only swipe, held contact, second finger, release');
  await p.waitForFunction(()=>!app.querySelector('[data-reading="true"],[data-copy-pending="true"]'));
