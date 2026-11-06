@@ -3,8 +3,8 @@ const fs=require('node:fs'),path=require('node:path'),{pathToFileURL}=require('n
 const root=path.resolve(__dirname,'..');
 const source=process.env.GAME_URL||pathToFileURL(path.join(root,'index.html')).href;
 const output=path.join(root,'tests/screenshots/tutorial-runs',new Date().toISOString().replace(/[:.]/g,'-'));
-const sizes=['320x568','375x812'];
-const profiles=['redraw','interrupt','viewport','resume'];
+const sizes=process.env.TOUCH_SIZE?[process.env.TOUCH_SIZE]:['320x568','375x812'];
+const profiles=process.env.JOURNEY_AUDIT?[process.env.JOURNEY_AUDIT]:['redraw','interrupt','viewport','resume'];
 const queue=profiles.flatMap(mode=>sizes.map(size=>({mode,size})));
 const results=[];
 async function run({mode,size}){
