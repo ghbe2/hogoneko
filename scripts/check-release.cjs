@@ -4,6 +4,9 @@ const fs = require('node:fs'), path = require('node:path'), crypto = require('no
 const root = path.resolve(__dirname, '..');
 process.chdir(root);
 const suites = {
+ encounter:[
+  ['餌選択・保護器の設置・開封までの100通りの座標タッチ', 'encounter-transition-matrix.test.cjs']
+ ],
  operations:[
   ['通信切断・再接続・タブ再開とセーブ保持', 'audit-network-recovery.test.cjs'],
   ['パスワード入力・再読み込み', 'audit-login-touch.test.cjs'],
@@ -47,7 +50,7 @@ const suites = {
  ]
 };
 const mode = process.argv[2] || 'all';
-if (!['all', ...Object.keys(suites)].includes(mode)) throw new Error('指定は all / critical / journey / operations');
+if (!['all', ...Object.keys(suites)].includes(mode)) throw new Error('指定は all / critical / journey / operations / encounter');
 const cases = mode === 'all' ? Object.values(suites).flat() : suites[mode];
 const selected = process.argv[3] ? cases.filter(([,file]) => file===process.argv[3]) : cases;
 if (!selected.length) throw new Error('指定した確認項目がありません');
@@ -66,7 +69,7 @@ const report = {startedAt:new Date().toISOString(),target:process.env.GAME_URL||
 for (const [label,file] of selected) {
  console.log('\n確認中：'+label);
  const start = Date.now();
- const run = spawnSync(process.execPath, [path.join('tests',file)], {encoding:'utf8',env:process.env,timeout:480000,maxBuffer:12*1024*1024});
+ const run = spawnSync(process.execPath, [path.join('tests',file)], {encoding:'utf8',env:process.env,timeout:file==='encounter-transition-matrix.test.cjs'?1200000:480000,maxBuffer:12*1024*1024});
  const log = (run.stdout||'')+(run.stderr||'')+(run.error?'\n'+run.error.stack:'');
  fs.writeFileSync(path.join(out,file+'.log'),log);
  const result = {label,file,passed:run.status===0,seconds:Math.round((Date.now()-start)/1000)};

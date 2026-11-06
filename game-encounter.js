@@ -186,6 +186,9 @@ function scheduleGust(){
 }
 const encounterRender=render;
 render=function(state){
+ // Keep the original touch target mounted until the finger lifts. Mobile
+ // browsers continue delivering this contact to the node it started on.
+ if(fieldDragDraft?.source?.isConnected && state.campaign.phase==='field' && !state.campaign.trapWaiting && !state.ui.modal)return;
  if(app.querySelector('.bait-carousel.dragging,.bait-carousel[data-bait-active="true"]')&&state.campaign.phase==='field'&&!state.campaign.trapWaiting&&!state.ui.modal)return;
  encounterRender(state);installCarousel();
  const c=state.campaign,key=c.phase==='field'&&c.trapWaiting&&!c.trapReady?c.trapToken+':'+(c.encounter?.readyAt||0):null;
