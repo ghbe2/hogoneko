@@ -91,6 +91,8 @@ function setupTownArrows(scroller){
 // One gesture advances one page; animation timing is independent of browser inertia.
 function setupTownScroll(s){
  let busy=false,drag=null,wheelUntil=0;
+ // A repaint of this state must preserve the node receiving the active pointer.
+ s.hasTownGesture=()=>drag!==null||busy;
  const featured=Number(s.dataset.featuredStop);
  const step=(from,direction)=>from>=1.99&&direction<0?featured:Math.max(0,Math.min(2,from+direction*.5));
  const go=(page)=>{

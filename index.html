@@ -5390,9 +5390,13 @@ triggerAutoEvent=function(){
 <script src="game-room-hold.js"></script>
 <script>
 // Periodic renders must not detach a captured piece of furniture or an IME input.
+let lastTownFrameState = null;
 const renderBetweenIntakeGestures = render;
 render = function(state) {
   const phase = state.campaign.phase;
+  if (phase === 'town' && !state.ui.modal && !titleScreenOpen &&
+      app.querySelector('.town-map-scroll')?.hasTownGesture?.() && state === lastTownFrameState) return;
+  lastTownFrameState = phase === 'town' ? state : null;
   if (dragDraft && state.ui.layoutMode && dragDraft.stage.isConnected &&
       phase === dragDraft.phase && !state.ui.modal) return;
   if (state.ui.firstName && document.activeElement?.matches('.first-name input')) return;
