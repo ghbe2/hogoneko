@@ -5391,11 +5391,40 @@ triggerAutoEvent=function(){
 <script>
 // Periodic renders must not detach a captured piece of furniture or an IME input.
 let lastTownFrameState = null;
+let renderingClockUpdate = false;
+let pendingTownPaint = 0;
+const dispatchWithTownClock = dispatch;
+dispatch = function(action) {
+  const previous = renderingClockUpdate;
+  renderingClockUpdate = action.type === 'SYNC_REAL_TIME';
+  try { return dispatchWithTownClock(action); }
+  finally { renderingClockUpdate = previous; }
+};
+function repaintAfterMapGesture(map) {
+  if (pendingTownPaint) return;
+  const finish = () => {
+    pendingTownPaint = 0;
+    if (!map.isConnected) return;
+    if (map.hasTownGesture() && !document.hidden) {
+      pendingTownPaint = setTimeout(finish, 100);
+      return;
+    }
+    render(gameState);
+  };
+  pendingTownPaint = setTimeout(finish, 100);
+}
 const renderBetweenIntakeGestures = render;
 render = function(state) {
   const phase = state.campaign.phase;
-  if (phase === 'town' && !state.ui.modal && !titleScreenOpen &&
-      app.querySelector('.town-map-scroll')?.hasTownGesture?.() && state === lastTownFrameState) return;
+  const map = phase === 'town' && !state.ui.modal && !titleScreenOpen && app.querySelector('.town-map-scroll');
+  if (map && map.hasTownGesture?.()) {
+    if (renderingClockUpdate) {
+      lastTownFrameState = state;
+      repaintAfterMapGesture(map);
+      return;
+    }
+    if (state === lastTownFrameState) return;
+  }
   lastTownFrameState = phase === 'town' ? state : null;
   if (dragDraft && state.ui.layoutMode && dragDraft.stage.isConnected &&
       phase === dragDraft.phase && !state.ui.modal) return;
