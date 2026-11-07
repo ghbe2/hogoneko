@@ -63,7 +63,19 @@ function guidePresentation(state){
  const target=app.querySelector(selector);
  if(['swipe','clinicScroll'].includes(key))layer.gestureSurface=app.querySelector('.town-map-scroll');
  else if(['bait','trap','moveFurniture'].includes(key))layer.gestureSurface=target;
- if(state.ui.layoutTrayOpen&&target?.closest('.furniture-grid'))target.scrollIntoView({block:'nearest'});
+ // The furniture cards are reordered later in the same render. Align the list
+ // after layout as well, so the hand and its target both remain above the footer.
+ const guidedList=key==='starter'?target?.closest('.store-list'):
+  key==='chooseFurniture'&&state.ui.layoutTrayOpen?target?.closest('.furniture-grid'):null;
+ const revealGuidedItem=()=>{
+  if(!guidedList||!target.isConnected||!guidedList.clientHeight)return;
+  const view=guidedList.getBoundingClientRect(),card=target.getBoundingClientRect();
+  if(view.height<=0)return;
+  const offset=card.height>view.height?(card.top+card.bottom-view.top-view.bottom)/2:
+   card.bottom>view.bottom?card.bottom-view.bottom:Math.min(0,card.top-view.top);
+  if(Math.abs(offset)>1)guidedList.scrollTop+=offset*guidedList.clientHeight/view.height;
+ };
+ if(guidedList){revealGuidedItem();requestAnimationFrame(revealGuidedItem);}
  const tick=()=>{
   if(!layer.isConnected)return;
   const count=Math.min(chars.length,Math.floor((performance.now()-start)/18));
