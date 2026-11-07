@@ -66,6 +66,8 @@ function journeyAudit(page, input, mode) {
     touchButton: ['edge','abandon'].includes(mode)?async function(selector) {
       const node=page.locator(selector).first();
       await node.waitFor({state:'visible'});
+      if(selector==='#enter'){await node.tap();return;}
+      await page.waitForFunction(s=>{const e=document.querySelector(s);return e&&!e.disabled;},selector);
       const r=await node.boundingBox(), x=r.x+r.width*(mode==='edge'?.8:.5),y=r.y+r.height*.5;
       if(selector==='[data-item="starter_set"]'||selector==='[data-action="pick-furniture"][data-item="box"]'){
         const hit=await node.evaluate((card,point)=>{
