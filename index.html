@@ -1970,7 +1970,8 @@ const initialCat = {
   status: "candidate",
 };
 
-const SAVE_KEY = new URLSearchParams(location.search).has('palette-review') ? 'hogoneko_palette_review' : new URLSearchParams(location.search).get('check') === '1' ? 'hogoneko_check_save' : 'hogoneko_mock_save';
+const SAVE_KEY = new URLSearchParams(location.search).get('debug-play') === '1' ? 'hogoneko_debug_play' : new URLSearchParams(location.search).has('palette-review') ? 'hogoneko_palette_review' : new URLSearchParams(location.search).get('check') === '1' ? 'hogoneko_check_save' : 'hogoneko_mock_save';
+if (SAVE_KEY === 'hogoneko_debug_play' && /^a[1-4]$/.test(new URLSearchParams(location.search).get('debug-start') || '')) { localStorage.removeItem(SAVE_KEY); localStorage.removeItem(SAVE_KEY+'_debug_clock'); }
 if (SAVE_KEY === 'hogoneko_check_save' && new URLSearchParams(location.search).has('scenario')) localStorage.removeItem(SAVE_KEY);
 const SAVE_SCHEMA_VERSION = 1;
 
@@ -5434,5 +5435,6 @@ render = function(state) {
 // Render only after every module has installed its current rules and artwork.
 document.addEventListener('DOMContentLoaded', () => render(gameState), {once:true});
 </script>
+<script src="game-debug-start.js"></script>
 </body>
 </html>

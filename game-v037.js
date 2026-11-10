@@ -34,11 +34,11 @@ moveLayoutDrag=function(draft,x,y){dragBeforeControlZone(draft,x,y);if(draft.mov
  draft.y=constrainFurnitureY(draft.itemId,raw/r.height*100,r.height,draft.height);draft.ghost.style.top=draft.y+'%';
  draft.valid=x>=r.left&&x<=r.right&&y>=r.top+b.wallTop&&y<=r.top+b.floorBottom&&(wall?bottom<=b.wallBottom:bottom>=b.floorTop);
  if(typeof guidedIntake==='function'&&guidedIntake(gameState)){
-  const frame=intakePlacementFrame(gameState,r.width,r.height),minY=Math.max(frame.top,frame.floor-draft.height);
+  const frame=intakePlacementFrame(gameState,r.width,r.height),minY=Math.max(frame.dragTop,frame.floor-draft.height);
   draft.x=Math.max(12,Math.min(frame.width-12-draft.width,x-r.left-draft.offsetX))/frame.width*100;
   draft.y=Math.max(minY,Math.min(frame.bottom-draft.height,raw))/frame.height*100;
   draft.ghost.style.left=draft.x+'%';draft.ghost.style.top=draft.y+'%';
-  draft.valid=intakePositionClear({itemId:draft.itemId,x:draft.x,y:draft.y},getPlaced(getRoom(gameState)),frame);
+  draft.valid=x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom&&intakePositionInBounds({itemId:draft.itemId,x:draft.x,y:draft.y},frame);
  }
  if(wall&&wallItemHitsWindow(draft.itemId,draft.x,draft.y,draft.worldRect))draft.valid=false;
  draft.ghost.classList.toggle('invalid',!draft.valid);}};
@@ -56,7 +56,7 @@ reduceGameState=function(state,action){
  state=keepFurnitureAboveControls(state);
  const world=()=>app.querySelector('[data-room-world]')?.getBoundingClientRect();
  if(action.type==='DROP_LAYOUT_ITEM'&&!action.store&&wallItemHitsWindow(action.itemId,action.x,constrainFurnitureY(action.itemId,action.y),world()))return state;
- if(action.type==='DROP_LAYOUT_ITEM'&&!action.store){if(typeof guidedIntake==='function'&&guidedIntake(state)){if(!intakePositionClear(action,getPlaced(getRoom(state)),intakePlacementFrame(state)))return state;}else action={...action,y:constrainFurnitureY(action.itemId,action.y)};}
+ if(action.type==='DROP_LAYOUT_ITEM'&&!action.store){if(typeof guidedIntake==='function'&&guidedIntake(state)){if(!intakePositionInBounds(action,intakePlacementFrame(state)))return state;}else action={...action,y:constrainFurnitureY(action.itemId,action.y)};}
  if(action.type==='ROAM_CAT'&&daylightAt()&&getAffinity(getCat(state),{affinityType:'sun'}).score>0&&Math.random()<.65)action={...action,index:990};
  if(action.type==='PICK_FURNITURE'){
   const item=getItem(action.itemId);if(!item||!owned(state,item.id)||getDurability(state,item.id)<=0)return state;
@@ -126,6 +126,7 @@ const roomInterfaceStyle=document.createElement('style');roomInterfaceStyle.text
 @media(prefers-reduced-motion:reduce){#app .layout-store-target .storage-flaps{transition:none}}
 #app .guided-intake .layout-store-target{display:none}
 #app .guided-intake .wall-zone,#app .guided-intake .layout-zone span{display:none}
+#app:has(.guided-intake):has(.layout-dragging) .first-guide-note{visibility:hidden}
 #app .layout-dragging .layout-workbar{visibility:hidden}
 #app .layout-library{z-index:50;padding:110px 12px 16px;background:#65543c25}
 #app .furniture-sheet{display:flex;flex-direction:column;width:100%;height:100%;min-height:0;background:#fff9ed;border-radius:24px;padding:16px;box-shadow:0 10px 30px #604b3925}

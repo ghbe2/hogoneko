@@ -1,15 +1,22 @@
 'use strict';
 const APP_PHOTO_FRAMES=[{pose:'sit',time:.65,crop:'body'},{pose:'sit',time:1.3,crop:'face'},{pose:'jump',time:.5,crop:'candid'},{pose:'punch',time:.8,crop:'body'},{pose:'sleep',time:1.1,crop:'body'},{pose:'walk',time:.6,crop:'tail'}];
+// Recover saves made by the former header-album return path. The phone is a
+// room overlay; leaving an invisible phone open on the map hid its travel button.
+if(gameState.campaign.phase==='town'&&gameState.ui.modal==='notebook')gameState={...gameState,ui:{...gameState.ui,modal:null}};
 function appRewardDay(){return careDayKey();}
 const appServicesReducer=reduceGameState;
 reduceGameState=function(state,action){
+ if(action.type==='OPEN_ALBUM'){
+  const next=appServicesReducer(state,action);
+  return next.ui.modal==='album'?{...next,ui:{...next.ui,appAlbumReturn:state.ui.modal==='notebook'?'notebook':null}}:next;
+ }
  if(action.type==='APP_SCHEDULE_NEXT')return {...state,ui:{...state.ui,appSchedulePage:(state.ui.appSchedulePage||0)+1,...(state.ui.appSchedulePage?{appScheduleSeen:getCat(state).id}:{})}};
  if(action.type==='APP_REWARD_START'){if(careDayUsed(state.economy?.appRewardDay)||state.ui.appRewardStarted||state.ui.adToken)return state;return {...state,ui:{...state.ui,appRewardStarted:Date.now()}};}
  if(action.type==='APP_REWARD_FINISH'){if(!state.ui.appRewardStarted||Date.now()-state.ui.appRewardStarted<3200||careDayUsed(state.economy?.appRewardDay))return state;return {...state,coins:state.coins+CONFIG.economy.adRewardCoins,economy:{...state.economy,appRewardDay:appRewardDay(),adClaims:(state.economy?.adClaims||0)+1},ui:{...state.ui,appRewardStarted:null}};}
  if(action.type==='APP_PHOTO')return {...state,ui:{...state.ui,appPhoto:action.index,appPhotoPose:'sit',appPhotoFrame:0}};
  if(action.type==='APP_PHOTO_POSE'){const i=((state.ui.appPhotoFrame||0)+(action.delta||1)+APP_PHOTO_FRAMES.length)%APP_PHOTO_FRAMES.length;return {...state,ui:{...state.ui,appPhotoFrame:i,appPhotoPose:APP_PHOTO_FRAMES[i].pose}};}
  if(action.type==='APP_PHOTO_CLOSE')return {...state,ui:{...state.ui,appPhoto:null,modal:'album'}};
- if(action.type==='APP_ALBUM_CLOSE')return {...state,ui:{...state.ui,appPhoto:null,modal:'notebook'}};
+ if(action.type==='APP_ALBUM_CLOSE')return {...state,ui:{...state.ui,appPhoto:null,modal:state.ui.appAlbumReturn??null,appAlbumReturn:null}};
  return appServicesReducer(state,action);
 };
 let appRewardTimer;

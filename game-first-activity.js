@@ -8,10 +8,16 @@ function guidedIntake(state){return state.campaign.phase==='intake'&&firstActive
 function intakePlacementFrame(state,width=app.clientWidth,height=app.clientHeight){
  const bounds=roomPlacementBounds(height,state),top=INTAKE_GUIDE_TOP+GUIDE_NOTE_HEIGHT+8;
  // The SVGs include a small transparent margin below their feet.
- return {width,height,top,bottom:bounds.floorBottom,floor:bounds.floorTop+14,
+ return {width,height,top,dragTop:bounds.wallTop,bottom:bounds.floorBottom,floor:bounds.floorTop+14,
   carrier:{x:width-122,y:Math.max(top,bounds.floorTop-51),width:110,height:63}};
 }
 function intakeFurnitureRect(p,frame){return {x:p.x*frame.width/100,y:p.y*frame.height/100,width:['shelf','decor_sun'].includes(p.itemId)?100:p.itemId==='tower'?90:84,height:furnitureHeight(p.itemId)};}
+// Automatic first placement keeps the essentials apart. Player placement uses
+// the entire visible floor, just like ordinary furnishing, without collision bans.
+function intakePositionInBounds(p,frame){
+ const r=intakeFurnitureRect(p,frame);
+ return r.x>=12-.1&&r.x+r.width<=frame.width-12+.1&&r.y>=frame.dragTop-.1&&r.y+r.height>=frame.floor-.1&&r.y+r.height<=frame.bottom+.1;
+}
 function furnitureRectsOverlap(a,b,gap=8){return a.x<b.x+b.width+gap&&a.x+a.width+gap>b.x&&a.y<b.y+b.height+gap&&a.y+a.height+gap>b.y;}
 function intakePositionClear(p,placed,frame){
  const r=intakeFurnitureRect(p,frame);
@@ -43,14 +49,14 @@ function planIntakeFurniture(state,placed,pending,randomize=false){
 }
 function repairIntakePlacement(state){
  if(!guidedIntake(state))return state;
- const room=getRoom(state),frame=intakePlacementFrame(state),valid=[],invalid=[];
- for(const p of room.floor){if(intakePositionClear(p,valid,frame))valid.push(p);else invalid.push(p.itemId);}
- const needsPracticeSpace=state.onboarding.guide==='moveFurniture'&&!intakeBoxCanMove(room.floor,frame);
- if(!invalid.length&&!needsPracticeSpace)return state;
- // Preserve valid positions. Only legacy/resize collisions are relocated.
- const arranged=(!needsPracticeSpace&&planIntakeFurniture(state,valid,invalid))||planIntakeFurniture(state,[],room.floor.map(p=>p.itemId).sort((a,b)=>furnitureHeight(b)-furnitureHeight(a)));
- if(!arranged)return state;
- return {...state,rooms:state.rooms.map(r=>r===room?{...r,floor:r.floor.map(p=>({...p,...arranged.find(n=>n.itemId===p.itemId)}))}:r)};
+ const room=getRoom(state),frame=intakePlacementFrame(state);
+ if(room.floor.every(p=>intakePositionInBounds(p,frame)))return state;
+ // A resize may clamp an edge, but never undo the player's chosen placement
+ // because another item occupies the same part of the floor.
+ const floor=room.floor.map(p=>{const r=intakeFurnitureRect(p,frame);return {...p,
+  x:Math.max(12,Math.min(frame.width-12-r.width,r.x))/frame.width*100,
+  y:Math.max(frame.dragTop,frame.floor-r.height,Math.min(frame.bottom-r.height,r.y))/frame.height*100};});
+ return {...state,rooms:state.rooms.map(r=>r===room?{...r,floor}:r)};
 }
 SHOP_CATALOG.push({id:'starter_set',shop:'petshop',category:'tools',label:'初心者セット',price:10,quantity:1,unit:'セット',emoji:''});
 bookIcons.starter_set=`<svg viewBox="0 0 100 90"><path d="M14 28h72v48H14Z" fill="#b98b59"/><path d="M14 28L25 14h52l9 14-36 11Z" fill="#ddbe87"/><path d="M50 39v37" stroke="#91744e" stroke-width="2"/><path d="M30 47h40v20H30Z" fill="#f8eed5"/><path d="M42 58l-1-8 6 3 7-3 1 8q-6 8-13 0" fill="#7c926c"/></svg>`;
@@ -100,7 +106,7 @@ reduceGameState=function(state,action){
   if(c.phase!=='clinic'||c.clinicStep==='exam'||cat.status!=='captured'||c.initialVisitPaidCatId===cat.id)return state;
   let next=firstReducer(state,{type:'START_INTAKE',name:'ネコ'});
   if(next.campaign.phase!=='intake')return state;
-  next={...next,cats:next.cats.map(n=>({...n,name:'',named:false})),campaign:{...next.campaign,phase:'town',initialVisitPaidCatId:cat.id},ui:{...next.ui,modal:null,layoutMode:false}};
+  next={...next,cats:next.cats.map(n=>({...n,name:'',named:false})),onboarding:{...next.onboarding,townStep:'done'},campaign:{...next.campaign,phase:'town',initialVisitPaidCatId:cat.id},ui:{...next.ui,modal:null,layoutMode:false}};
   townScrollTop=null;return first?guideTo(next,'shopBuilding'):next;
  }
  if(action.type==='GO_HOME'&&cat.status==='intake'){
@@ -254,7 +260,13 @@ render=function(state){
  if(state.onboarding.guide==='chartReview'){const cue=document.createElement('div');cue.className='chart-pay-cue';cue.innerHTML=guideHand();app.querySelector('.campaign-actions')?.append(cue);return;}
  const selector=typeof spec.target==='function'?spec.target():spec.target,target=app.querySelector(selector)||app.querySelector('.stage');if(!target)return;
  const layer=document.createElement('section');layer.className='first-guide';layer.dataset.context=state.campaign.phase;layer.innerHTML=`<div class="first-guide-ring"></div><aside class="first-guide-note shared-guide-note"><header><span class="first-senior">${seniorArt().replace('viewBox="0 0 220 270"','viewBox="45 5 135 190"')}</span><strong class="senior-dialogue-name">保護主のせんぱい</strong></header><p></p>${spec.next||spec.finish?`<button data-first="${spec.finish?'finish':'next'}">${spec.finish?'はじめる':'つぎへ'}</button>`:'<small></small>'}</aside>`;layer.querySelector('p').textContent=typeof spec.copy==='function'?spec.copy():spec.copy;app.append(layer);
- const scroller=app.querySelector('.town-map-scroll');if(state.onboarding.guide==='clinicScroll'&&scroller&&firstMapGuide!=='clinicScroll')scroller.scrollTop=Math.max(0,scroller.scrollHeight-scroller.clientHeight*1.5);firstMapGuide=state.onboarding.guide;
+ const scroller=app.querySelector('.town-map-scroll');
+ if(scroller){
+  if(state.onboarding.guide==='clinicScroll'&&firstMapGuide!=='clinicScroll')scroller.scrollTop=Math.max(0,scroller.scrollHeight-scroller.clientHeight*1.5);
+  if(['clinicBuilding','shopBuilding','homeBuilding'].includes(state.onboarding.guide))scroller.scrollTop=scroller.scrollHeight-scroller.clientHeight;
+  townScrollTop=scroller.scrollTop;
+ }
+ firstMapGuide=state.onboarding.guide;
  const watchScroll=()=>{if(!layer.isConnected)return;if(state.onboarding.guide==='clinicScroll'&&scroller&&scroller.scrollHeight-scroller.clientHeight-scroller.scrollTop<=2){dispatch({type:'FIRST_SCROLL_DONE'});return;}firstFrame=requestAnimationFrame(watchScroll);};watchScroll();
 };
 app.addEventListener('click',event=>{
@@ -262,7 +274,7 @@ app.addEventListener('click',event=>{
 });
 app.addEventListener('input',event=>{if(event.target.matches('.first-name input')){gameState={...gameState,campaign:{...gameState.campaign,nameDraft:event.target.value}};saveGameState(gameState);}});
 function gateFirstInput(event){
- if(event.target.closest('[data-alpha-report],.alpha-report,.alpha-layer'))return;
+ if(event.target.closest('[data-alpha-report],.alpha-report,.alpha-layer,.debug-start-button,.debug-start-dialog'))return;
  if(!firstActive(gameState)||titleScreenOpen)return;
  if(gameState.ui.firstName){if(event.target.closest('.first-name'))return;event.preventDefault();event.stopImmediatePropagation();return;}
  if(firstGuidePause(gameState)){event.preventDefault();event.stopImmediatePropagation();return;}

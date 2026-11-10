@@ -56,7 +56,7 @@ reduceGameState=function(state,action){
 };
 
 // Dialogue is centrally maintained in game-dialogue.js.
-function currentTownTutorial(state){return !titleScreenOpen&&state.onboarding?.status==='active'&&state.campaign.phase==='town'&&!state.campaign.captured?TOWN_TUTORIAL[state.onboarding.townStep]:null;}
+function currentTownTutorial(state){return !titleScreenOpen&&state.onboarding?.status==='active'&&state.campaign.phase==='town'&&getCat(state).status==='candidate'&&!state.onboarding.guide&&!state.campaign.captured&&!state.flags.firstIntake?TOWN_TUTORIAL[state.onboarding.townStep]:null;}
 let tutorialFrame=0;
 const tutorialRender=render;
 render=function(state){
@@ -81,7 +81,7 @@ render=function(state){
 };
 // Explanatory steps cannot accidentally navigate away; swipe remains a real gesture.
 function gateTownInput(event){
- if(event.target.closest('[data-alpha-report],.alpha-report,.alpha-layer'))return;
+ if(event.target.closest('[data-alpha-report],.alpha-report,.alpha-layer,.debug-start-button,.debug-start-dialog'))return;
  const spec=currentTownTutorial(gameState);if(!spec||event.target.closest('.tutorial-note'))return;
  if(gameState.onboarding.townStep==='swipe'&&event.type!=='click'&&event.target.closest('.town-map-scroll'))return;
  if(gameState.onboarding.townStep==='rescue'&&event.target.closest(spec.target))return;

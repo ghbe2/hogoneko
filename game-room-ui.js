@@ -92,7 +92,7 @@ function showRoomCallCue(state,stage,call){
  const bubble=document.createElement('output');bubble.className='room-call-feedback';bubble.setAttribute('aria-live','polite');bubble.textContent=roomCallPhrase(getCat(state));bubble.style.animationDelay=-elapsed+'ms';stage.append(bubble);call?.classList.add('is-calling');
  roomCallCueTimer=setTimeout(()=>{bubble.remove();temporaryCaller?.remove();call?.classList.remove('is-calling');},2200-elapsed);
 }
-function roomTravelArt(home){const cat=home?residentCats(gameState)[0]:null;const frame=RoomControlArt.frame.replace('class="rim"','class="corner-frame"').replace('<polygon','<g class="travel-frame"><polygon').replace('</svg>','</g></svg>');const picture=home?roomHomeArt().replace(/<g class="travel-frame">[\s\S]*?<\/g>/,''):RoomControlArt.map;return frame+'<span class="corner-picture">'+picture+'</span>'+(cat?'<span class="home-travel-cat">'+renderCatArt(cat)+'</span>':'');}
+function roomTravelArt(home){const cat=home?residentCats(gameState)[0]:null;const frame=RoomControlArt.frame.replace('class="rim"','class="corner-frame"').replace('<polygon','<g class="travel-frame"><polygon').replace('</svg>','</g></svg>');const picture=home?roomHomeArt().replace(/<g class="travel-frame">[\s\S]*?<\/g>/,''):RoomControlArt.map;return frame+'<span class="corner-picture">'+picture+(cat?'<span class="home-travel-window"><span class="home-travel-cat">'+renderCatArt(cat)+'</span></span>':'')+'</span>';}
 render=function(state){
  const oldSupply=app.querySelector('.room-supplies-menu'),oldGrid=oldSupply?.querySelector('.inventory-grid');
  if(oldSupply?.dataset.tab)supplySearchMemory.set(oldSupply.dataset.tab,{query:oldSupply.querySelector('[data-supply-search]')?.value||'',scroll:oldGrid?.scrollTop||0});
@@ -144,7 +144,7 @@ render=function(state){
  }
  app.querySelectorAll('.room-travel-icon').forEach(n=>n.remove());
  if(['room','town','shop'].includes(phase)&&!state.ui.modal&&!state.ui.layoutMode){
-  const travel=document.createElement('button');travel.className='room-travel-icon'+(room&&state.ui.careTravelPrompt?' travel-suggested':'');travel.dataset.action=phase==='town'?'go-home':phase==='room'?'open-outing':'back-town';travel.setAttribute('aria-label',phase==='town'?'家へ':'街へ');travel.innerHTML=roomTravelArt(phase==='town');app.append(travel);if(phase==='town'){mountGameCats();travel.querySelectorAll('.game-cat-svg').forEach(svg=>{fitAlbumFace(svg);svg.dataset.staticPhoto='true';});}app.querySelectorAll('.reception-exit,.store-exit').forEach(n=>n.remove());
+  const travel=document.createElement('button');travel.className='room-travel-icon'+(room&&state.ui.careTravelPrompt?' travel-suggested':'');travel.dataset.action=phase==='town'?'go-home':phase==='room'?'open-outing':'back-town';travel.setAttribute('aria-label',phase==='town'?'家へ':'街へ');travel.innerHTML=roomTravelArt(phase==='town');app.append(travel);if(phase==='town'){mountGameCats();travel.querySelectorAll('.game-cat-svg').forEach(svg=>{const entry=svgRigs.get(svg);if(entry)CatSVG.applyPose(entry.rig,CatSVG.poseModel('sit',0),0,'sit');fitAlbumFace(svg);svg.dataset.staticPhoto='true';});}app.querySelectorAll('.reception-exit,.store-exit').forEach(n=>n.remove());
   {
    travel.classList.add('travel-with-frame');
    travel.querySelector('.travel-frame').style.animationDelay=-(performance.now()%24000)+'ms';

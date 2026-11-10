@@ -117,7 +117,7 @@ render=function(state){
 };
 for(const type of ['click','pointerdown','touchstart'])window.addEventListener(type,event=>{
  const target=event.target;
- if(target.closest('[data-alpha-report],.alpha-report,.alpha-layer'))return;
+ if(target.closest('[data-alpha-report],.alpha-report,.alpha-layer,.debug-start-button,.debug-start-dialog'))return;
  const layer=app.querySelector('section.first-guide:not(.navigation-snapshot *),section.tutorial-focus:not(.navigation-snapshot *)');
  if(!layer)return;
  const reading=layer.dataset.reading==='true',more=layer.dataset.copyPending==='true';
