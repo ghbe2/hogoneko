@@ -3,6 +3,9 @@ function visitorGroup(svg,cls,markup){const g=document.createElementNS('http://w
 function fitVisitorBody(svg,child=false){
  svg.querySelectorAll('.adoption-companion').forEach(n=>n.remove());
  const torso=svg.querySelector('.adoption-torso'),body=torso.querySelector('.actor-breath')||torso,head=body.querySelector('.adoption-head'),look=head.closest('.actor-look')||head;
+ // The larger child head tilts independently of the stretched garment. Keep
+ // the neck tucked inside the jaw throughout that tilt, not just at rest.
+ if(child){const neck=[...body.children].find(n=>n.getAttribute('d')==='M52 81v13q9 9 17-1V80');if(neck){neck.classList.add('visitor-neck');neck.setAttribute('d','M52 69V94q9 9 17-1V69Z');}}
  const stretch=visitorGroup(svg,'visitor-body-study','');
  // Extend the existing garment and arms as one unit; leave the authored head
  // and neck in place. Preserve age, glasses, hats, bags and color differences.

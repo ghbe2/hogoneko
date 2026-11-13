@@ -1,0 +1,17 @@
+const {chromium,webkit}=require('playwright');
+const {openGame}=require('./helpers/game-page.cjs');
+const {touchGesture}=require('./helpers/touch-gesture.cjs');
+const fs=require('fs'),assert=require('node:assert/strict');
+const probe=process.env.PROBE==='1',dir='tests/screenshots/feedback-nov13';fs.mkdirSync(dir,{recursive:true});
+(async()=>{const isWebkit=process.env.BROWSER==='webkit',b=await (isWebkit?webkit.launch():chromium.launch({channel:'chrome'}));try{for(const [width,height] of [[360,663],[320,568],[375,812]]){
+ const p=await b.newPage({viewport:{width,height},hasTouch:true,isMobile:!isWebkit});await openGame(p,'room');
+ await p.evaluate(()=>{titleScreenOpen=false;gameState.onboarding={...gameState.onboarding,status:'done',guide:null,homeTour:'done'};gameState.alpha={...gameState.alpha,firstCatId:'previous',mail:Array.from({length:18},(_,i)=>({key:'test-'+i,text:'ごはんとお水を忘れずに。今日もネコの様子を見てみましょう。',receivedAt:i,read:i%2===0}))};gameState.ui={...gameState.ui,modal:null,alphaNotice:null,alphaMailbox:false};render(gameState);});
+ await p.locator('[data-alpha-mail="open"]').tap();await p.waitForTimeout(200);
+ const measure=()=>p.evaluate(()=>{const rect=s=>document.querySelector(s).getBoundingClientRect().toJSON(),list=app.querySelector('.alpha-mail-list');return {app:rect('#app'),box:rect('.alpha-mailbox'),article:rect('.alpha-mailbox article'),close:rect('[data-alpha-mail="close"]'),list:rect('.alpha-mail-list'),scroll:list.scrollTop,scrollHeight:list.scrollHeight,clientHeight:list.clientHeight,ancestors:(()=>{let n=list,a=[];while(n){a.push([n.tagName,n.className,getComputedStyle(n).touchAction,getComputedStyle(n).minHeight]);n=n.parentElement}return a})()};});
+ const before=await measure();await p.screenshot({path:`${dir}/mail-${probe?'before':'after'}-${isWebkit?'webkit':'chrome'}-${width}.png`});const r=before.list;
+ if(isWebkit){await p.mouse.move(r.x+r.width/2,r.y+r.height/2);await p.mouse.wheel(0,300);}else{const g=await touchGesture(p);await g.move(r.x+r.width/2,Math.min(r.bottom,height-80)-15);await g.down();await g.move(r.x+r.width/2,r.y+25,{steps:12});await g.up();}await p.waitForTimeout(350);const after=await measure();fs.writeFileSync(`${dir}/mail-${isWebkit?'webkit':'chrome'}-${width}.json`,JSON.stringify({before,after},null,2));
+ if(!probe){assert(after.scroll>20,'native touch scroll advances');assert(before.close.bottom<=before.app.bottom-10,'close remains inside play area');assert(before.close.top>=before.list.bottom,'close outside scroll list');await p.evaluate(()=>dispatch({type:'SYNC_REAL_TIME'}));assert(Math.abs((await measure()).scroll-after.scroll)<2,'clock redraw keeps scroll position');await p.touchscreen.tap(before.close.x+before.close.width/2,before.close.y+before.close.height/2);assert.equal(await p.locator('.alpha-mailbox').count(),0);
+ for(const count of [0,1,40]){await p.evaluate(count=>{gameState.alpha.mail=Array.from({length:count},(_,i)=>({key:'test-'+i,text:'お便りです。',receivedAt:i,read:true}));render(gameState)},count);await p.locator('[data-alpha-mail="open"]').tap();const r=(await measure()).close;assert(r.bottom<=height-10);await p.touchscreen.tap(r.x+r.width/2,r.y+r.height/2);assert.equal(await p.locator('.alpha-mailbox').count(),0);}
+ }
+ console.log('PASS mailbox',isWebkit?'WebKit wheel + touch tap':'Chrome coordinate touch',width,'0/1/18/40 messages');await p.close();
+}}finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});

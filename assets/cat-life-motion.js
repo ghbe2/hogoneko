@@ -210,7 +210,7 @@ window.CatLifeMotion=(()=>{
   }
   r.lifeAnatomy={outline,path:outline.getAttribute('d'),chestShape,chestPath:chestShape.getAttribute('d'),legPaint,paintRight:false};
  }
- function reset(r){prepare(r);r.lifeAnatomy.outline.setAttribute('d',r.lifeAnatomy.path);r.lifeAnatomy.chestShape.setAttribute('d',r.lifeAnatomy.chestPath);}
+ function reset(r){prepare(r);r.lifeAnatomy.outline.setAttribute('d',r.lifeAnatomy.path);r.lifeAnatomy.chestShape.setAttribute('d',r.lifeAnatomy.chestPath);for(const n of r.lifeAnatomy.support||[])n.setAttribute('points','');}
  function finish(r,m,p,t){
   if(p.startsWith('reaction'))p=p.split(':')[1];
   prepare(r);
@@ -262,7 +262,19 @@ window.CatLifeMotion=(()=>{
    // Both contours share one clip and one coat fill: no layered colour seam.
    const shoulder=locomotion?'M-24 -62 C-34 -42 -35 -30 -46 -10 L-49 7 Q0 20 50 7 L47 -7 C35 -30 34 -42 24 -62Z':n.chestPath;
    if(p!=='rest'&&p!=='sleep')n.chestShape.setAttribute('d',shoulder+` M-46 -10 L-49 7 Q0 20 50 7 L47 -7 C34 -42 ${b.x+4} ${b.y+22} ${b.x} ${b.y} L${a.x} ${a.y} C${a.x-4} ${a.y+20} -35 -42 -46 -10Z`);
-   if(locomotion||p==='poop')n.chestShape.setAttribute('d',`M-46 -10 L-49 7 Q0 20 50 7 L47 -7 C34 -42 ${b.x+4} ${b.y+22} ${b.x} ${b.y} L${a.x} ${a.y} C${a.x-4} ${a.y+20} -35 -42 -46 -10Z`);
+   if(p==='poop')n.chestShape.setAttribute('d',`M-46 -10 L-49 7 Q0 20 50 7 L47 -7 C34 -42 ${b.x+4} ${b.y+22} ${b.x} ${b.y} L${a.x} ${a.y} C${a.x-4} ${a.y+20} -35 -42 -46 -10Z`);
+   if(locomotion){
+    // Body width and kitten proportions do not scale the leg anchors equally.
+    // Include each upper foreleg in the same painted shoulder silhouette.
+    n.support??=Array.from({length:4},()=>{const polygon=document.createElementNS('http://www.w3.org/2000/svg','polygon');n.chestShape.parentElement.append(polygon);return polygon;});
+    for(const [i,key] of ['legFarFront','legNearFront'].entries()){
+     const matrix=r.nodes.chest.getCTM().inverse().multiply(r.nodes[key].getCTM());
+     const points=[[-7,-8],[7,-8],[7,4],[-7,4]].map(([x,y])=>new DOMPoint(x,y).matrixTransform(matrix));
+     const coords=points.map(q=>`${q.x},${q.y}`);
+     n.support[i*2].setAttribute('points',coords.join(' '));
+     n.support[i*2+1].setAttribute('points',`-12,-12 12,-12 ${coords[1]} ${coords[0]}`);
+    }
+   }
   }
   const tail=r.nodes.tail,base=tail.getAttribute('transform');tail.setAttribute('transform',base+` skewX(${Math.sin(t*1.8-.8)*2.2})`);
   if(window.CatFaceDepth&&!r.depthManual){

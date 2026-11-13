@@ -23,6 +23,8 @@ const suites = {
   ['6時間・24時間進める', 'debug-clock.test.cjs']
  ],
  critical:[
+  ['メール増加時のスクロール・閉じる・時刻更新', 'mailbox-feedback.test.cjs'],
+  ['子どもの首、歩行の前脚接続、おさがりの画像', 'feedback-art.test.cjs'],
   ['帰宅案内の混在・アルバム復帰・床全域への家具タッチ配置', 'feedback-nov10.test.cjs'],
   ['チュートリアル地図のスワイプ・自動移動中の時刻更新', 'tutorial-map-clock.test.cjs'],
   ['コイン取得と撫でる操作、移動中の模様替え、抱っこ後の表示', 'room-continuity.test.cjs'],

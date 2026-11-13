@@ -32,6 +32,7 @@ function bowlSVG(water=false,level=100){
  return bookSVG(body+contents).replace('0 0 250 220',water?'45 52 165 155':'12 86 230 105');
 }
 Object.assign(bookIcons,{
+ treat:bookSVG('<path d="M82 38L165 35 178 181 72 184Z" fill="#c88467"/><path d="M82 38L165 35 164 49 81 52ZM73 169L177 166 178 181 72 184Z" fill="#a8664e"/><path d="M88 77L161 75 165 142 83 145Z" fill="#f6e8c7"/><path d="M107 119Q101 105 114 100Q123 89 134 100Q148 106 140 119Q133 126 123 122Q113 127 107 119Z" fill="#ad8055"/><ellipse cx="106" cy="95" rx="5" ry="7" fill="#ad8055"/><ellipse cx="122" cy="88" rx="5" ry="7" fill="#ad8055"/><ellipse cx="138" cy="94" rx="5" ry="7" fill="#ad8055"/>'),
  bowl:bowlSVG(),water:bowlSVG(true),
  litter:bookSVG('<path d="M27 77L179 63 225 102 207 174 55 191 22 147Z" fill="#82927b"/><path d="M27 77L179 63 225 102 63 125Z" fill="#e0d7bc"/><path d="M46 84L174 75 203 100 66 115Z" fill="#b7a789"/><path d="M63 125L225 102 218 124 73 147 55 132Z" fill="#a8b39a"/><path d="M80 88l5 2m18-6 4 3m20-5 6 2m20 0 4 4m-70 12 6 2m18-7 5 3m23-4 5 2m24-6 4 3" stroke="#e5d9b7" stroke-width="5" stroke-linecap="round"/><path d="M55 136Q80 167 106 143L107 161Q75 181 55 156Z" fill="#f1e5c8"/>'),
  box:bookSVG('<path d="M33 69L175 60 186 175 44 185Z" fill="#b5824e"/><path d="M175 60L216 89 220 171 186 175Z" fill="#aa8056"/><path d="M32 71L seventy 40 206 56 175 64Z" fill="#d6bb89"/><path d="M79 122Q111 86 145 119L153 171 80 177Z" fill="#343d35"/>'.replace('seventy','70')),
