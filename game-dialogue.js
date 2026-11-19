@@ -21,7 +21,7 @@ const FIRST_GUIDES={
  healthCommand:{target:'[data-clinic="examine"]',copy:'様子がいつもと違うと感じたら、早めに診てもらいましょう。小さな変化に気づくことも大切ですよ。',next:'surgeryCommand'},
  surgeryCommand:{target:'[data-action="go-surgery"]',copy:'条件が整えば、不妊去勢手術を受けられます。猫が増えすぎないようにする、大切な活動です。',next:'firstCommand'},
  firstCommand:{target:'[data-first="exam"]',copy:'今回は初めての診察です。体調や体の様子を診てもらいましょう。'},
- healthy:{target:'.first-diagnosis',copy:'性別や体重、健康状態がわかりました。カルテと明細を確認して、医療費を払って帰りましょう。',next:'chartReview'},
+ healthy:{target:'.first-diagnosis',copy:'検査が終わりました。つぎはカルテと明細を、一緒に確認しましょう。',next:'chartReview'},
  chartReview:{target:'[data-first="pay"]',copy:''},
  stats:{target:'.first-chart-stats',copy:'性別や体重なども分かりました。',next:'receipt'},
  receipt:{target:'[data-first="pay"]',copy:'初診ではこのような検査をします。医療費を払って、連れて帰りましょう。',next:'chartReview'},
@@ -89,8 +89,8 @@ const HOME_TOUR=[
  ['calendar','.app-calendar','スケジュール','手術と譲渡会の予定です。手術に向けて、ごはんをあげて体重と体調を整えましょう。'],
  ['pay','.app-pay','ミャオペイ','持っているコインを確認できます。広告を見てコインを受け取ることもできます。'],
  ['close','.home-phone-close','お部屋にもどろう','右上の×でアプリを閉じて、お世話の道具を見てみましょう。'],
- ['play','.main-command-row [data-tab="play"]','あそぶ','おもちゃを猫の近くで動かして、一緒に遊びましょう。'],
- ['clean','.main-command-row [data-tab="clean"]','そうじ','掃除道具で汚れを落として、お部屋をきれいに保ちましょう。'],
+ ['play','.main-command-row [data-tab="play"]','あそぶ','下のおもちゃを手に取って、猫の近くへ。持ったまま動かして、一緒に遊びましょう。'],
+ ['clean','.main-command-row [data-tab="clean"]','そうじ','下の掃除道具を手に取って、汚れのところへ。持ったままこすって、きれいにしましょう。'],
  ['food','.room-preparation [data-tab="food"]','ごはん','ごはんを選んで、お皿に用意しましょう。好みや体調を見ながら用意してあげてくださいね。'],
  ['items','.room-preparation [data-tab="touch"]','もちもの','使いたいケア用品を選んで持ち替えられます。左端の引き出しを押すと、収納棚を開けますよ。']
 ];

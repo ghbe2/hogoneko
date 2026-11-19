@@ -88,7 +88,7 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
    for(const dx of[-20,20,-30,30,0])for(const dy of[0,-7,7]){const p={...to,x:Math.max(50/world.width*100,Math.min(100-50/world.width*100,to.x+dx)),y:Math.max((floor.floorTop-28)/world.height*100,Math.min((floor.floorBottom-12)/world.height*100,to.y+dy)),surface:'floor'};if(clear(p))candidates.push(p);}
    candidates.sort((a,b)=>Math.hypot((a.x-to.x)*world.width,(a.y-to.y)*world.height)-Math.hypot((b.x-to.x)*world.width,(b.y-to.y)*world.height));
    result={...(candidates[0]||from),catId:id};
-   gameState.ui={...gameState.ui,catFocus:null,playRestPoint:result};const cue=currentLifeCue();if(cue?.catId===id){cue.point=result;if(to.surface!=='floor')cue.pose='sit';}
+   gameState.ui={...gameState.ui,catFocus:null,playRestPoint:result};const cue=currentLifeCue();if(cue?.catId===id){cue.point=result;cue.itemId=null;if(to.surface!=='floor')cue.pose='sit';}
   }
   node._householdDestination={...result};return result===to?null:result;
  }
@@ -109,6 +109,10 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
   app.querySelectorAll('.resident-selector,.resident-cat,.return-window,.renovate-home').forEach(n=>n.remove());
   const world=app.querySelector('[data-room-world]'),active=getCat(s),main=world?.querySelector('.cat-object');
   if(world&&s.campaign.phase==='room'&&active.status==='raising'){
+   // The cabinet belongs to the left wall. It must not follow the camera and
+   // cover a different cat or bowl when looking into the extension.
+   const cabinet=app.querySelector('.room-preparation');
+   if(cabinet&&getWorldWidth(s)>1)world.append(cabinet);
    let goal=app.querySelector('.alpha-goal');if(!goal&&householdPlaySpaceFactor(s)<1){goal=document.createElement('div');goal.className='room-care-status alpha-goal household-space-status';app.querySelector('.stage')?.append(goal);}
    if(goal&&residentCats(s).length>1){if(!goal.classList.contains('household-space-status'))goal.prepend(document.createTextNode(active.name+'：'));if(householdPlaySpaceFactor(s)<1){const note=document.createElement('span');note.className='household-space-note';note.textContent='2匹には少し手狭です。玩具で心が育つ速さがゆっくりになっています。';goal.append(note);}}
    app.querySelectorAll('.household-pan,.pan-guide').forEach(n=>n.remove());

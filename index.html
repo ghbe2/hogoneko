@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta name="tsuguneko-build" content="local-household-20261119">
+<meta name="tsuguneko-build" content="local-external-fb-20261120">
 <link rel="stylesheet" href="assets/guidance-theme.css">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#f4bfc7">
-  <title>ホゴネコ｜保護から卒業までモック v0.37</title>
+  <title>つぐねこ</title>
   <link rel="preload" href="assets/fonts/nikumaru/nikumaru.otf" as="font" type="font/otf" crossorigin>
   <link rel="stylesheet" href="assets/game-font.css">
   <style>
@@ -1633,7 +1633,7 @@
 // ============================================================
 const CONFIG = {
   game: {
-    title: "ホゴネコ",
+    title: "つぐねこ",
     saveKey: "hogoneko_v2",
     weekStart: 0,
     debug: false,
@@ -3379,7 +3379,7 @@ function animateCatWalk(from, to) {
 
 function animateFelineTravel(element, from, to, pace = 1) {
   const destination=window.roomActorRuntime?.destination?.(element,from,to);
-  if(destination){Object.assign(to,destination);element.style.left=to.x+'%';element.style.top=to.y+'%';element.style.transform=`translate(-50%,-50%) scale(${to.scale})`;}
+  if(destination){Object.assign(to,destination);element.dataset.travelSurface=to.surface||'floor';element.dataset.travelTarget=JSON.stringify([to.x,to.y,to.scale]);element.style.left=to.x+'%';element.style.top=to.y+'%';element.style.transform=`translate(-50%,-50%) scale(${to.scale})`;}
   element._travelAnimation?.cancel();
   const jumping = to.escapeHop || from.surface !== to.surface && (from.surface !== "floor" || to.surface !== "floor");
   const rect = element.parentElement.getBoundingClientRect();
@@ -3499,7 +3499,7 @@ function resumeCampaignTimers() {
 
 function renderCampaignShell(state, place, body, actions = "") {
   return `<section class="campaign-frame" aria-label="保護から卒業まで">
-    <header class="campaign-hud"><div class="campaign-place"><span class="place-chip">${place}</span><strong>ホゴネコ</strong></div><span class="campaign-wallet">${DAY_LABELS[state.week.dayOfWeek]}曜日　💰 ${state.coins.toLocaleString("ja-JP")}</span></header>
+    <header class="campaign-hud"><div class="campaign-place"><span class="place-chip">${place}</span><strong>つぐねこ</strong></div><span class="campaign-wallet">${DAY_LABELS[state.week.dayOfWeek]}曜日　💰 ${state.coins.toLocaleString("ja-JP")}</span></header>
     <main class="campaign-screen"><div class="campaign-scroll">${body}</div>${actions ? `<footer class="campaign-actions">${actions}</footer>` : ""}</main>${renderDebugQuickbar(state)}
   </section>`;
 }
@@ -4363,14 +4363,16 @@ function startGameDrag(event) {
     return;
   }
 
-  if (event.target.closest("[data-action], .placed-item, .cat-object, .trouble-object, .clue-marker, .mess-object, .held-cat")) return;
+  // Panning belongs only to unoccupied room space. Several overlays use their
+  // own handlers rather than data-action; consuming their press prevents click.
+  if (gameState.ui.modal || event.target.closest("button, a, input, select, textarea, [role='button'], .modal-layer, [data-action], .placed-item, .cat-object, .household-other-cat, .trouble-object, .clue-marker, .mess-object, .held-cat")) return;
   if (!CONFIG.stage1.roomPanEnabled) return;
   const stage = event.target.closest(".stage");
   const world = stage?.querySelector("[data-room-world]");
   if (!stage || !world) return;
   event.preventDefault();
   const rect = stage.getBoundingClientRect();
-  panDraft = { startX:event.clientX, startPan:gameState.ui.roomPan, pan:gameState.ui.roomPan, maxPan:getMaxPan(gameState), rect, world };
+  panDraft = { startX:event.clientX, startPan:gameState.ui.roomPan, pan:gameState.ui.roomPan, maxPan:getMaxPan(gameState), rect, world, moved:false };
   world.classList.add("dragging");
 }
 
@@ -4419,6 +4421,8 @@ function moveGameDrag(event) {
     return;
   }
   if (panDraft) {
+    if (!panDraft.moved && Math.abs(panDraft.startX-event.clientX)<=8) return;
+    panDraft.moved=true;
     event.preventDefault();
     const delta = ((panDraft.startX - event.clientX) / panDraft.rect.width) * 100;
     panDraft.pan = Math.max(0, Math.min(panDraft.maxPan, panDraft.startPan + delta));
@@ -4480,7 +4484,7 @@ function finishGameDrag(event) {
     const draft = panDraft;
     panDraft = null;
     draft.world.classList.remove("dragging");
-    dispatch({ type:"SET_ROOM_PAN", pan:Math.round(draft.pan) });
+    if(draft.moved){suppressClickUntil=Date.now()+350;dispatch({ type:"SET_ROOM_PAN", pan:Math.round(draft.pan) });}
   }
 }
 

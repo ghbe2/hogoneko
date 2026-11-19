@@ -9,7 +9,7 @@ function intakePlacementFrame(state,width=app.clientWidth,height=app.clientHeigh
  const bounds=roomPlacementBounds(height,state),top=INTAKE_GUIDE_TOP+GUIDE_NOTE_HEIGHT+8;
  // The SVGs include a small transparent margin below their feet.
  return {width,height,top,dragTop:bounds.wallTop,bottom:bounds.floorBottom,floor:bounds.floorTop+14,
-  carrier:{x:width-122,y:Math.max(top,bounds.floorTop-51),width:110,height:63}};
+  carrier:{x:width-122,y:Math.max(bounds.wallTop,bounds.floorTop-51),width:110,height:63}};
 }
 function intakeFurnitureRect(p,frame){return {x:p.x*frame.width/100,y:p.y*frame.height/100,width:['shelf','decor_sun'].includes(p.itemId)?100:p.itemId==='tower'?90:84,height:furnitureHeight(p.itemId)};}
 // Automatic first placement keeps the essentials apart. Player placement uses
@@ -18,7 +18,7 @@ function intakePositionInBounds(p,frame){
  const r=intakeFurnitureRect(p,frame);
  return r.x>=12-.1&&r.x+r.width<=frame.width-12+.1&&r.y>=frame.dragTop-.1&&r.y+r.height>=frame.floor-.1&&r.y+r.height<=frame.bottom+.1;
 }
-function furnitureRectsOverlap(a,b,gap=8){return a.x<b.x+b.width+gap&&a.x+a.width+gap>b.x&&a.y<b.y+b.height+gap&&a.y+a.height+gap>b.y;}
+function furnitureRectsOverlap(a,b,gap=8){const epsilon=.1;return a.x<b.x+b.width+gap-epsilon&&a.x+a.width+gap-epsilon>b.x&&a.y<b.y+b.height+gap-epsilon&&a.y+a.height+gap-epsilon>b.y;}
 function intakePositionClear(p,placed,frame){
  const r=intakeFurnitureRect(p,frame);
  return r.x>=12-.1&&r.x+r.width<=frame.width-12+.1&&r.y>=frame.top-.1&&r.y+r.height>=frame.floor-.1&&r.y+r.height<=frame.bottom+.1&&!furnitureRectsOverlap(r,frame.carrier)&&placed.every(n=>n.itemId===p.itemId||!furnitureRectsOverlap(r,intakeFurnitureRect(n,frame)));
@@ -32,15 +32,20 @@ function openIntakePositions(itemId,placed,frame){
 }
 function intakeBoxCanMove(placed,frame){
  const box=placed.find(p=>p.itemId==='box');if(!box)return true;
- return [[24,0],[-24,0],[0,24],[0,-24]].some(([dx,dy])=>intakePositionClear({...box,x:box.x+dx/frame.width*100,y:box.y+dy/frame.height*100},placed,frame));
+ return [[24,0],[-24,0],[0,24],[0,-24]].some(([dx,dy])=>intakePositionInBounds({...box,x:box.x+dx/frame.width*100,y:box.y+dy/frame.height*100},frame));
 }
 function planIntakeFurniture(state,placed,pending,randomize=false){
  const frame=intakePlacementFrame(state);let budget=3000;
  function solve(items,rest){
-  if(!intakeBoxCanMove(items,frame))return null;
+  // Manual placement accepts the whole floor, including beside/over another
+  // item. Do not require an additional empty 24px corridor for the tutorial.
   if(!rest.length)return items;
   if(--budget<0)return null;
-  const options=openIntakePositions(rest[0],items,frame);
+  const itemId=rest[0],size=intakeFurnitureRect({itemId,x:0,y:0},frame);
+  const obstacles=[frame.carrier,...items.map(p=>intakeFurnitureRect(p,frame))];
+  const xs=new Set([12,frame.width-12-size.width]),ys=new Set([Math.max(frame.top,frame.floor-size.height),frame.bottom-size.height]);
+  for(const r of obstacles){xs.add(r.x+r.width+8);xs.add(r.x-size.width-8);ys.add(r.y+r.height+8);ys.add(r.y-size.height-8);}
+  const options=[...xs].flatMap(x=>[...ys].map(y=>({itemId,x:x/frame.width*100,y:y/frame.height*100}))).filter(p=>intakePositionClear(p,items,frame));
   if(randomize)for(let i=options.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[options[i],options[j]]=[options[j],options[i]];}
   for(const p of options){const result=solve([...items,p],rest.slice(1));if(result)return result;}
   return null;
@@ -253,7 +258,7 @@ render=function(state){
  }
  if(state.campaign.phase==='clinic'&&getCat(state).status==='captured'&&state.campaign.clinicStep==='exam')firstTimer=setTimeout(()=>dispatch({type:'FINISH_EXAM'}),Math.max(0,3000-(Date.now()-(state.campaign.firstExamAt||Date.now()))));
  if(state.ui.storeThanks&&state.campaign.phase==='shop')shopExitTimer=setTimeout(()=>dispatch({type:'BACK_TO_TOWN'}),Math.max(0,(state.ui.storeLeaveAt||Date.now()+3000)-Date.now()));
- if(state.ui.firstName){const panel=document.createElement('div');panel.className='first-name modal-layer';panel.innerHTML=`<section><div class="first-name-cat">${renderCatArt(getCat(state))}</div><h2>なまえ決まった？</h2><input maxlength="8" aria-label="ネコの名前（8文字まで）"><button data-first="name">決定</button></section>`;panel.querySelector('input').value=state.campaign.nameDraft||'';app.append(panel);mountGameCats();return;}
+ if(state.ui.firstName){const panel=document.createElement('div');panel.className='first-name modal-layer';panel.innerHTML=`<section><div class="first-name-cat">${renderCatArt(getCat(state))}</div><h2>なまえ決まった？</h2><input maxlength="8" placeholder="1〜8文字でつけてね" aria-label="ネコの名前（1〜8文字）"><button data-first="name">決定</button></section>`;panel.querySelector('input').value=state.campaign.nameDraft||'';panel.querySelector('button').disabled=!panel.querySelector('input').value.trim();app.append(panel);mountGameCats();return;}
  if(!firstActive(state)||titleScreenOpen)return;
  const spec=FIRST_GUIDES[state.onboarding.guide];if(!spec)return;
  const pause=firstGuidePause(state);if(pause){if(state.onboarding.guide==='fieldHello')app.querySelectorAll('.encounter-plant').forEach((n,i)=>{if(i%3===0)n.style.animation='encounter-rustle 1.1s ease-in-out infinite';});firstGuideRevealTimer=setTimeout(()=>render(gameState),pause);return;}
@@ -272,7 +277,7 @@ render=function(state){
 app.addEventListener('click',event=>{
  const b=event.target.closest('[data-first]');if(b){const map={next:'FIRST_GUIDE_NEXT',finish:'FIRST_FINISH',exam:'FIRST_EXAM',pay:'PAY_FIRST_EXAM',name:'FIRST_NAME_CALL'};dispatch({type:map[b.dataset.first],name:app.querySelector('.first-name input')?.value});return;}
 });
-app.addEventListener('input',event=>{if(event.target.matches('.first-name input')){gameState={...gameState,campaign:{...gameState.campaign,nameDraft:event.target.value}};saveGameState(gameState);}});
+app.addEventListener('input',event=>{if(event.target.matches('.first-name input')){gameState={...gameState,campaign:{...gameState.campaign,nameDraft:event.target.value}};const button=app.querySelector('[data-first="name"]');if(button)button.disabled=!event.target.value.trim();saveGameState(gameState);}});
 function gateFirstInput(event){
  if(event.target.closest('[data-alpha-report],.alpha-report,.alpha-layer,.debug-start-button,.debug-start-dialog'))return;
  if(!firstActive(gameState)||titleScreenOpen)return;

@@ -4,11 +4,11 @@ let furnitureUndo=[];
 let furnitureStoredNotice=null;
 function furnitureStorageArt(){return `<svg viewBox="0 0 80 64" aria-hidden="true"><path d="M10 22L40 13 70 22 40 34Z" fill="#776045"/><g class="storage-flaps"><path d="M10 22L3 12 31 4 40 13Z" fill="#d5b982"/><path d="M40 13L50 4 78 13 70 22Z" fill="#c5a16c"/></g><path d="M10 22L40 32 40 60 10 48Z" fill="#be9863"/><path d="M40 32L70 22 70 48 40 60Z" fill="#a87e50"/><path d="M10 22L40 32 70 22" fill="none" stroke="#ead4a7" stroke-width="2"/><path d="M18 31L33 36 33 48 18 43Z" fill="#efe0ba"/><path d="M22 36L28 38" stroke="#9b885e" stroke-width="2"/><path d="M46 48L63 42M15 46L35 53" stroke="#cfac77" stroke-width="1"/></svg>`;}
 function updateFurnitureStorage(draft){const target=draft.storage;if(!target?.classList.contains('layout-store-target'))return;target.dataset.state=draft.store?'over':'drag';target.querySelector('.storage-copy').textContent=draft.store?'離してしまう':'ここへドラッグしてしまう';}
-const ROOM_CONTROL_RESERVE=128;
+const ROOM_CONTROL_RESERVE=118;
 const ROOM_MENU_RESERVE=118;
 function layoutWallStart(height=app.clientHeight||window.innerHeight){return ROOM_MENU_RESERVE/height*100;}
 // The painted skirting is at y=429 in the 760-unit room artwork.
-function roomPlacementBounds(height=app.clientHeight||window.innerHeight,state=gameState){const intake=state.campaign.phase==='intake'&&state.onboarding?.status==='active'&&state.onboarding.flowVersion===1;return {wallTop:ROOM_MENU_RESERVE,wallBottom:height*429/760-8,floorTop:height*429/760+8,floorBottom:height-(intake?76:ROOM_CONTROL_RESERVE)};}
+function roomPlacementBounds(height=app.clientHeight||window.innerHeight,state=gameState){return {wallTop:ROOM_MENU_RESERVE,wallBottom:height*429/760-8,floorTop:height*429/760+8,floorBottom:height-ROOM_CONTROL_RESERVE};}
 function furnitureHeight(itemId){if(['shelf','hammock'].includes(itemId))return 77;return itemId==='tower'?150:['bowl','water'].includes(itemId)?45:['shelf','decor_sun','litter'].includes(itemId)?65:84;}
 function constrainFurnitureY(itemId,y,height=app.clientHeight||window.innerHeight,itemHeight=furnitureHeight(itemId)){
  const b=roomPlacementBounds(height),wall=getItem(itemId)?.zone==='wall';
