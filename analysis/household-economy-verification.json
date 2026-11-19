@@ -1,0 +1,42 @@
+{
+  "growth": [
+    80,
+    100
+  ],
+  "once": 8,
+  "repeated": 8,
+  "two": 16,
+  "capped": 16,
+  "migrated": 0,
+  "cramped": 0.8,
+  "expanded": 1,
+  "solo": 1,
+  "balance": {
+    "dailyCoins": 8,
+    "dailyAdCoins": 4,
+    "familyCoins": 10,
+    "toyWearMs": 40000
+  },
+  "food": [
+    [
+      "food_wet",
+      12
+    ],
+    [
+      "food_fish",
+      12
+    ],
+    [
+      "food_kitten",
+      12
+    ],
+    [
+      "food_chicken",
+      12
+    ],
+    [
+      "food_soup",
+      12
+    ]
+  ]
+}

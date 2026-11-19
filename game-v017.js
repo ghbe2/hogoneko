@@ -307,6 +307,7 @@ function animateGameCats(now){
         continue;
       }
       if(svg.dataset.motionResumeAt){if(Date.now()<Number(svg.dataset.motionResumeAt))continue;delete svg.dataset.motionResumeAt;entry.since=now;entry.previous=null;}
+      const update=()=>{
       let [pose,mood]=scenePose(svg),t=(now-entry.since)/1000;
       if(pose!==entry.pose){entry.previous=entry.lastModel||CatSVG.poseModel(entry.pose,t);entry.pose=pose;entry.since=now;entry.changed=now;t=0;}
       entry.rig.d.mood=mood;
@@ -324,6 +325,10 @@ function animateGameCats(now){
       if(discovery)positionDiscoveryCoin(entry);
       // The room owns dirt and toys; the cat renderer supplies only the animal.
       if(svg.closest('.cat-object')){entry.rig.nodes.props.innerHTML='';entry.rig.nodes.effects.innerHTML='';}
+      };
+      // A household supplies each cat's state; the animation pipeline stays the same.
+      if(window.roomActorRuntime?.owns(svg))window.roomActorRuntime.run(svg.dataset.catId,update);
+      else update();
     }
   }
   requestAnimationFrame(animateGameCats);

@@ -57,7 +57,7 @@ reduceGameState=function(state,action){
  const world=()=>app.querySelector('[data-room-world]')?.getBoundingClientRect();
  if(action.type==='DROP_LAYOUT_ITEM'&&!action.store&&wallItemHitsWindow(action.itemId,action.x,constrainFurnitureY(action.itemId,action.y),world()))return state;
  if(action.type==='DROP_LAYOUT_ITEM'&&!action.store){if(typeof guidedIntake==='function'&&guidedIntake(state)){if(!intakePositionInBounds(action,intakePlacementFrame(state)))return state;}else action={...action,y:constrainFurnitureY(action.itemId,action.y)};}
- if(action.type==='ROAM_CAT'&&daylightAt()&&getAffinity(getCat(state),{affinityType:'sun'}).score>0&&Math.random()<.65)action={...action,index:990};
+ if(action.type==='ROAM_CAT'&&!action.freeWalk&&daylightAt()&&getAffinity(getCat(state),{affinityType:'sun'}).score>0&&Math.random()<.65)action={...action,index:990};
  if(action.type==='PICK_FURNITURE'){
   const item=getItem(action.itemId);if(!item||!owned(state,item.id)||getDurability(state,item.id)<=0)return state;
   const placed=getPlaced(getRoom(state)).find(p=>p.itemId===item.id);
@@ -311,29 +311,33 @@ const progressionStyle=document.createElement('style');progressionStyle.textCont
 .shop-product .product-benefit{color:#75634e;font-size:11px;line-height:1.5;white-space:normal}.shop-product.progression-locked{opacity:.65}.progression-news{font-size:12px;line-height:1.5;padding:8px;background:#e7ebdc;border-radius:10px}.loop-prep .loop-keeps{padding:10px;font-size:12px}.loop-prep header h2{font-size:18px}.loop-prep{gap:6px}.loop-prep header h2{margin:6px 0}.loop-prep .loop-balance{font-size:25px}
 `;document.head.appendChild(progressionStyle);
 
-// Daily discovery: local calendar day, once per save, not per cat or simulated day.
+// Daily discovery: once per resident cat per care day; legacy claims migrate without a second payout.
 function discoveryDay(now=new Date(gameNow())){return careDayKey(now,true);}
-function discoveryAvailable(state){return getCat(state).status==='raising'&&(!state.dailyDiscovery?.lastDay||state.dailyDiscovery.lastDay<discoveryDay());}
+function discoveryAvailable(state){const daily=state.dailyDiscovery||{},last=daily.byCat?daily.byCat[getCat(state).id]:daily.lastDay;return getCat(state).status==='raising'&&(!last||last<discoveryDay());}
 const discoveryReduce=reduceGameState;
 function discoveryScene(state){return state.campaign.phase==='room'&&!state.ui.modal&&!state.ui.layoutMode&&!state.ui.holdingCat&&(!state.ui.careAnimation||['food','water'].includes(state.ui.careAnimation.operation))&&!state.campaign.requiredVisit&&discoveryAvailable(state);}
 reduceGameState=function(state,action){
  if(['ROAM_CAT','FINISH_PLAY'].includes(action.type)&&discoveryScene(state))return state;
  const next=discoveryReduce(state,action);
  if(action.type!=='PICK_DISCOVERY_COIN'||!discoveryScene(state)||!discoveryScene(next))return next;
- return {...next,coins:next.coins+(CONFIG.economy.discoveryCoins||5),dailyDiscovery:{lastDay:discoveryDay(),visits:(state.dailyDiscovery?.visits||0)+1},ui:{...next.ui,coinDiscovery:{id:Date.now()+Math.random(),until:Date.now()+2200}}};
+ return {...next,coins:next.coins+(CONFIG.economy.discoveryCoins||5),dailyDiscovery:{...state.dailyDiscovery,byCat:{...(state.dailyDiscovery?.byCat||Object.fromEntries(state.cats.map(c=>[c.id,state.dailyDiscovery?.lastDay]))),[getCat(state).id]:discoveryDay()},visits:(state.dailyDiscovery?.visits||0)+1},ui:{...next.ui,coinDiscovery:{id:Date.now()+Math.random(),until:Date.now()+2200}}};
 };
 const discoveryPose=scenePose;
 scenePose=function(svg){const pose=discoveryPose(svg);if(svg.closest('.cat-object')&&discoveryScene(gameState)&&!gameState.ui.playMode&&!['walk','jump'].includes(pose[0]))return ['punch','neutral'];return pose;};
-const discoveryRender=render;let lastDiscovery=null;
+const discoveryRender=render;const lastDiscovery=new Map();
 render=function(state){
  discoveryRender(state);const cat=app.querySelector('.cat-object'),stage=app.querySelector('.stage');if(!cat||!stage||state.ui.modal||state.ui.layoutMode)return;
  const c=cat.getBoundingClientRect(),s=stage.getBoundingClientRect();
  if(discoveryScene(state)){const clue=document.createElement('button');clue.type='button';clue.className='discovery-pickup';clue.dataset.action='pick-discovery-coin';clue.innerHTML='<span>●</span>';clue.setAttribute('aria-label','ネコが遊んでいるコインを拾う');stage.appendChild(clue);positionDiscoveryCoin();}
- const found=state.ui.coinDiscovery;if(!found||found.id===lastDiscovery||found.until<Date.now())return;lastDiscovery=found.id;
- const coin=document.createElement('span');coin.className='discovery-coin';coin.textContent='● +'+(CONFIG.economy.discoveryCoins||5);coin.setAttribute('role','status');coin.setAttribute('aria-label',(CONFIG.economy.discoveryCoins||5)+'コインを見つけた');const x=Math.max(30,Math.min(s.width-50,c.left-s.left+c.width/2)),y=Math.max(35,c.top-s.top+c.height*.5);coin.style.left=x+'px';coin.style.top=y+'px';stage.appendChild(coin);
+ renderDiscoveryReward(state,cat,stage);
+};
+function renderDiscoveryReward(state,cat,stage){
+ if(!cat||!stage)return;const c=cat.getBoundingClientRect(),s=stage.getBoundingClientRect();
+ const found=state.ui.coinDiscovery;if(!found||lastDiscovery.get(getCat(state).id)===found.id||found.until<Date.now())return;lastDiscovery.set(getCat(state).id,found.id);
+ const coin=document.createElement('span');coin.className='discovery-coin';coin.innerHTML=(typeof PAW_COIN==='string'?PAW_COIN:'●')+' +'+(CONFIG.economy.discoveryCoins||5);coin.setAttribute('role','status');coin.setAttribute('aria-label',(CONFIG.economy.discoveryCoins||5)+'コインを見つけた');const x=Math.max(30,Math.min(s.width-50,c.left-s.left+c.width/2)),y=Math.max(35,c.top-s.top+c.height*.5);coin.style.left=x+'px';coin.style.top=y+'px';stage.appendChild(coin);
  // The app button is created by the outer room renderer later in this frame.
  requestAnimationFrame(()=>{if(!coin.isConnected)return;const target=app.querySelector('.room-icon-menu [data-action="open-notebook"]'),r=target?.getBoundingClientRect(),from=coin.getBoundingClientRect();const dx=r?r.left+r.width/2-from.left-from.width/2:0,dy=r?r.top+r.height/2-from.top-from.height/2:-25;coin.dataset.destination='app';coin.animate([{translate:'0 0',opacity:0,scale:.5},{offset:.2,translate:'0 -25px',opacity:1,scale:1.1},{offset:.6,translate:'0 -25px',opacity:1,scale:1},{translate:`${dx}px ${dy}px`,opacity:0,scale:.45}],{duration:1600,fill:'forwards'});setTimeout(()=>coin.remove(),1700);});
-};
+}
 const discoveryStyle=document.createElement('style');discoveryStyle.textContent='.discovery-glint{position:absolute;pointer-events:none;color:#d6ac54;font-size:20px;animation:discovery-glint 3s ease-in-out infinite}.discovery-coin{position:absolute;z-index:90;pointer-events:none;color:#ba872d;font:bold 16px var(--game-font);text-shadow:0 2px #fff8}@keyframes discovery-glint{50%{opacity:.2;scale:.7}}@media(prefers-reduced-motion:reduce){.discovery-glint{animation:none}}';document.head.appendChild(discoveryStyle);
 // The paw and coin share one clock and the cat's ground-space coordinates.
 function discoveryContactMotion(t){
@@ -348,7 +352,7 @@ function discoveryContactMotion(t){
  return {model:m,x,y:0,contact:u>=.55&&u<=.71,rotation:x*7};
 }
 function positionDiscoveryCoin(entry){
- const coin=app.querySelector('.discovery-pickup'),svg=app.querySelector('.cat-object .game-cat-svg'),stage=app.querySelector('.stage');
+ const coin=[...app.querySelectorAll('.discovery-pickup')].find(n=>n.dataset.hhCoin===getCat(gameState).id)||app.querySelector('.discovery-pickup:not([data-hh-coin])'),svg=app.querySelector('.cat-object .game-cat-svg'),stage=app.querySelector('.stage');
  entry=entry?.rig?entry:svgRigs.get(svg);if(!coin||!entry?.discoveryContact||!stage)return;
  const motion=entry.discoveryContact,matrix=entry.rig.nodes.age.getScreenCTM();if(!matrix)return;
  const point=new DOMPoint(motion.x,motion.y).matrixTransform(matrix),s=stage.getBoundingClientRect();

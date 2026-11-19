@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ja">
 <head>
+<meta name="tsuguneko-build" content="local-household-20261119">
 <link rel="stylesheet" href="assets/guidance-theme.css">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
@@ -3377,6 +3378,8 @@ function animateCatWalk(from, to) {
 }
 
 function animateFelineTravel(element, from, to, pace = 1) {
+  const destination=window.roomActorRuntime?.destination?.(element,from,to);
+  if(destination){Object.assign(to,destination);element.style.left=to.x+'%';element.style.top=to.y+'%';element.style.transform=`translate(-50%,-50%) scale(${to.scale})`;}
   element._travelAnimation?.cancel();
   const jumping = to.escapeHop || from.surface !== to.surface && (from.surface !== "floor" || to.surface !== "floor");
   const rect = element.parentElement.getBoundingClientRect();
@@ -4838,7 +4841,7 @@ function accrueLivePlayHeart(draft, catElement, result, segment, dt, speed) {
   draft.heartAtLimit=allowance-draft.heartEarned<.9999;
   if (allowance - draft.heartEarned < .9999) return;
   draft.canGainHeart=true;
-  draft.heartProgressMs += Math.max(0, Math.min(100, dt));
+  draft.heartProgressMs += Math.max(0, Math.min(100, dt)) * householdPlaySpaceFactor(gameState);
   const interval = CONFIG.playFeel[result.affinity].tickMs / (getItem(draft.itemId)?.playEfficiency || 1);
   while (draft.heartProgressMs >= interval && allowance - draft.heartEarned + .0001 >= 1) {
     draft.heartProgressMs -= interval;
@@ -4870,6 +4873,8 @@ function spawnLiveFeedback(catElement, affinity, big = false, moodOnly = false) 
 }
 
 function animateLiveCatMove(draft, catElement, from, to, speed) {
+  const destination=window.roomActorRuntime?.destination?.(catElement,from,to);
+  if(destination)Object.assign(to,destination);
   const parentRect = catElement.parentElement.getBoundingClientRect();
   const computed = getComputedStyle(catElement);
   const matrix = new DOMMatrixReadOnly(computed.transform === "none" ? undefined : computed.transform);
@@ -4931,12 +4936,14 @@ document.addEventListener("touchend", event => {
 }, { passive:false });
 document.addEventListener("dblclick", event => event.preventDefault());
 
-function scheduleRoam() {
+function roomRoamDelay() {
   const cat = getCat(gameState);
   const ratio = cat.heart / CONFIG.week.heartCapMax;
   const span = CONFIG.stage1.roamMsHighHeart - CONFIG.stage1.roamMsLowHeart;
   const delay = CONFIG.stage1.roamMsLowHeart + Math.round(span * ratio);
-  window.setTimeout(() => {
+  return delay;
+}
+function performRoomRoam() {
     if (!titleScreenOpen && gameState.campaign.phase === "room" && !commandDraft && !playDraft && !gameState.ui.modal && !gameState.ui.layoutMode && !gameState.ui.holdingCat && !gameState.ui.reaction && !gameState.ui.catFocus && !gameState.ui.playMode) {
       const catNow = getCat(gameState);
       const stage = getHeartStage(catNow.heart);
@@ -4950,8 +4957,18 @@ function scheduleRoam() {
       if (next === gameState.ui.roamIndex) next = preferred[(preferred.findIndex(entry => entry.index === next) + 1) % preferred.length].index;
       dispatch({ type:"ROAM_CAT", index:next });
     }
-    scheduleRoam();
-  }, delay);
+
+}
+const roomRoamTimers=new Map();
+function scheduleRoam() {
+  const actors=window.roomActorRuntime?.ids()||[null];
+  for(const [id,timer] of roomRoamTimers)if(!actors.includes(id)){clearTimeout(timer);roomRoamTimers.delete(id);}
+  for(const id of actors){
+    if(roomRoamTimers.has(id))continue;
+    const run=fn=>id===null?fn():window.roomActorRuntime.run(id,fn);
+    const delay=run(roomRoamDelay);
+    roomRoamTimers.set(id,setTimeout(()=>{roomRoamTimers.delete(id);run(performRoomRoam);scheduleRoam();},delay));
+  }
 }
 
 function triggerAutoEvent() {
@@ -5436,5 +5453,11 @@ render = function(state) {
 document.addEventListener('DOMContentLoaded', () => render(gameState), {once:true});
 </script>
 <script src="game-debug-start.js"></script>
+<link rel="stylesheet" href="assets/household.css">
+<link rel="stylesheet" href="assets/household-return.css">
+<script src="game-household-runtime.js"></script>
+<script src="game-household-return.js"></script>
+<script src="game-household-boot.js"></script>
+<script src="game-diagnostics.js"></script>
 </body>
 </html>

@@ -59,7 +59,7 @@ reduceGameState=function(state,action){
   }
   if(care.operation==='food'&&before.body.foodLevel<=50&&after.body.foodLevel>before.body.foodLevel)queueObjectReaction(next,'bowl','eat');
   if(care.operation==='water'&&before.body.waterLevel<=50&&after.body.waterLevel>before.body.waterLevel)queueObjectReaction(next,'water','eat');
- }else if((action.type==='ROAM_CAT'||state.ui.layoutMode&&!next.ui.layoutMode)&&!currentLifeCue()&&!commandDraft&&!discoveryScene(next)){
+ }else if((action.type==='ROAM_CAT'&&!action.freeWalk||state.ui.layoutMode&&!next.ui.layoutMode)&&!currentLifeCue()&&!commandDraft&&!discoveryScene(next)){
   const entries=getPlaced(getRoom(next)).filter(p=>FURNITURE_REACTIONS[p.itemId]&&getDurability(next,p.itemId)>0);
   if(entries.length){const entry=(state.ui.layoutMode?entries.find(p=>p.itemId===state.ui.lastLayoutItem):null)||entries[Math.floor(gameNow()/6000)%entries.length];queueObjectReaction(next,entry.itemId,FURNITURE_REACTIONS[entry.itemId]);}
  }

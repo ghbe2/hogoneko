@@ -1,7 +1,8 @@
 'use strict';
-// Provisional tuning: a seven-day, ad-free adoption cycle is slightly positive.
-const CARE_BALANCE={dailyCoins:3,dailyAdCoins:4,familyCoins:10,toyWearMs:20000};
+// Approved household budget: 8 coins per cat/day, 12 food servings per pack, 40 seconds per toy durability unit.
+const CARE_BALANCE={dailyCoins:8,dailyAdCoins:4,familyCoins:10,toyWearMs:40000};
 CONFIG.economy.discoveryCoins=CARE_BALANCE.dailyCoins;CONFIG.economy.adRewardCoins=CARE_BALANCE.dailyAdCoins;RELEASE_ECONOMY.ad=CARE_BALANCE.dailyAdCoins;
+for(const product of SHOP_CATALOG)if(product.category==='food'&&!getItem(product.id)?.unlimited)product.quantity=12;
 function toyPlayMillisecondsLeft(state,id){if(getItem(id)?.unlimited)return Infinity;const copies=Math.max(0,Number(state.inventory[id])||0),units=copies?getDurability(state,id)+Math.max(0,copies-1)*getMaxDurability(id):0;return Math.max(0,units*CARE_BALANCE.toyWearMs-(state.toyWearMs?.[id]||0));}
 function wearToyForTime(state,id,milliseconds){
  if(getItem(id)?.unlimited)return {inventory:state.inventory,durability:state.durability,broken:false,toyWearMs:state.toyWearMs};

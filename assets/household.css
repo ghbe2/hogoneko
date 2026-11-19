@@ -1,0 +1,23 @@
+.household-other-cat{position:absolute;cursor:grab;touch-action:none;user-select:none;background:none;border:0;padding:0}
+.household-other-cat .game-cat-svg{width:100%;height:100%;pointer-events:none;overflow:visible;transform:scale(1.3)}
+/* Transparent rig padding must not cover the other cat or a visible bowl. */
+.household-active .stage .cat-object,.household-active .stage .household-other-cat{pointer-events:none}
+.household-active .stage :is(.cat-object,.household-other-cat) .game-cat-svg :is(path,ellipse,circle,polygon,rect,use){pointer-events:visiblePainted}
+.home-phone .household-phone-tabs{display:flex;gap:5px;margin:0 0 5px;flex-shrink:0;height:44px}
+.home-phone .household-phone-tabs button{flex:1;min-height:44px;height:44px;padding:3px 6px;background:#eee3cf;color:#70533e;border:0;border-radius:18px;font:inherit;font-size:14px;white-space:nowrap}
+.household-phone-tabs button[aria-pressed=true]{background:#9d5341;color:#fff8e9}
+.household-picker .menu-sheet{display:flex;flex-direction:column;gap:12px;max-height:calc(100% - 24px);padding:18px}
+.household-picker .menu-sheet h2{margin:0;font-size:18px;line-height:1.5}
+.household-picker .menu-sheet p{margin:0;font-size:14px;line-height:1.6}
+.household-picker .menu-sheet button{flex:none;min-height:44px;border:1px solid #c9b995;border-radius:22px;background:#eee2ca;color:#70533e;padding:10px 12px;font:inherit;font-size:14px}
+.household-picker [data-hh-buy]{background:#9d5341!important;color:#fff8e9!important;border-color:#9d5341!important}
+.household-picker [data-hh-buy]:disabled{background:#ded5c3!important;color:#8c816d!important;border-color:#d0c5af!important}
+.household-picker .menu-sheet [data-hh-home]{background:#9d5341;color:#fff8e9;border-color:#9d5341}
+.book-room{touch-action:none}
+.store-scene .household-renovation-banner{position:absolute;left:12px;top:76px;z-index:12;display:flex;align-items:center;gap:8px;width:166px;min-height:48px;margin:0;padding:8px 10px;border:1px solid #b58b63;border-radius:4px 12px 12px 4px;background:#fff4d9;color:#805138;box-shadow:0 3px 0 #74563e22;font-family:var(--game-font);font-size:13px;white-space:nowrap}
+.household-renovation-banner svg{width:25px;height:25px;flex:none;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.household-renovation-banner span:last-child{margin-left:auto;font-size:22px;line-height:1}
+
+
+
+.household-space-note{display:block;font-size:12px;line-height:1.5;margin-top:4px;color:#9d5341}

@@ -34,19 +34,23 @@ function showFeel(catElement,affinity){
  svg.animate([{translate:'0 0',rotate:'0deg'},{translate:`${strength<0?10:0}px ${strength>0?-9*strength:2}px`,rotate:`${strength*7}deg`},{translate:'0 0',rotate:'0deg'}],{duration:strength<0?450:700,iterations:2});
 }
 const feelRender=render;
-let lastFeelId=null;
+const lastFeelIds=new Map();
 render=function(state){
- feelRender(state);const f=state.ui.feel,stage=app.querySelector('.stage');
+ feelRender(state);renderRoomFeel(state,app.querySelector('.stage'),app.querySelector('.cat-object'));
+};
+function renderRoomFeel(state,stage,cat){
+ const f=state.ui.feel;
  if(!stage||state.ui.modal||state.ui.layoutMode||!f||f.until<Date.now())return;
- const cat=app.querySelector('.cat-object');if(!cat)return;
+ if(!cat)return;
  const b=cat.getBoundingClientRect(),s=stage.getBoundingClientRect();
  const cue=document.createElement('span');cue.className='feel-cue';cue.style.left=`${Math.max(25,Math.min(s.width-25,b.left+b.width/2-s.left))}px`;cue.style.top=`${Math.max(35,b.top-s.top)}px`;
  cue.textContent=f.affinity==='superDislike'?'💢':'';
  cue.setAttribute('role','status');cue.setAttribute('aria-label',{superMatch:'大喜び',match:'うれしそう',neutral:'気付いてこちらを見る',dislike:'身を引く',superDislike:'強く嫌がる'}[f.affinity]);
 
- if(lastFeelId!==f.id){showFeel(cat,f.affinity);if(f.delta>0)spawnLiveFeedback(cat,f.affinity,true);lastFeelId=f.id;}
+ const catId=getCat(state).id;
+ if(lastFeelIds.get(catId)!==f.id){showFeel(cat,f.affinity);if(f.delta>0)spawnLiveFeedback(cat,f.affinity,true);lastFeelIds.set(catId,f.id);}
  setTimeout(()=>{cue.remove();stage.querySelector('.care-heart-meter')?.remove();},Math.max(0,f.until-Date.now()));
-};
+}
 const feelSpawn=spawnLiveFeedback;
 spawnLiveFeedback=function(cat,affinity,big=false,moodOnly=false){
  feelSpawn(cat,affinity,big,moodOnly);

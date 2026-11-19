@@ -1,0 +1,101 @@
+{
+  "build": "local-household-20261119",
+  "publication": "Local main game only; GitHub Pages not updated",
+  "implemented": [
+    "Production household actor and return runtime shared with review",
+    "Swipe-only expanded room, native roaming beyond viewport",
+    "100 coin one-time renovation; no further capacity tiers",
+    "8 discovery coins per resident per care day; 12 serving paid food; 40sec toy wear",
+    "Two unrenovated cats: play heart progress80%; renovation restores100%; no health or weight penalty",
+    "Bounded operation history in locally saved tester report",
+    "Isolated debug scenes and external playtest brief"
+  ],
+  "tests": [
+    [
+      "first-journey-touch.test.cjs",
+      "pass",
+      "320/375; introduction through care, actual browser touch"
+    ],
+    [
+      "first-journey-touch.test.cjs JOURNEY_AUDIT=resume",
+      "pass",
+      "320/375; same journey with saved-progress reloads"
+    ],
+    [
+      "encounter-transition-matrix.test.cjs",
+      "pass",
+      "100 combinations = 5 inputs × 5 transitions × 4 placements; 100/100"
+    ],
+    [
+      "household-production-care.test.cjs",
+      "pass",
+      "main index: both feed, purchase100, receipt/reload, home, swipe, furniture, both play, phone, call, save"
+    ],
+    [
+      "household-production-coins.test.cjs",
+      "pass",
+      "main debug-start, two pickups8+8, no pet, saved daily cap, paw-coin feedback"
+    ],
+    [
+      "household-economy.test.cjs",
+      "pass",
+      "approved values, legacy daily claim, native play progress80 vs100"
+    ],
+    [
+      "economy-balance.test.cjs",
+      "pass",
+      "time wear, food affinity, ad daily cap, online/offline meal parity"
+    ],
+    [
+      "mtg-household.test.cjs",
+      "pass",
+      "second rescue preserves resident, both cats age, permanent cat not sent to surgery"
+    ],
+    [
+      "household-runtime.test.cjs",
+      "pass",
+      "320/375 native pet, hold/cancel, identity, feeding, save; shared production runtime"
+    ],
+    [
+      "room-hold.test.cjs",
+      "pass",
+      "320/375 affinity, redraw, release, blur, navigation, reload"
+    ],
+    [
+      "household-return-reset.test.cjs",
+      "pass",
+      "shared production return, day/night, no early cat or duplicate curtains, ordinary room reset"
+    ],
+    [
+      "analysis/check-production-return.cjs",
+      "pass",
+      "main pending cat identity, full window sequence and native room"
+    ],
+    [
+      "tool-multitouch-cleanup.test.cjs",
+      "pass",
+      "320/375 tools, secondary finger, cancellation, town navigation, no orphan ghosts"
+    ],
+    [
+      "mail-album-journey.test.cjs",
+      "pass",
+      "320/375 notifications, two gifts, album, six swipe photos and back"
+    ],
+    [
+      "surgery-adoption-feedback.test.cjs",
+      "pass",
+      "320/375 shared camera and family catch sequence"
+    ],
+    [
+      "audit-report-touch.test.cjs",
+      "pass",
+      "320/375 save file, simulated failed send/retry/close; network mocked, no production submissions"
+    ]
+  ],
+  "limits": [
+    "iPhone Safari reported freeze remains actual-device reconfirmation pending",
+    "No independent Claude or Muse playtest performed",
+    "No claim that all historical FB or every possible route is exhaustively verified",
+    "Sound deferred; no new audio integrated"
+  ]
+}
