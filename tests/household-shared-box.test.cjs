@@ -1,0 +1,11 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),{openGame}=require('./helpers/game-page.cjs');
+(async()=>{const b=await chromium.launch({channel:'chrome'});try{for(const [width,height]of [[320,568],[375,812]]){const p=await b.newPage({viewport:{width,height},hasTouch:true,isMobile:true});await openGame(p);await p.goto(require('url').pathToFileURL(require('path').resolve('index.html')).href+'?check=1&debug-play=1&debug-start=two-cats');await p.waitForSelector('.household-other-cat');
+await p.evaluate(()=>{for(const t of roomRoamTimers.values())clearTimeout(t);roomRoamTimers.clear();gameState.dailyDiscovery={lastDay:discoveryDay()};for(const id of roomActorRuntime.ids())roomActorRuntime.run(id,()=>{catLifeCues=[];gameState.ui.catFocus=null;gameState.ui.playRestPoint={...visibleRoomCatPoint(app.querySelector('.cat-object')),catId:id};queueObjectReaction(gameState,'box','sit');render(gameState)});});await p.waitForTimeout(8000);
+const separate=async(label)=>{const pos=await p.evaluate(()=>[...app.querySelectorAll('[data-hh-cat]')].map(n=>({id:n.dataset.hhCat,rect:n.getBoundingClientRect().toJSON()})));assert.equal(pos.length,2);assert(Math.hypot(pos[0].rect.x-pos[1].rect.x,pos[0].rect.y-pos[1].rect.y)>50,label);};
+await separate('independently queued furniture reactions must not settle on top of each other');
+await p.screenshot({path:`tests/screenshots/shared-box-${width}.png`});
+await p.locator('.household-other-cat').tap();await p.waitForTimeout(2200);await separate('touching second cat preserves separation');
+await p.locator('[data-action="open-notebook"]').tap();await p.locator('[data-hh-phone="debug-komugi"]').tap();await p.locator('[data-hh-phone="debug-sumi"]').tap();await p.locator('.home-phone-close').tap();await p.waitForTimeout(500);await separate('phone tabs do not re-anchor cats');
+await p.locator('[data-action="call-cat"]').tap();await p.waitForTimeout(7500);await separate('calling does not leave cats stacked');
+await p.evaluate(()=>saveGameState(gameState));await p.reload();await p.waitForSelector('.household-other-cat');await p.waitForTimeout(1000);await separate('reload preserves distinct positions');console.log('PASS',width,'same furniture→touch→phone tabs→call→reload');await p.close();}
+}finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});

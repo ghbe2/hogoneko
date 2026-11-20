@@ -197,7 +197,7 @@ renderMapShop=function(state){
 const firstPose=scenePose;
 scenePose=svg=>svg.closest('.first-exam-cat')?['sleep','neutral']:firstPose(svg);
 const firstClinic=renderClinic;
-function publicCoatLabel(cat){return (cat.coatLabel||'—').replace(/\s*[A-ZＡ-Ｚ](?=（|$)/g,'').replace(/（レア）/g,'').split(' / ')[0];}
+function publicCoatLabel(cat){return (CatSVG.coats[phenotypeFor(cat).bodyCoat]?.label||cat.coatLabel||'—').replace(/\s*[A-ZＡ-Ｚ](?=（|$)/g,'').replace(/（レア）/g,'').split(' / ')[0];}
 function firstExamArt(){const t=document.createElement('template');t.innerHTML=receptionArt('doctor');const staff=t.content.querySelector('.reception-staff');return `<svg viewBox="0 0 450 300" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><path fill="#d7ddcc" d="M0 0h450v300H0Z"/><path fill="#b5c9bf" stroke="#f5efd9" stroke-width="6" d="M25 50h130v130H25Z"/><path stroke="#f5efd9" stroke-width="5" d="M90 50v130M25 115h130"/>${staff.outerHTML}</svg>`;}
 renderClinic=function(state,cat){
  if(state.campaign.clinicStep==='exam'){

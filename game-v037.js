@@ -33,7 +33,7 @@ const dragBeforeControlZone=moveLayoutDrag;
 moveLayoutDrag=function(draft,x,y){dragBeforeControlZone(draft,x,y);if(draft.moved&&draft.ghost&&!draft.store){const r=draft.stageRect,b=roomPlacementBounds(r.height),wall=draft.zone==='wall',raw=y-r.top-draft.offsetY,bottom=raw+draft.height;
  draft.y=constrainFurnitureY(draft.itemId,raw/r.height*100,r.height,draft.height);draft.ghost.style.top=draft.y+'%';
  draft.valid=x>=r.left&&x<=r.right&&y>=r.top+b.wallTop&&y<=r.top+b.floorBottom&&(wall?bottom<=b.wallBottom:bottom>=b.floorTop);
- if(typeof guidedIntake==='function'&&guidedIntake(gameState)){
+ if(!wall&&typeof intakePlacementFrame==='function'&&gameState.campaign.phase==='intake'){
   const frame=intakePlacementFrame(gameState,r.width,r.height),minY=Math.max(frame.dragTop,frame.floor-draft.height);
   draft.x=Math.max(12,Math.min(frame.width-12-draft.width,x-r.left-draft.offsetX))/frame.width*100;
   draft.y=Math.max(minY,Math.min(frame.bottom-draft.height,raw))/frame.height*100;

@@ -98,7 +98,14 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
   if(!enabled)return baseRender(s);
   if(actorScope){
    const node=nodes.get(actorScope),p=getCatPoint(s);
-   if(node&&p){node.style.left=p.x+'%';node.style.top=p.y+'%';node.style.transform=`translate(-50%,-50%) scale(${p.scale})`;}
+   if(node&&p){
+    // Background actors must use the same occupancy check and travel animation
+    // as the selected cat. Writing the cue position directly bypassed both.
+    const from=visibleRoomCatPoint(node),to=destination(node,from,p)||p;
+    node.style.left=to.x+'%';node.style.top=to.y+'%';node.style.transform=`translate(-50%,-50%) scale(${to.scale})`;
+    const r=node.parentElement.getBoundingClientRect();
+    if(from&&Math.hypot((to.x-from.x)*r.width/100,(to.y-from.y)*r.height/100)>2)animateFelineTravel(node,from,to);
+   }
    return;
   }
   const picker=app.querySelector('.household-picker');

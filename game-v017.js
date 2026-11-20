@@ -384,9 +384,23 @@ app.addEventListener('click',event=>{
     const token=crypto.randomUUID();dispatch({type:'START_REWARD_AD',token});
     setTimeout(()=>dispatch({type:'COMPLETE_REWARD_AD',token}),3200);
   }
-  if(action==='restart-release'&&window.confirm('今の記録をバックアップして、50コインと初期セットから遊び直しますか？')){
-    try{localStorage.setItem(SAVE_KEY+'_before_release_restart',localStorage.getItem(SAVE_KEY));}catch{}
-    resetGameSave();
+  if(action==='restart-release'&&!document.querySelector('.release-restart-dialog')){
+    // Browser confirm is suppressed by some test browsers/WebViews. Keep this
+    // debug-only action explicit and cancellable without relying on that API.
+    const dialog=document.createElement('dialog');dialog.className='release-restart-dialog';
+    dialog.setAttribute('aria-label','はじめから遊び直す');
+    dialog.innerHTML='<p>今の記録をバックアップして、50コインと初期セットから遊び直しますか？</p><button data-restart-cancel>やめる</button><button data-restart-confirm>はじめから遊び直す</button>';
+    dialog.style.cssText='box-sizing:border-box;width:min(340px,calc(100vw - 32px));padding:24px;border:1px solid #cbb995;border-radius:20px;background:#fff8e9;color:#614e3f;font:16px var(--game-font);line-height:1.7';
+    dialog.querySelectorAll('button').forEach(b=>b.style.cssText='display:block;width:100%;min-height:44px;margin-top:12px;padding:10px;border:1px solid #cbb995;border-radius:24px;background:#fff8e9;color:#614e3f;font:inherit');
+    Object.assign(dialog.querySelector('[data-restart-confirm]').style,{background:'#9d5341',borderColor:'#9d5341',color:'#fff8e9'});
+    const close=()=>{dialog.close();dialog.remove()};
+    dialog.addEventListener('cancel',e=>{e.preventDefault();close()});
+    dialog.querySelector('[data-restart-cancel]').onclick=close;
+    dialog.querySelector('[data-restart-confirm]').onclick=()=>{
+      try{localStorage.setItem(SAVE_KEY+'_before_release_restart',localStorage.getItem(SAVE_KEY));}catch{}
+      close();resetGameSave();
+    };
+    document.body.append(dialog);dialog.showModal();dialog.querySelector('[data-restart-cancel]').focus();
   }
 });
 const releaseStyle=document.createElement('style');
