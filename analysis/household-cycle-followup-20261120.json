@@ -1,0 +1,26 @@
+{
+  "scope": "User excluded old-save migration; permanent pet is never a rescue/adoption target.",
+  "status": "Local fixes verified; not published in this task",
+  "fixes": [
+    {"issue":"Permanent pet disappeared while a new rescue waited in its carrier","change":"Render and animate the pet during intake; touching pet or its bowl enters its normal care; carrier returns to intake; exclude waiting cat from toy reactions","verification":"Next rescue capture→exam→name→pet touch/water→carrier→reload at both phone sizes; pet-room reload also preserves waiting rescue"},
+    {"issue":"A bowl hidden behind furniture stayed ungrabbable even when selected in the furniture library","before":"layout-hidden-equipment: hit target was box, not selected bowl","after":"Selected furniture is foreground only in layout mode; touch drag passes at 320x520 and375x764","constraint":"No new placement prohibition or automatic movement"},
+    {"issue":"Long blackout after welcoming returned cat","change":"Replace1100ms transition including a hold with180ms fade-out and220ms fade-in; remove curtain in finally on interruption","verification":"Window→two confirmations→welcome→normal-room guide; no reset curtain remains","limitation":"Original reporter's several-second stall was not reproduced; this is shorter transition and cleanup hardening"}
+  ],
+  "verified": [
+    "Pet cannot book surgery; rescue can book through phone",
+    "Touch: rescue appointment→next day→clinic→surgery→home→event day→adoption→farewell→pet remains→reload",
+    "Touch: same route through TNR→open carrier→return home→pet remains→reload",
+    "Pet's surgery record preserved, not replaced by rescue's surgery",
+    "Reducer: adoption and TNR followed by next field create exactly one candidate while preserving pet",
+    "Touch: pet-only home→field→bait swipe→trap drag→capture→clinic→home→name next rescue→six equipment objects→reload",
+    "Touch: unfavorable furniture→three calls→center consultation→rescue mat→placement→successful call"
+  ],
+  "reportN3": {
+    "version":"0fb17dc",
+    "data":"Screenshot and action log only; no save snapshot, cat types or room contents",
+    "observation":"Phase remains intake. Log contains a call opening naming, FIRST_NAME_CALL, then one CALL_INTAKE_CAT. No ACCEPT_CAT.",
+    "conclusion":"Exact cause not proven. Current recovery route passes; do not mark original report resolved solely from this. Three-call guidance threshold remains as approved."
+  },
+  "environment":"Chrome with generated touch input; no actual iPhone Safari verification",
+  "excluded":"Old-save migration, sound, new furniture placement restrictions"
+}

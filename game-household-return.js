@@ -47,9 +47,8 @@ window.HouseholdReturn=(()=>{
    const finish=()=>{flight?.remove();camera.cancel();back?.cancel();world.style.transformOrigin='';world.style.transform='';model.returnPhase='landed';const landed=document.createElement('div');landed.className='cat-object household-arrived-cat';landed.style.cssText='left:45%;top:70%;transform:translate(-50%,-50%) scale(.65)';landed.innerHTML=renderCatArt(returning);world.append(landed);mountGameCats();cinema.innerHTML=`<div class="hh-entry-welcome"><p>おかえり、${surgeryText(returning.name)}。</p><button>おかえり</button></div>`;cinema.querySelector('button').onclick=()=>{
     if(model.returnPhase!=='landed')return;model.returnPhase='transition';cinema.querySelector('button').disabled=true;
     const curtain=document.createElement('div');curtain.className='hh-return-reset';curtain.setAttribute('aria-label','部屋へ戻っています');stage.append(curtain);
-    const fade=curtain.animate([{opacity:0,offset:0},{opacity:1,offset:.35},{opacity:1,offset:.65},{opacity:0,offset:1}],{duration:1100,fill:'both'});
-    setTimeout(()=>{if(token!==modeToken||!curtain.isConnected)return;curtain.remove();active=false;app.classList.remove('household-cinema');dispatch({type:'HOUSEHOLD_RETURN'});app.querySelector('.stage')?.append(curtain);},430);
-    fade.finished.then(()=>{if(token!==modeToken)return;curtain.remove();model.returnPhase='accepted';}).catch(()=>{});
+    const fade=curtain.animate([{opacity:0},{opacity:1}],{duration:180,fill:'forwards'});
+    fade.finished.then(()=>{if(token!==modeToken||!curtain.isConnected)return;active=false;app.classList.remove('household-cinema');dispatch({type:'HOUSEHOLD_RETURN'});app.querySelector('.stage')?.append(curtain);return curtain.animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards'}).finished;}).then(()=>{if(token===modeToken)model.returnPhase='accepted';}).catch(()=>{}).finally(()=>curtain.remove());
    };};
    function confirmWelcome(openWindow){
     if(cinema.querySelector('.hh-welcome-confirm'))return;

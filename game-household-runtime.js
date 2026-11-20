@@ -39,7 +39,8 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
   for(const [n]of classes){if(!animationOnly){const css=getComputedStyle(n);n.style.width=css.width;n.style.height=css.height;}n.classList.toggle('cat-object',n===node);n.classList.toggle('household-other-cat',n!==node);}
   for(const [n,,kind]of bowls)n.classList.toggle('item-'+kind,(n.dataset.hhOwner||n.dataset.hhBowl)===id);
   const ui={...root.ui};for(const k of perCat)ui[k]=ctx[k]??null;ui.usedHandItems=ctx.usedHandItems||{};
-  gameState={...root,cats:[cat,...root.cats.filter(c=>c.id!==id)],ui};catLifeCues=ctx.cues||[];coinRestPoint=ctx.coinRestPoint||null;
+  const caringDuringIntake=root.campaign.phase==='intake'&&cat.status==='raising';
+  gameState={...root,cats:[cat,...root.cats.filter(c=>c.id!==id)],campaign:caringDuringIntake?{...root.campaign,phase:'room'}:root.campaign,ui};catLifeCues=ctx.cues||[];coinRestPoint=ctx.coinRestPoint||null;
   const perActorDraft=draft||rootCommand?.householdPlays?.[id]||rootPlay?.householdPlays?.[id];
   if(perActorDraft){commandDraft=perActorDraft;playDraft=null;}
   actorScope=id;
@@ -47,7 +48,7 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
    const out=gameState,updated=captureContext();updated.coinRestPoint=coinRestPoint;contexts[id]=updated;
    const visible=!animationOnly&&node?.isConnected?visibleRoomCatPoint(node):null;if(visible)points[id]={...visible,catId:id};
    const selected=root.cats[0].id===id,restoredUI={...root.ui};if(selected)for(const k of perCat)restoredUI[k]=updated[k];
-   gameState={...out,cats:root.cats.map(c=>out.cats.find(o=>o.id===c.id)||c),ui:restoredUI};
+   gameState={...out,cats:root.cats.map(c=>out.cats.find(o=>o.id===c.id)||c),campaign:caringDuringIntake?{...out.campaign,phase:root.campaign.phase}:out.campaign,ui:restoredUI};
    catLifeCues=selected?updated.cues:rootCues;commandDraft=rootCommand;playDraft=rootPlay;coinRestPoint=rootCoin;actorScope=null;
    for(const [n,main,other]of classes){n.classList.toggle('cat-object',main);n.classList.toggle('household-other-cat',other);}
    for(const [n,had,kind]of bowls)n.classList.toggle('item-'+kind,had);
@@ -55,20 +56,23 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
  }
  function switchCat(id,draw=true,toolTarget=false){
   if(id===getCat(gameState).id)return true;
+  if(gameState.campaign.phase==='intake'&&gameState.campaign.intakeCalled)return false;
   if(CatRoomHold.active||(!toolTarget&&(commandDraft||playDraft))||gameState.ui.careAnimation)return false;
   const cat=gameState.cats.find(c=>c.id===id);if(!cat)return false;
   remember();const ctx=contexts[id]||{},ui={...gameState.ui};for(const k of perCat)ui[k]=ctx[k]??null;
   ui.holdingCat=false;ui.catFocus=null;ui.playRestPoint=points[id];catLifeCues=ctx.cues||[];
   // Remove the previous active node from core queries before rendering a different cat.
   const old=app.querySelector('.cat-object');if(old){const css=getComputedStyle(old);old.style.width=css.width;old.style.height=css.height;old._travelAnimation?.cancel();old.dataset.hhCat=getCat(gameState).id;old.classList.remove('cat-object');old.classList.add('household-other-cat');}
-  gameState={...gameState,cats:[cat,...gameState.cats.filter(c=>c.id!==id)],ui};
+  const phase=['room','intake'].includes(gameState.campaign.phase)&&!gameState.ui.modal?(cat.status==='intake'?'intake':cat.status==='raising'?'room':gameState.campaign.phase):gameState.campaign.phase;
+  gameState={...gameState,cats:[cat,...gameState.cats.filter(c=>c.id!==id)],campaign:{...gameState.campaign,phase},ui};
   if(draw)render(gameState);else{const next=nodes.get(id);if(next){next._travelAnimation?.cancel();next.classList.remove('household-other-cat');next.classList.add('cat-object');next.dataset.action='tap-cat';}}
   store();return true;
  }
  function callChance(heart,named){const h=Math.max(0,Math.min(100,heart))/100;return named ? .35+.60*h : .35*(1-h)**2;}
  function callHousehold(){
   if(gameState.ui.modal||gameState.ui.layoutMode||CatRoomHold.active||commandDraft||playDraft)return;
-  const cats=residentCats(gameState),named=cats[Math.floor(Math.random()*cats.length)];if(!named)return;
+  const waiting=residentCats(gameState).find(c=>c.status==='intake');if(waiting){if(switchCat(waiting.id))baseDispatch({type:'CALL_INTAKE_CAT'});return;}
+  const cats=residentCats(gameState).filter(c=>c.status==='raising'),named=cats[Math.floor(Math.random()*cats.length)];if(!named)return;
   lastCall={id:named.id,name:named.name,at:Date.now(),responses:{}};
   for(const cat of cats){
    const responds=Math.random()<callChance(cat.heart,cat.id===named.id);lastCall.responses[cat.id]=responds;
@@ -116,23 +120,23 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
   }
   app.querySelectorAll('.resident-selector,.resident-cat,.return-window,.renovate-home').forEach(n=>n.remove());
   const world=app.querySelector('[data-room-world]'),active=getCat(s),main=world?.querySelector('.cat-object');
-  if(world&&s.campaign.phase==='room'&&active.status==='raising'){
+  if(world&&((s.campaign.phase==='room'&&active.status==='raising')||(s.campaign.phase==='intake'&&active.status==='intake'))){
    // The drawer is a fixed control, like the play/clean tools.
    let goal=app.querySelector('.alpha-goal');if(!goal&&householdPlaySpaceFactor(s)<1){goal=document.createElement('div');goal.className='room-care-status alpha-goal household-space-status';app.querySelector('.stage')?.append(goal);}
    if(goal&&residentCats(s).length>1){if(!goal.classList.contains('household-space-status'))goal.prepend(document.createTextNode(active.name+'：'));if(householdPlaySpaceFactor(s)<1){const note=document.createElement('span');note.className='household-space-note';note.textContent='2匹には少し手狭です。玩具で心が育つ速さがゆっくりになっています。';goal.append(note);}}
    app.querySelectorAll('.household-pan,.pan-guide').forEach(n=>n.remove());
    if(main){main.dataset.hhCat=active.id;nodes.set(active.id,main);const p=visibleRoomCatPoint(main);if(p)points[active.id]={...p,catId:active.id};}
-   for(const c of residentCats(s).filter(c=>c.id!==active.id)){
+   for(const c of residentCats(s).filter(c=>c.id!==active.id&&c.status==='raising')){
     let n=nodes.get(c.id);
     if(!n){n=document.createElement('div');n.innerHTML=renderCatArt(c);}
-    if(main){const css=getComputedStyle(main);n.style.width=css.width;n.style.height=css.height;}
+    if(main){const css=getComputedStyle(main);n.style.width=css.width;n.style.height=css.height;}else if(!n.style.width){n.classList.add('cat-object');world.append(n);const css=getComputedStyle(n);n.style.width=css.width;n.style.height=css.height;}
     n.classList.remove('cat-object');n.classList.add('household-other-cat');n.removeAttribute('data-action');n.dataset.hhCat=c.id;n.setAttribute('role','button');n.tabIndex=0;n.setAttribute('aria-label',c.name+'を撫でる・抱く');
     const p=points[c.id]||{x:72,y:73,scale:.65};if(n._travelAnimation?.playState!=='running'){n.style.left=p.x+'%';n.style.top=p.y+'%';n.style.transform='translate(-50%,-50%) scale('+p.scale+')';}world.append(n);nodes.set(c.id,n);const svg=n.querySelector('.game-cat-svg'),entry=rigEntries.get(c.id);if(entry&&entry.rig.svg===svg)svgRigs.set(svg,entry);
    }
    mountGameCats();
    const primaryCoin=app.querySelector('.discovery-pickup');if(primaryCoin)primaryCoin.dataset.hhCoin=active.id;
    if(householdEquipmentEnabled(s)&&!s.ui.layoutMode)world.querySelectorAll('[data-hh-equipment]').forEach(n=>n.classList.toggle('item-'+n.dataset.hhEquipment,n.dataset.hhOwner===active.id));
-   for(const c of residentCats(s).filter(c=>c.id!==active.id))runActor(c.id,()=>{
+   for(const c of residentCats(s).filter(c=>c.id!==active.id&&c.status==='raising'))runActor(c.id,()=>{
     if(!discoveryScene(gameState)||currentLifeCue())return;
     const coin=document.createElement('button');coin.className='discovery-pickup';coin.dataset.hhCoin=c.id;coin.dataset.action='pick-discovery-coin';coin.innerHTML='<span class="alpha-coin">'+PAW_COIN+'</span>';coin.setAttribute('aria-label',c.name+'が遊んでいるコインを拾う');app.querySelector('.stage').append(coin);positionDiscoveryCoin();
    });
@@ -145,9 +149,11 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
     order.forEach((c,i)=>{const b=c.id===active.id?bowl:bowl.cloneNode(true);b.dataset.hhBowl=c.id;b.style.left=x+'%';b.style.top=(i?Math.max(limit.floorTop,y/100*world.clientHeight-height-5)/world.clientHeight*100:y)+'%';b.style.setProperty('--portion',c.body.foodLevel/100);b.classList.toggle('filled',c.body.foodLevel>0);b.classList.toggle('empty',c.body.foodLevel<=0);b.setAttribute('aria-label',c.name+'のごはん皿');if(b!==bowl)world.append(b);});
    }
    orderDepth(world);
-   for(const c of residentCats(s).filter(c=>c.id!==active.id))runActor(c.id,()=>{renderRoomFeel(gameState,app.querySelector('.stage'),nodes.get(c.id));renderDiscoveryReward(gameState,nodes.get(c.id),app.querySelector('.stage'));});
+   for(const c of residentCats(s).filter(c=>c.id!==active.id&&c.status==='raising'))runActor(c.id,()=>{renderRoomFeel(gameState,app.querySelector('.stage'),nodes.get(c.id));renderDiscoveryReward(gameState,nodes.get(c.id),app.querySelector('.stage'));});
    if(lastCall&&Date.now()-lastCall.at<2200&&!s.ui.modal){app.querySelectorAll('.room-call-feedback').forEach(n=>n.remove());showRoomCallCue({...s,ui:{...s.ui,roomCallCue:{at:lastCall.at,catId:active.id}}},app.querySelector('.stage'),app.querySelector('[data-action="call-cat"]'));}
   }
+  const waiting=residentCats(s).find(c=>c.status==='intake');
+  if(world&&s.campaign.phase==='room'&&waiting){const carrier=document.createElement('button'),stage=app.querySelector('.stage'),r=intakePlacementFrame(s,stage.clientWidth,stage.clientHeight).carrier;carrier.className='room-carrier';carrier.dataset.hhCarrier=waiting.id;carrier.setAttribute('aria-label',waiting.named?waiting.name+'の様子を見る':'保護した猫の様子を見る');carrier.innerHTML=encounterTrapArt();Object.assign(carrier.style,{left:(r.x+r.width/2)+'px',top:(r.y+r.height/2)+'px',width:r.width+'px',height:r.height+'px'});world.append(carrier);}
   const profile=app.querySelector('.home-phone .app-profile');if(profile&&s.cats.length>1){
    const tabs=document.createElement('nav');tabs.className='household-phone-tabs';tabs.setAttribute('aria-label','表示するネコ');
    tabs.innerHTML=s.cats.slice().sort((a,b)=>a.id.localeCompare(b.id)).map(c=>'<button data-hh-phone="'+c.id+'" aria-pressed="'+(c.id===active.id)+'">'+surgeryText(c.name)+'</button>').join('');profile.querySelector('h2').replaceWith(tabs);
@@ -298,7 +304,7 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
    draft.dropElement=stage;
    if(draft.householdParent)return runActor(draft.householdId,()=>nativeToy(draft,x,y),draft);
    if(!draft.valid)return;
-   draft.householdPlays ||= Object.fromEntries(residentCats(gameState).map(c=>[c.id,{...draft,householdId:c.id,householdParent:draft,followTimer:null,catAnimation:null,livePlayPoint:points[c.id],liveAnchorIndex:contexts[c.id]?.roamIndex??gameState.ui.roamIndex}]));
+   draft.householdPlays ||= Object.fromEntries(residentCats(gameState).filter(c=>c.status==='raising').map(c=>[c.id,{...draft,householdId:c.id,householdParent:draft,followTimer:null,catAnimation:null,livePlayPoint:points[c.id],liveAnchorIndex:contexts[c.id]?.roamIndex??gameState.ui.roamIndex}]));
    for(const [id,child]of Object.entries(draft.householdPlays)){child.valid=draft.valid;child.dropElement=draft.dropElement;runActor(id,()=>nativeToy(child,x,y),child);}
   };
   scheduleToyFollow=function(draft,delay){
@@ -309,12 +315,12 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
   completeCommandDrag=function(draft,...args){finishingPlay=draft.householdPlays?draft:null;try{return nativeComplete(draft,...args)}finally{finishingPlay=null;for(const child of Object.values(draft.householdPlays||{}))clearTimeout(child.followTimer)}};
   const nativePhrase=roomCallPhrase;roomCallPhrase=cat=>enabled&&lastCall&&Date.now()-lastCall.at<2200?lastCall.name:nativePhrase(cat);
   window.roomActorRuntime={
-   ids:()=>enabled&&gameState.campaign.phase==='room'&&!window.HouseholdReturn?.active?residentCats(gameState).filter(c=>c.status==='raising').map(c=>c.id):null,
+   ids:()=>enabled&&['room','intake'].includes(gameState.campaign.phase)&&!window.HouseholdReturn?.active?residentCats(gameState).filter(c=>c.status==='raising').map(c=>c.id):null,
    owns:svg=>enabled&&!!svg.closest('.cat-object,.household-other-cat'),
      run:(id,work)=>runActor(id,work),animate:(id,work)=>runActor(id,work,null,true),destination
   };
   window.addEventListener('pointerdown',e=>{
-   if(!enabled||e.isPrimary===false)return;
+   if(!enabled||e.isPrimary===false||gameState.ui.layoutMode)return;
    const n=e.target.closest?.('.household-other-cat');if(!n)return;
    e.preventDefault();e.stopImmediatePropagation();const id=n.dataset.hhCat;
    if(!switchCat(id))return;
@@ -326,7 +332,8 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
    e.preventDefault();e.stopImmediatePropagation();runActor(coin.dataset.hhCoin,()=>baseDispatch({type:'PICK_DISCOVERY_COIN'}));renderRuntime(gameState);store();
   },true);
   app.addEventListener('click',e=>{
-   if(!enabled)return;const b=e.target.closest('[data-hh-phone],[data-hh-bowl],[data-hh-owner],[data-action="call-cat"]');if(!b)return;
+   if(!enabled)return;const b=e.target.closest('[data-hh-phone],[data-hh-bowl],[data-hh-owner],[data-hh-carrier],[data-action="call-cat"]');if(!b)return;
+   if(b.dataset.hhCarrier){e.preventDefault();e.stopImmediatePropagation();switchCat(b.dataset.hhCarrier);return;}
    if(b.dataset.hhOwner&&b.dataset.hhOwner!==getCat(gameState).id&&!gameState.ui.layoutMode){e.preventDefault();e.stopImmediatePropagation();const owner=b.dataset.hhOwner,kind=b.dataset.hhEquipment;if(switchCat(owner))app.querySelector('[data-hh-owner="'+owner+'"][data-hh-equipment="'+kind+'"]').click();return;}
    if(b.dataset.hhPhone){e.preventDefault();e.stopImmediatePropagation();switchCat(b.dataset.hhPhone);}
    else if(b.dataset.hhBowl&&b.dataset.hhBowl!==getCat(gameState).id){e.preventDefault();e.stopImmediatePropagation();const id=b.dataset.hhBowl;if(switchCat(id))app.querySelector('[data-hh-bowl="'+id+'"]').click();}

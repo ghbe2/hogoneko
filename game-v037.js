@@ -129,6 +129,7 @@ const roomInterfaceStyle=document.createElement('style');roomInterfaceStyle.text
 #app:has(.guided-intake):has(.layout-dragging) .first-guide-note{visibility:hidden}
 #app .layout-dragging .layout-workbar{visibility:hidden}
 #app .layout-library{z-index:50;padding:110px 12px 16px;background:#65543c25}
+#app .game-frame.layout-mode .layout-selected{z-index:45!important}
 #app .furniture-sheet{display:flex;flex-direction:column;width:100%;height:100%;min-height:0;background:#fff9ed;border-radius:24px;padding:16px;box-shadow:0 10px 30px #604b3925}
 #app .furniture-sheet header,#app .furniture-sheet nav{display:flex;justify-content:space-between;gap:8px;flex:none;margin-bottom:10px}
 #app .furniture-sheet h2{margin:4px 0;font-size:20px}
