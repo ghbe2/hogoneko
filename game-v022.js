@@ -61,7 +61,8 @@ moveCommandDrag=function(draft,x,y){
   const hitRadius=tool.id==='starter_clean'&&node.dataset.problem!=='hair'?18:radius;
   const hit=inside&&Math.hypot(dx,dy)<=hitRadius;
   node.classList.toggle('drop-hover',hit);
-  if(hit&&(node.dataset.problem==='hair'||getProblemLevel(getCat(gameState),node.dataset.problem)>0))targets.push({problem:node.dataset.problem,hairId:node.dataset.hair});
+  const owner=gameState.cats.find(c=>c.id===node.closest('[data-hh-owner]')?.dataset.hhOwner)||getCat(gameState);
+  if(hit&&(node.dataset.problem==='hair'||getProblemLevel(owner,node.dataset.problem)>0))targets.push({problem:node.dataset.problem,hairId:node.dataset.hair,ownerId:owner.id});
  });
  draft.valid=!!targets.length;draft.ghost.classList.toggle('invalid',!draft.valid);
  draft.ghost.style.setProperty('--scrub-size',(radius*2)+'px');

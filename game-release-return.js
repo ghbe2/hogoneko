@@ -26,8 +26,10 @@ reduceGameState=function(state,action){
  const next=releaseReturnReducer(state,action);
  if(action.type==='HOUSEHOLD_RETURN'&&next!==state&&state.household?.pendingReturn&&!next.household?.pendingReturn){
   const returning=getCat(next),id='return-'+returning.id,letters={...next.economy?.familyLetters};
-  if(!letters[id])letters[id]={catId:id,name:returning.name,kind:'return',arrivedAt:Date.now(),coins:CARE_BALANCE.familyCoins,itemId:drawFamilyItem(),claimed:false,bonusClaimed:true};
-  return {...next,economy:{...next.economy,familyLetters:letters,pendingFamilyLetter:id}};
+  // The returning cat's 10 coins are handed over once by HOUSEHOLD_RETURN.
+  // Keep the item in the mailbox, without interrupting the supplies tutorial.
+  if(!letters[id])letters[id]={catId:id,name:returning.name,kind:'return',arrivedAt:Date.now(),coins:0,itemId:drawFamilyItem(),claimed:false,bonusClaimed:true};
+  return {...next,economy:{...next.economy,familyLetters:letters,pendingFamilyLetter:null}};
  }
  return next;
 };

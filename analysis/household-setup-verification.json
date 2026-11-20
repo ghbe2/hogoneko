@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-20",
+  "publicPreviousFixes": "https://ghbe2.github.io/hogoneko/?v=436e636",
+  "newFeatures": "local implementation; not yet published",
+  "verified": [
+    "Two confirmation pages before opening; decline and reload",
+    "Welcome grants 10 coins once; normal product-detail/cart checkout spends 10",
+    "All five tutorial stages persist across reload; debt cannot block reserved set purchase",
+    "Six independently placed equipment objects, independent food and water refill",
+    "Touch cleaning of inactive cat litter routes to its owner",
+    "Initial 10 slots; moving existing objects and saving at cap; renovation capacity 20",
+    "All affinity pairs can leave carrier using six essentials plus rescue mat",
+    "Cabinet stays fixed through room swipe, unfolds and folds",
+    "Shared furniture collision and phone identity regression tests",
+    "320x520 and 375x764 playfield screenshots reviewed"
+  ],
+  "performance": "Repeated actor geometry reads and depth-sort reads reduced; browser layout count ~559 to399 over4s. Not proof of real-device smoothness.",
+  "outstanding": ["iPhone Safari actual-device acceptance and performance"]
+}

@@ -11,3 +11,7 @@
 .household-returning .hh-window{pointer-events:auto}
 
 .household-cinema>.room-travel-icon{visibility:hidden;pointer-events:none}
+.hh-welcome-confirm{position:absolute;inset:auto 16px 20px;z-index:10;padding:20px;border:1px solid #cbb995;border-radius:22px;background:#fff8e9;color:#614e3f;pointer-events:auto;box-shadow:0 4px 20px #55412c33}
+.hh-welcome-confirm p{font-size:16px;line-height:1.65;margin:8px 0 16px}
+.hh-welcome-confirm button{display:block;width:100%;min-height:46px;margin-top:10px;padding:10px 12px;border-radius:24px;background:#9d5341;color:#fff8e9;border:0;font:inherit}
+.hh-welcome-confirm [data-welcome-no]{background:#f1e5cf;color:#614e3f}

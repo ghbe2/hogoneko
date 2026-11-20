@@ -327,7 +327,7 @@ function animateGameCats(now){
       if(svg.closest('.cat-object')){entry.rig.nodes.props.innerHTML='';entry.rig.nodes.effects.innerHTML='';}
       };
       // A household supplies each cat's state; the animation pipeline stays the same.
-      if(window.roomActorRuntime?.owns(svg))window.roomActorRuntime.run(svg.dataset.catId,update);
+      if(window.roomActorRuntime?.owns(svg))(window.roomActorRuntime.animate||window.roomActorRuntime.run)(svg.dataset.catId,update);
       else update();
     }
   }

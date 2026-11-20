@@ -27,16 +27,17 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
  function store(){if(actorScope)return true;if(production){if(enabled){remember();gameState={...gameState,household:{...gameState.household,actorPoints:points,actorContexts:contexts}};}return baseSave(gameState);}if(!enabled)return true;remember();try{localStorage.setItem(key,JSON.stringify({state:gameState,points,contexts}));return true}catch{return false}}
  // Run the unchanged single-cat game against one actor. Scope lasts only for
  // this synchronous call; selected UI, input capture and other actors stay put.
- function runActor(id,work,draft){
+ function runActor(id,work,draft,animationOnly=false){
   if(!enabled||actorScope)return work();
+  if(animationOnly&&id===getCat(gameState).id)return work();
   const cat=gameState.cats.find(c=>c.id===id),node=nodes.get(id);if(!cat)return;
   contexts[getCat(gameState).id]=captureContext();
   const root=gameState,rootCues=catLifeCues,rootCommand=commandDraft,rootPlay=playDraft,rootCoin=coinRestPoint;
   const ctx=contexts[id]||{...captureContext(),cues:[],playRestPoint:points[id],catFocus:null,usedHandItems:{}};
   const classes=[...nodes.values()].filter(n=>n.isConnected).map(n=>[n,n.classList.contains('cat-object'),n.classList.contains('household-other-cat')]);
-  const bowls=[...app.querySelectorAll('[data-hh-bowl]')].map(n=>[n,n.classList.contains('item-bowl')]);
-  for(const [n]of classes){const css=getComputedStyle(n);n.style.width=css.width;n.style.height=css.height;n.classList.toggle('cat-object',n===node);n.classList.toggle('household-other-cat',n!==node);}
-  for(const [n]of bowls)n.classList.toggle('item-bowl',n.dataset.hhBowl===id);
+  const bowls=[...app.querySelectorAll('[data-hh-bowl],[data-hh-equipment]')].map(n=>[n,n.classList.contains('item-'+(n.dataset.hhEquipment||'bowl')),n.dataset.hhEquipment||'bowl']);
+  for(const [n]of classes){if(!animationOnly){const css=getComputedStyle(n);n.style.width=css.width;n.style.height=css.height;}n.classList.toggle('cat-object',n===node);n.classList.toggle('household-other-cat',n!==node);}
+  for(const [n,,kind]of bowls)n.classList.toggle('item-'+kind,(n.dataset.hhOwner||n.dataset.hhBowl)===id);
   const ui={...root.ui};for(const k of perCat)ui[k]=ctx[k]??null;ui.usedHandItems=ctx.usedHandItems||{};
   gameState={...root,cats:[cat,...root.cats.filter(c=>c.id!==id)],ui};catLifeCues=ctx.cues||[];coinRestPoint=ctx.coinRestPoint||null;
   const perActorDraft=draft||rootCommand?.householdPlays?.[id]||rootPlay?.householdPlays?.[id];
@@ -44,12 +45,12 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
   actorScope=id;
   try{return work();}finally{
    const out=gameState,updated=captureContext();updated.coinRestPoint=coinRestPoint;contexts[id]=updated;
-   const visible=node?.isConnected?visibleRoomCatPoint(node):null;if(visible)points[id]={...visible,catId:id};
+   const visible=!animationOnly&&node?.isConnected?visibleRoomCatPoint(node):null;if(visible)points[id]={...visible,catId:id};
    const selected=root.cats[0].id===id,restoredUI={...root.ui};if(selected)for(const k of perCat)restoredUI[k]=updated[k];
    gameState={...out,cats:root.cats.map(c=>out.cats.find(o=>o.id===c.id)||c),ui:restoredUI};
    catLifeCues=selected?updated.cues:rootCues;commandDraft=rootCommand;playDraft=rootPlay;coinRestPoint=rootCoin;actorScope=null;
    for(const [n,main,other]of classes){n.classList.toggle('cat-object',main);n.classList.toggle('household-other-cat',other);}
-   for(const [n,had]of bowls)n.classList.toggle('item-bowl',had);
+   for(const [n,had,kind]of bowls)n.classList.toggle('item-'+kind,had);
   }
  }
  function switchCat(id,draw=true,toolTarget=false){
@@ -116,10 +117,7 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
   app.querySelectorAll('.resident-selector,.resident-cat,.return-window,.renovate-home').forEach(n=>n.remove());
   const world=app.querySelector('[data-room-world]'),active=getCat(s),main=world?.querySelector('.cat-object');
   if(world&&s.campaign.phase==='room'&&active.status==='raising'){
-   // The cabinet belongs to the left wall. It must not follow the camera and
-   // cover a different cat or bowl when looking into the extension.
-   const cabinet=app.querySelector('.room-preparation');
-   if(cabinet&&getWorldWidth(s)>1)world.append(cabinet);
+   // The drawer is a fixed control, like the play/clean tools.
    let goal=app.querySelector('.alpha-goal');if(!goal&&householdPlaySpaceFactor(s)<1){goal=document.createElement('div');goal.className='room-care-status alpha-goal household-space-status';app.querySelector('.stage')?.append(goal);}
    if(goal&&residentCats(s).length>1){if(!goal.classList.contains('household-space-status'))goal.prepend(document.createTextNode(active.name+'：'));if(householdPlaySpaceFactor(s)<1){const note=document.createElement('span');note.className='household-space-note';note.textContent='2匹には少し手狭です。玩具で心が育つ速さがゆっくりになっています。';goal.append(note);}}
    app.querySelectorAll('.household-pan,.pan-guide').forEach(n=>n.remove());
@@ -133,6 +131,7 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
    }
    mountGameCats();
    const primaryCoin=app.querySelector('.discovery-pickup');if(primaryCoin)primaryCoin.dataset.hhCoin=active.id;
+   if(householdEquipmentEnabled(s)&&!s.ui.layoutMode)world.querySelectorAll('[data-hh-equipment]').forEach(n=>n.classList.toggle('item-'+n.dataset.hhEquipment,n.dataset.hhOwner===active.id));
    for(const c of residentCats(s).filter(c=>c.id!==active.id))runActor(c.id,()=>{
     if(!discoveryScene(gameState)||currentLifeCue())return;
     const coin=document.createElement('button');coin.className='discovery-pickup';coin.dataset.hhCoin=c.id;coin.dataset.action='pick-discovery-coin';coin.innerHTML='<span class="alpha-coin">'+PAW_COIN+'</span>';coin.setAttribute('aria-label',c.name+'が遊んでいるコインを拾う');app.querySelector('.stage').append(coin);positionDiscoveryCoin();
@@ -140,7 +139,7 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
    for(const n of world.querySelectorAll('.cat-object,.household-other-cat'))n.querySelector('svg')?.removeAttribute('data-static-photo');
    // The original bowl retains its original action; another bowl uses that same
    // action after selecting its owner. No replacement feeding implementation.
-   const bowl=world.querySelector('.item-bowl');if(bowl&&!s.ui.layoutMode){
+   const bowl=world.querySelector('.item-bowl');if(bowl&&!s.ui.layoutMode&&!householdEquipmentEnabled(s)){
     const order=[...residentCats(s)].sort((a,b)=>a.id.localeCompare(b.id));
     const x=parseFloat(bowl.style.left),y=parseFloat(bowl.style.top),height=bowl.offsetHeight,limit=roomPlacementBounds(world.clientHeight);
     order.forEach((c,i)=>{const b=c.id===active.id?bowl:bowl.cloneNode(true);b.dataset.hhBowl=c.id;b.style.left=x+'%';b.style.top=(i?Math.max(limit.floorTop,y/100*world.clientHeight-height-5)/world.clientHeight*100:y)+'%';b.style.setProperty('--portion',c.body.foodLevel/100);b.classList.toggle('filled',c.body.foodLevel>0);b.classList.toggle('empty',c.body.foodLevel<=0);b.setAttribute('aria-label',c.name+'のごはん皿');if(b!==bowl)world.append(b);});
@@ -167,7 +166,7 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
   layer.querySelector('[data-hh-home]').onclick=()=>close(true);layer.querySelector('[data-hh-continue]').onclick=()=>close(false);app.append(layer);
  }
  function orderDepth(world=app.querySelector('[data-room-world]')){
-  if(!world)return;[...world.querySelectorAll('.floor-placement,.cat-object,.household-other-cat')].sort((a,b)=>a.getBoundingClientRect().bottom-b.getBoundingClientRect().bottom).forEach((n,i)=>{if(!n.classList.contains('room-cat-held'))n.style.zIndex=10+i;});
+  if(!world)return;[...world.querySelectorAll('.floor-placement,.cat-object,.household-other-cat')].map(n=>({n,bottom:n.getBoundingClientRect().bottom})).sort((a,b)=>a.bottom-b.bottom).forEach(({n},i)=>{const z=String(10+i);if(!n.classList.contains('room-cat-held')&&n.style.zIndex!==z)n.style.zIndex=z;});
  }
  function purchaseRenovation(){
   if(gameState.coins<100||gameState.household?.renovation)return;
@@ -189,12 +188,16 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
   app.querySelectorAll('.household-picker').forEach(n=>n.remove());render(gameState);store();
  }
  function renovate(){
-  const l=document.createElement('div');l.className='modal-layer household-picker';l.innerHTML='<section class="menu-sheet"><h2>おうちを広くする</h2><p>2匹で暮らすには、今のお部屋は少し手狭。右側に、今の半分ほどの広さを足せます。</p><p>改装すると、玩具で心が育つ速さが元に戻ります。今の家具は、そのまま使えます。</p><p>改装費用：100コイン<br>持っているコイン：'+gameState.coins+'</p>'+(gameState.coins<100?'<p>あと'+(100-gameState.coins)+'コインで改装できます。</p>':'')+'<button data-hh-buy '+(gameState.coins<100?'disabled':'')+'>100コインで改装する</button><button data-hh-dismiss>今はやめる</button></section>';app.append(l);l.querySelector('[data-hh-dismiss]').onclick=()=>l.remove();l.querySelector('[data-hh-buy]').onclick=purchaseRenovation;
+  const l=document.createElement('div');l.className='modal-layer household-picker';l.innerHTML='<section class="menu-sheet"><h2>おうちを広くする</h2><p>2匹で暮らすには、今のお部屋は少し手狭。右側に、今の半分ほどの広さを足せます。</p><p>改装すると、玩具で心が育つ速さが元に戻り、置ける家具も10個から20個に増えます。</p><p>改装費用：100コイン<br>持っているコイン：'+gameState.coins+'</p>'+(gameState.coins<100?'<p>あと'+(100-gameState.coins)+'コインで改装できます。</p>':'')+'<button data-hh-buy '+(gameState.coins<100?'disabled':'')+'>100コインで改装する</button><button data-hh-dismiss>今はやめる</button></section>';app.append(l);l.querySelector('[data-hh-dismiss]').onclick=()=>l.remove();l.querySelector('[data-hh-buy]').onclick=purchaseRenovation;
  }
  function dispatchRuntime(action){
   useProductionState(gameState);
-  if(window.HouseholdReturn?.active&&action.type!=='HOUSEHOLD_RETURN')return;
+  if(window.HouseholdReturn?.active&&!['HOUSEHOLD_RETURN','HOUSEHOLD_DECLINE'].includes(action.type))return;
   if(!enabled)return baseDispatch(action);
+  if(action.type==='RUB_CLEAN'&&householdEquipmentEnabled(gameState)&&action.targets?.some(t=>t.ownerId&&t.ownerId!==getCat(gameState).id)){
+   const groups=new Map();for(const t of action.targets){const id=t.ownerId||getCat(gameState).id;if(!groups.has(id))groups.set(id,[]);groups.get(id).push(t);}
+   for(const [id,targets]of groups)runActor(id,()=>baseDispatch({...action,targets}));renderRuntime(gameState);store();return;
+  }
   if(action.type==='ROAM_CAT'&&getWorldWidth(gameState)>1)action={...action,freeWalk:Math.random()<.6};
   if(actorScope){baseDispatch(action);return;}
   if(action.type==='EXECUTE_CONTACT'&&action.contact==='call'){callHousehold();return;}
@@ -223,7 +226,7 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
   baseDispatch(action);
   if(before.realClock?.processedAt&&gameState.realClock?.processedAt&&careDayKey(before.realClock.processedAt)!==careDayKey(gameState.realClock.processedAt))for(const ctx of Object.values(contexts))ctx.usedHandItems={};
   if(gameState.ui.careAnimation)busyCat=getCat(gameState).id;else busyCat=null;
-  if(action.type==='FINISH_CARE'&&care?.operation==='water'){
+  if(action.type==='FINISH_CARE'&&care?.operation==='water'&&!householdEquipmentEnabled(gameState)){
    const water=getCat(gameState).body.waterLevel;gameState={...gameState,cats:gameState.cats.map(c=>({...c,body:{...c.body,waterLevel:water}}))};
   }
   if(action.type==='CLOSE_MODAL'&&phoneOrigin){const id=phoneOrigin;phoneOrigin=null;switchCat(id);}
@@ -284,7 +287,7 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
    if(enabled&&node?.matches('[data-room-world]')&&svg){const width=450*getWorldWidth(gameState);svg=svg.replace(/viewBox="[^"]+"/,'viewBox="0 0 '+width+' 760"');}
    return nativeBackground(node,svg);
   };
-  const nativePlacedPoint=getPlacedPoint;getPlacedPoint=function(s,id,fallback){if(enabled&&id==='bowl'){const n=app.querySelector('[data-hh-bowl="'+getCat(s).id+'"]');if(n)return{x:parseFloat(n.style.left),y:parseFloat(n.style.top)};}return nativePlacedPoint(s,id,fallback)};
+  const nativePlacedPoint=getPlacedPoint;getPlacedPoint=function(s,id,fallback){if(enabled){const n=householdEquipmentEnabled(s)?app.querySelector('[data-hh-equipment="'+id+'"][data-hh-owner="'+getCat(s).id+'"]'):id==='bowl'?app.querySelector('[data-hh-bowl="'+getCat(s).id+'"]'):null;if(n)return{x:parseFloat(n.style.left),y:parseFloat(n.style.top)};}return nativePlacedPoint(s,id,fallback)};
   const nativeToy=updateLiveToyPlay,nativeFollow=scheduleToyFollow,nativeClear=clearCommandDrag,nativeComplete=completeCommandDrag;
   updateLiveToyPlay=function(draft,x,y){
    if(!enabled)return nativeToy(draft,x,y);
@@ -308,7 +311,7 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
   window.roomActorRuntime={
    ids:()=>enabled&&gameState.campaign.phase==='room'&&!window.HouseholdReturn?.active?residentCats(gameState).filter(c=>c.status==='raising').map(c=>c.id):null,
    owns:svg=>enabled&&!!svg.closest('.cat-object,.household-other-cat'),
-   run:(id,work)=>runActor(id,work),destination
+     run:(id,work)=>runActor(id,work),animate:(id,work)=>runActor(id,work,null,true),destination
   };
   window.addEventListener('pointerdown',e=>{
    if(!enabled||e.isPrimary===false)return;
@@ -323,7 +326,8 @@ window.HouseholdRuntime=window.HouseholdReviewRuntime=(()=>{
    e.preventDefault();e.stopImmediatePropagation();runActor(coin.dataset.hhCoin,()=>baseDispatch({type:'PICK_DISCOVERY_COIN'}));renderRuntime(gameState);store();
   },true);
   app.addEventListener('click',e=>{
-   if(!enabled)return;const b=e.target.closest('[data-hh-phone],[data-hh-bowl],[data-action="call-cat"]');if(!b)return;
+   if(!enabled)return;const b=e.target.closest('[data-hh-phone],[data-hh-bowl],[data-hh-owner],[data-action="call-cat"]');if(!b)return;
+   if(b.dataset.hhOwner&&b.dataset.hhOwner!==getCat(gameState).id&&!gameState.ui.layoutMode){e.preventDefault();e.stopImmediatePropagation();const owner=b.dataset.hhOwner,kind=b.dataset.hhEquipment;if(switchCat(owner))app.querySelector('[data-hh-owner="'+owner+'"][data-hh-equipment="'+kind+'"]').click();return;}
    if(b.dataset.hhPhone){e.preventDefault();e.stopImmediatePropagation();switchCat(b.dataset.hhPhone);}
    else if(b.dataset.hhBowl&&b.dataset.hhBowl!==getCat(gameState).id){e.preventDefault();e.stopImmediatePropagation();const id=b.dataset.hhBowl;if(switchCat(id))app.querySelector('[data-hh-bowl="'+id+'"]').click();}
    else if(b.dataset.action==='call-cat'&&gameState.cats.length>1){e.preventDefault();e.stopImmediatePropagation();callHousehold();}

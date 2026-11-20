@@ -41,7 +41,7 @@ function townProgressFaces(state,id){
  const count=p.total??Math.min(records.length,16);
  const silhouette='<path d="M9 36L4 6 23 18 44 3 41 36Z" fill="currentColor"/>';
  return `<div class="town-cat-goal" style="--goal-columns:${Math.min(count,8)}" role="img" aria-label="${p.total===null?p.done+'匹の記録':p.total+'匹の目標、'+Math.min(p.done,p.total)+'匹達成'}">${Array.from({length:count},(_,i)=>{
-  const record=records[i];
+  const saved=records[i],record=saved?{...saved,phenotype:saved.phenotype||phenotypeFor(state.cats.find(c=>c.id===saved.catId)||{...saved,id:saved.catId||'record-'+i})}:null;
   if(record?.phenotype){
    const key=JSON.stringify(record.phenotype);
    if(!townFaceCache.has(key)){

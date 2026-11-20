@@ -1,5 +1,6 @@
 'use strict';
 function householdCapacity(state){return state.flags.returnedCat?2:1;}
+function householdEquipmentEnabled(s){return !!s.household?.basicSetBought;}
 function residentCats(state){return state.cats.filter(c=>['raising','intake','captured'].includes(c.status));}
 function householdPlaySpaceFactor(state){return residentCats(state).filter(c=>c.status==='raising').length>=2&&!state.household?.renovation?0.8:1;}
 function resetHouseholdCandidate(cat){const next={...cat};for(const key of ['carePlan','initialAge','permanentResident','returnTutorial','previousDayHeart','seniorGift','seniorHelpUnlocked','seniorPromptDismissed','alphaLayoutTried','alphaMessSeen','parkKittenLesson','unsuccessfulCalls'])delete next[key];return next;}
@@ -16,8 +17,11 @@ reduceGameState=function(state,action){
  if(action.type==='HOUSEHOLD_RETURN'){
   const returning=state.household?.pendingReturn;if(!returning||state.campaign.phase!=='room'||residentCats(state).length>=2)return state;
   const restored={...returning,status:'raising',permanentResident:true};
-  return {...state,flags:{...state.flags,returnedCat:true},household:{...state.household,pendingReturn:null},cats:[restored,...residentCats(state)],rooms:state.rooms.map(r=>({...r,cats:[restored.id,...residentCats(state).map(c=>c.id)]})),ui:{...state.ui,message:''}};
+  const record={catId:returning.id,name:returning.name,area:returning.rescueArea||state.campaign.area||'a1',outcome:'tnr',returnsHome:true,phenotype:phenotypeFor(returning)};
+  const album=state.album.some(e=>e.catId===returning.id)?state.album.map(e=>e.catId===returning.id?{...e,...record}:e):[...state.album,record];
+  return {...state,album,coins:state.coins+10,flags:{...state.flags,returnedCat:true},household:{...state.household,pendingReturn:null,setup:'intro',setCoinsReserved:true},cats:[restored,...residentCats(state)],rooms:state.rooms.map(r=>({...r,cats:[restored.id,...residentCats(state).map(c=>c.id)]})),ui:{...state.ui,message:''}};
  }
+ if(action.type==='HOUSEHOLD_DECLINE'&&state.household?.pendingReturn)return {...state,household:{...state.household,pendingReturn:null},ui:{...state.ui,modal:null,message:''}};
  if(action.type==='HOUSEHOLD_RENOVATE'){
   const level=state.household?.renovation||0,cost=100;
   if(!state.flags.returnedCat||level>=1||state.coins<cost||state.campaign.shopId!=='petshop')return state;
